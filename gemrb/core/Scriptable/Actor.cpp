@@ -2692,21 +2692,22 @@ void Actor::AddEffects(EffectQueue&& fx) {
 void Actor::AddEffects(EffectQueue* fx)
 {
 	bool first = !(InternalFlags&IF_INITIALIZED); //initialize base stats
-	stats_t prev = ResetStats(first);
+	if (first) ResetStats(true);
 	
 	if (!fx->GetOwner()) fx->SetOwner(this);
 	if (!fx->IsDestinationSet()) fx->SetDestination(Pos);
 	fx->AddAllEffects(this);
 
-	if (SpellStatesSize) {
-		memset(spellStates, 0, sizeof(ieDword) * SpellStatesSize);
+	// apply palette changes not caused by persistent effects
+	if (Modified[IE_STATE_ID] & STATE_PETRIFIED) {
+		SetLockedPalette(fullstone);
+	} else if (Modified[IE_STATE_ID] & STATE_FROZEN) {
+		SetLockedPalette(fullwhite);
 	}
-	//also clear the spell bonuses just given, they will be
-	//recalculated below again
-	spellbook->ClearBonus();
-	//AC.ResetAll(); // TODO: check if this is needed
-	//ToHit.ResetAll();
-	
+
+	// reset stats before reapplying everything
+	stats_t prev = ResetStats(false);
+
 	RefreshEffects(first, prev);
 }
 
@@ -2715,13 +2716,6 @@ void Actor::RefreshEffects(bool first, const stats_t& previous)
 	// some VVCs are controlled by stats (and so by PCFs), the rest have 'effect_owned' set
 	for (ScriptedAnimation* vvc : vfxQueue) {
 		if (vvc->effect_owned) vvc->active = false;
-	}
-
-	// apply palette changes not caused by persistent effects
-	if (Modified[IE_STATE_ID] & STATE_PETRIFIED) {
-		SetLockedPalette(fullstone);
-	} else if (Modified[IE_STATE_ID] & STATE_FROZEN) {
-		SetLockedPalette(fullwhite);
 	}
 
 	// give the 3ed save bonus before applying the effects, since they may do extra rolls
