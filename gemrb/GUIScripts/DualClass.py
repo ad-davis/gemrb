@@ -227,6 +227,7 @@ def DCMainDonePress ():
 		GemRB.SetPlayerStat (pc, IE_LEVEL2, 0, 0)
 	else:
 		GemRB.SetPlayerStat (pc, IE_LEVEL2, Level1 - 1, 0)
+		GemRB.SetPlayerStat (pc, IE_CLASS, MultClassId, 0)
 		GemRB.SetPlayerStat (pc, IE_LEVEL, 0, 0)
 
 	# finally set the new class
