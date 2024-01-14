@@ -712,7 +712,7 @@ TableMgr::index_t Actor::GetKitIndex (ieDword kit, ieDword baseclass) const
 }
 
 //applies a kit on the character
-bool Actor::ApplyKit(bool remove, ieDword baseclass, int diff)
+bool Actor::ApplyKit(bool remove, ieDword baseclass, int diff, bool pcflevel)
 {
 	ieDword kit = GetStat(IE_KIT);
 	ieDword kitclass = 0;
@@ -721,6 +721,7 @@ bool Actor::ApplyKit(bool remove, ieDword baseclass, int diff)
 	ieDword max = 0;
 	ieDword cls = GetStat(IE_CLASS);
 	std::shared_ptr<TableMgr> tm;
+	ieDword levelid = 0;
 
 	// iwd2 has support for multikit characters, so we have more work
 	// at the same time each baseclass has its own level stat, so the logic is cleaner
@@ -748,14 +749,24 @@ bool Actor::ApplyKit(bool remove, ieDword baseclass, int diff)
 		}
 		assert(!clab.IsEmpty());
 		cls = baseclass;
+		levelid = GetLevelIdInClass(baseclass);
 	} else if (row) {
 		// bg2 kit abilities
-		// this doesn't do a kitMatchesClass like above, since it is handled when applying the clab below
-		// NOTE: a fighter/illusionist multiclass and illusionist/fighter dualclass would be good test cases, but they don't have any clabs
-		// NOTE: multiclass characters will get the clabs applied for all classes at once, so up to three times, since there are three level stats
-		// we can't rely on baseclass, since it will match only for combinations of fighters, mages and thieves.
-		// TODO: fix it — one application ensures no problems with stacking permanent effects
-		// NOTE: it can happen in normal play that we are leveling two classes at once, as some of the xp thresholds are shared (f/m at 250,000 xp).
+		// we can use baseclass, but the meaning of it is different for pcf_level
+		// IE_LEVEL corresponds to fighter
+		// IE_LEVEL2 corresponds to mage
+		// IE_LEVEL3 corresponds to thief
+		// if no baseclass, we are not in the pcf and need to work it out from the kit
+		// in this case it's a true kit application, so we don't need to worry about true class clabs
+		if (!pcflevel && baseclass) {
+			levelid = GetLevelIdInClass(baseclass);
+		} else if (baseclass == classesiwd2[ISFIGHTER]) {
+			levelid = IE_LEVEL;
+		} else if (baseclass == classesiwd2[ISMAGE]) {
+			levelid = IE_LEVEL2;
+		} else if (baseclass == classesiwd2[ISTHIEF]) {
+			levelid = IE_LEVEL3;
+		}
 		bool found = false;
 		std::map<int, ClassKits>::iterator clskit = class2kits.begin();
 		for (int cidx=0; clskit != class2kits.end(); clskit++, cidx++) {
@@ -764,6 +775,9 @@ bool Actor::ApplyKit(bool remove, ieDword baseclass, int diff)
 			for (int kidx=0; it != kits.end(); it++, kidx++) {
 				if (row == *it) {
 					kitclass = cidx;
+					if (!levelid) {
+						levelid = GetLevelIdInClass(kitclass);
+					}
 					clab = class2kits[cidx].clabs[kidx];
 					found = true;
 					clskit = --class2kits.end(); // break out of the outer loop too
@@ -786,15 +800,24 @@ bool Actor::ApplyKit(bool remove, ieDword baseclass, int diff)
 		for(unsigned int i=1;(i<(unsigned int) classcount) && (msk<=multiclass);i++) {
 			if (multiclass & msk) {
 				max = GetLevelInClass(i);
+				// get out of here if we aren't applying that class and it's not a dual class activation
+				if (levelid && GetLevelIdInClass(i) != levelid) {
+					// if the diff gets us to a dual class reactivation, we have to apply that too
+					// apparently dual class activation shouldn't remove the clab first as it is already done
+					// there is some very odd logic with FX_PERMANENT effects that means this is necessary,
+					// removal of spells that apply those try to just do the reverse of what the spell would do
+					if (diff && IsDualClassed() && BaseStats[levelid] - diff <= max) {
+						if (i == kitclass) {
+							ApplyClab(clab, max, 2, 0);
+						} else {
+							ApplyClab(class2kits[i].clab, max, 2, 0);
+						}
+					}
+					continue;
+				}
 				// don't apply/remove the old kit clab if the kit is disabled
 				if (i == kitclass && !IsKitInactive()) {
-					// in case of dc reactivation, we already removed the clabs on activation of new class
-					// so we shouldn't do it again as some of the effects could be permanent (oozemaster)
-					if (IsDualClassed()) {
-						ApplyClab(clab, max, 2, 0);
-					} else {
-						ApplyClab(clab, max, remove, diff);
-					}
+					ApplyClab(clab, max, remove, diff);
 				} else {
 					ApplyClab(class2kits[i].clab, max, remove, diff);
 				}
@@ -945,7 +968,7 @@ static void pcf_level (Actor *actor, ieDword oldValue, ieDword newValue, ieDword
 	actor->SetBase(IE_CLASSLEVELSUM,sum);
 	actor->SetupFist();
 	if (newValue!=oldValue) {
-		actor->ApplyKit(false, baseClass, newValue-oldValue);
+		actor->ApplyKit(false, baseClass, newValue-oldValue, true);
 	}
 	actor->GotLUFeedback = false;
 	if (third && actor->PCStats) {
@@ -10047,8 +10070,7 @@ Actor *Actor::CopySelf(bool mislead) const
 	return newActor;
 }
 
-//high level function, used by scripting
-ieDword Actor::GetLevelInClass(ieDword classid) const
+ieDword Actor::GetLevelIdInClass(ieDword classid) const
 {
 	if (creVersion == CREVersion::V2_2) {
 		//iwd2
@@ -10064,11 +10086,20 @@ ieDword Actor::GetLevelInClass(ieDword classid) const
 		classid=0;
 	}
 	//other, levelslotsbg starts at 0 classid
-	return GetClassLevel(levelslotsbg[classid]);
+	return GetClassLevelId(levelslotsbg[classid]);
 }
 
-//lowlevel internal function, isclass is NOT the class id, but an internal index
-ieDword Actor::GetClassLevel(const ieDword isClass) const
+//high level function, used by scripting
+ieDword Actor::GetLevelInClass(ieDword classid) const
+{
+	ieDword levelid = GetLevelIdInClass(classid);
+	if (!levelid) {
+		return 0;
+	}
+	return BaseStats[levelid];
+}
+
+ieDword Actor::GetClassLevelId(const ieDword isClass) const
 {
 	ieDword levelStat;
 
@@ -10099,6 +10130,16 @@ ieDword Actor::GetClassLevel(const ieDword isClass) const
 		//being searched for, return 0
 		if (IsDualInactive() && ((Modified[IE_MC_FLAGS] & MC_WAS_ANY) == (ieDword) mcwasflags[isClass]))
 			return 0;
+	}
+	return levelStat;
+}
+
+//lowlevel internal function, isclass is NOT the class id, but an internal index
+ieDword Actor::GetClassLevel(const ieDword isClass) const
+{
+	ieDword levelStat = GetClassLevelId(isClass);
+	if (!levelStat) {
+		return 0;
 	}
 	return BaseStats[levelStat];
 }

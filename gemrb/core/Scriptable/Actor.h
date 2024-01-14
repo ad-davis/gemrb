@@ -501,6 +501,10 @@ private:
 	void CreateDerivedStatsBG();
 	/* Set up all the missing stats on load time, or after level up */
 	void CreateDerivedStatsIWD2();
+	/* returns the stat index that stores the level for classid */
+	ieDword GetLevelIdInClass (const ieDword classid) const;
+	/* returns the stat index that stores the level for ISCLASS */
+	ieDword GetClassLevelId (const ieDword isclass) const;
 	/* Gets the given ISCLASS level */
 	ieDword GetClassLevel(ieDword isClass) const;
 	/* Returns true if the dual class is backwards */
@@ -716,7 +720,7 @@ public:
 	void SetRunFlags(ieDword flags);
 	bool IsRunning() const { return InternalFlags & IF_RUNFLAGS; }
 	/* applies the kit abilities, returns false if kit is not applicable */
-	bool ApplyKit(bool remove, ieDword baseclass=0, int diff=0);
+	bool ApplyKit(bool remove, ieDword baseclass=0, int diff=0, bool pcflevel=false);
 	/* applies the class abilities*/
 	void ApplyClab(const ResRef& clab, ieDword max, int remove, int diff);
 	/* calls InitQuickSlot in PCStatStruct */
