@@ -2289,7 +2289,7 @@ int GameScript::Detect(Scriptable *Sender, const Trigger *parameters)
 	params->objectParameter = parameters->objectParameter;
 	int see = SeeCore(Sender, params, 0);
 	params->objectParameter = nullptr;
-	params->Release();
+	//params->Release();
 	if (!see) {
 		return 0;
 	}
