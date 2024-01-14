@@ -890,7 +890,8 @@ void Map::DoStepForActor(Actor *actor, ieDword time) const
 		return;
 	}
 
-	if (!(actor->GetBase(IE_STATE_ID)&STATE_CANTMOVE) ) {
+	// FIXME: should this check be in DoStep?
+	if (!(actor->GetStat(IE_STATE_ID)&STATE_CANTMOVE) ) {
 		actor->DoStep(walkScale, time);
 	}
 }
