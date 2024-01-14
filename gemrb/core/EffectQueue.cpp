@@ -2187,7 +2187,7 @@ std::string EffectQueue::dump(bool print) const
 			return buffer;
 		}
 		const auto& opcodeName = Opcodes[fx.Opcode].Name ? Opcodes[fx.Opcode].Name : "unknown opcode";
-		AppendFormat(buffer, " {:2d}: 0x{:02x}: {} ({}, {}) Source:{}, School:{}, SecondaryType:{}\n", i++, fx.Opcode, opcodeName, fx.Parameter1, fx.Parameter2, fx.SourceRef, fx.PrimaryType, fx.SecondaryType);
+		AppendFormat(buffer, " {:2d}: 0x{:02x}: {} ({}, {}) Source:{}, School:{}, SecondaryType:{}, TimingMode:{}\n", i++, fx.Opcode, opcodeName, fx.Parameter1, fx.Parameter2, fx.SourceRef, fx.PrimaryType, fx.SecondaryType, fx.TimingMode);
 	}
 	if (print) Log(DEBUG, "EffectQueue", "{}", buffer);
 	return buffer;
