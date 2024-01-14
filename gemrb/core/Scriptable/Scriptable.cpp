@@ -245,7 +245,7 @@ void Scriptable::TickScripting()
 	}
 
 	// states that pause scripts
-	if ((actorState & (STATE_HELPLESS|STATE_PETRIFIED|STATE_FROZEN)) || actorAvatarRemoved) {
+	if ((actorState & (STATE_HELPLESS|STATE_SLEEP|STATE_PETRIFIED|STATE_FROZEN)) || actorAvatarRemoved) {
 		needsUpdate = false;
 	}
 
