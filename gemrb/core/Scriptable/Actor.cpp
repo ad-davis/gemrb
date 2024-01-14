@@ -10610,17 +10610,16 @@ bool Actor::TryToHide()
 
 	// check for disabled dualclassed thieves (not sure if we need it)
 
-	bool seen = SeeAnyOne(true, true);
+	if (SeeAnyOne(true, true)) {
+		HideFailed(this, 1);
+		return false;
+	}
 
 	stat_t skill;
 	if (core->HasFeature(GFFlags::HAS_HIDE_IN_SHADOWS)) {
 		skill = (GetStat(IE_HIDEINSHADOWS) + GetStat(IE_STEALTH))/2;
 	} else {
 		skill = GetStat(IE_STEALTH);
-	}
-
-	if (seen) {
-		HideFailed(this, 1);
 	}
 
 	if (third) {
