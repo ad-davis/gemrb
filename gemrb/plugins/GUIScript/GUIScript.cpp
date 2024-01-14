@@ -12415,11 +12415,11 @@ static PyObject* GemRB_GetCombatDetails(PyObject * /*self*/, PyObject* args)
 
 	PyObject *tohits = PyDict_New();
 	PyDict_SetItemString(tohits, "Total", PyLong_FromLong(actor->ToHit.GetTotal()));
-	PyDict_SetItemString(tohits, "Base", PyLong_FromLong(actor->ToHit.GetBase()));
+	PyDict_SetItemString(tohits, "Base", PyLong_FromLong(actor->ToHit.GetBase() + actor->ToHit.GetFxBonus()));
 	PyDict_SetItemString(tohits, "Armor", PyLong_FromLong(actor->ToHit.GetArmorBonus()));
 	PyDict_SetItemString(tohits, "Shield", PyLong_FromLong(actor->ToHit.GetShieldBonus()));
 	PyDict_SetItemString(tohits, "Proficiency", PyLong_FromLong(actor->ToHit.GetProficiencyBonus()));
-	PyDict_SetItemString(tohits, "Generic", PyLong_FromLong(actor->ToHit.GetGenericBonus() + actor->ToHit.GetFxBonus()));
+	PyDict_SetItemString(tohits, "Generic", PyLong_FromLong(actor->ToHit.GetGenericBonus()));
 	PyDict_SetItemString(tohits, "Ability", PyLong_FromLong(actor->ToHit.GetAbilityBonus()));
 	PyDict_SetItemString(tohits, "Weapon", PyLong_FromLong(actor->ToHit.GetWeaponBonus()));
 	PyDict_SetItemString(dict, "ToHitStats", tohits);
