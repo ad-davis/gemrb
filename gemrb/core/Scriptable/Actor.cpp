@@ -4011,16 +4011,18 @@ void Actor::DialogInterrupt() const
 
 void Actor::GetHit(int damage, bool killingBlow)
 {
-	bool asleep = GetSafeStat(IE_STATE_ID) & STATE_SLEEP;
-	if (!asleep && !Immobile() && !(InternalFlags & IF_REALLYDIED) && !killingBlow) {
-		SetStance( IE_ANI_DAMAGE );
+	if (!(GetStance()==IE_ANI_TWITCH || GetStance()==IE_ANI_SLEEP) && !Immobile() && !(InternalFlags & IF_REALLYDIED) && !killingBlow) {
+		SetStance(IE_ANI_DAMAGE);
 		VerbalConstant(VB_DAMAGE);
 	}
-
+	bool asleep = GetSafeStat(IE_STATE_ID) & STATE_SLEEP;
 	if (asleep) {
 		if (GetSafeStat(IE_EXTSTATE_ID)&EXTSTATE_NO_WAKEUP || HasSpellState(SS_NOAWAKE)) {
 			return;
 		}
+		// this will make the actor stand up
+		SetStance(IE_ANI_DAMAGE);
+		VerbalConstant(VB_DAMAGE);
 		Effect *fx = EffectQueue::CreateEffect(fx_cure_sleep_ref, 0, 0, FX_DURATION_INSTANT_PERMANENT);
 		fxqueue.AddEffect(fx);
 	}
