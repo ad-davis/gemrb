@@ -256,6 +256,12 @@ struct WildSurgeSpellMods {
 	int saving_throw_mod;
 };
 
+enum AttackType {
+	ATTACK_NONE = 0,
+	ATTACK_MAIN = 1,
+	ATTACK_OFFH = 2,
+};
+
 using ActionButtonRow = std::array<ieByte, GUIBT_COUNT>;
 struct ActionButtonRow2 {
 	ActionButtonRow buttons;
@@ -476,6 +482,7 @@ private:
 	ieDword disarmTrap = 0;
 	ieDword InTrap = 0;
 	char AttackStance = 0;
+	enum AttackType performingAttack = ATTACK_NONE;
 	/*The projectile bringing the current attack*/
 	Projectile* attackProjectile = nullptr;
 	tick_t TicksLastRested = 0;
@@ -637,11 +644,6 @@ public:
 	/** Gets the Portrait */
 	Holder<Sprite2D> CopyPortrait(int which) const;
 
-	/** Gets the attack projectile */
-	Projectile* GetAttackProjectile()
-	{
-		return attackProjectile;
-	}
 	void SetName(String str, unsigned char type);
 	void SetName(ieStrRef strref, unsigned char type);
 	/* Returns by how much movement speed should be divided to account for loot weight */
@@ -781,8 +783,10 @@ public:
 	/* get the current hit bonus */
 	bool GetCombatDetails(int& tohit, bool leftorright, \
 		int& DamageBonus, int& speed, int& CriticalBonus, int& style, const Actor* target);
-	/* performs attack against target */
+	/* prepares attack against target */
 	void PerformAttack(ieDword gameTime);
+	/* finishes attack against target */
+	void FinishAttack();
 	/* returns the adjusted weapon range, since items have odd values stored */
 	unsigned int GetWeaponRange(bool leftOrRight) const;
 	/* filter out any damage reduction that is cancelled by high weapon enchantment and return the resulting resistance */

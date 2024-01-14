@@ -373,7 +373,6 @@ Actor::~Actor(void)
 		delete vvc;
 	}
 
-	delete attackProjectile;
 	delete polymorphCache;
 
 	free(spellStates);
@@ -6795,8 +6794,6 @@ static void ApplyCriticalEffect(Actor* actor, Actor* target, const WeaponInfo& w
 
 void Actor::PerformAttack(ieDword gameTime)
 {
-	static int attackRollDiceSides = gamedata->GetMiscRule("ATTACK_ROLL_DICE_SIDES");
-
 	// don't let imprisoned or otherwise missing actors continue their attack
 	if (Modified[IE_AVATARREMOVAL]) return;
 
@@ -6850,17 +6847,7 @@ void Actor::PerformAttack(ieDword gameTime)
 		return;
 	}
 
-	// also start CombatCounter if a pc is attacked
-	if (!InParty && target->IsPartyMember()) {
-		core->GetGame()->PartyAttack = true;
-	}
-
-	assert(!(target->IsInvisibleTo((Scriptable *) this) || (target->GetSafeStat(IE_STATE_ID) & STATE_DEAD)));
-	target->AttackedBy(this);
-	ieDword state = GetStat(IE_STATE_ID);
-	if (state&STATE_BERSERK) {
-		BaseStats[IE_CHECKFORBERSERK]=3;
-	}
+	if ((target->IsInvisibleTo((Scriptable *) this) || (target->GetSafeStat(IE_STATE_ID) & STATE_DEAD))) return;
 
 	Log(DEBUG, "Actor", "Performattack for {}, target is: {}", fmt::WideToChar{GetShortName()}, fmt::WideToChar{target->GetShortName()});
 
@@ -6892,10 +6879,6 @@ void Actor::PerformAttack(ieDword gameTime)
 	//will return false on any errors (eg, unusable weapon)
 	if (!GetCombatDetails(tohit, usedLeftHand, DamageBonus, speed, CriticalBonus, style, target)) {
 		return;
-	}
-
-	if (PCStats) {
-		PCStats->RegisterFavourite(weaponInfo[usedLeftHand && IsDualWielding()].item->Name, FAV_WEAPON);
 	}
 
 	//if this is the first call of the round, we need to update next attack
@@ -6931,7 +6914,83 @@ void Actor::PerformAttack(ieDword gameTime)
 	nextattack += (core->Time.round_size/attacksperround);
 	lastattack = gameTime;
 
+	performingAttack = usedLeftHand ? ATTACK_OFFH : ATTACK_MAIN;
+}
+
+void Actor::FinishAttack() {
+	static int attackRollDiceSides = gamedata->GetMiscRule("ATTACK_ROLL_DICE_SIDES");
 	std::string buffer;
+	bool usedLeftHand;
+	switch (performingAttack) {
+		case ATTACK_NONE:
+			return;
+		case ATTACK_OFFH:
+			usedLeftHand = true;
+			break;
+		case ATTACK_MAIN:
+		default:
+			usedLeftHand = false;
+			break;
+	}
+
+	// reset variable
+	performingAttack = ATTACK_NONE;
+
+	// Repetition of checks from PerformAttack
+
+	// don't let imprisoned or otherwise missing actors continue their attack
+	if (Modified[IE_AVATARREMOVAL]) return;
+
+	if (IsDead()) {
+		// this should be avoided by the AF_ALIVE check by all the calling actions
+		Log(ERROR, "Actor", "Attack by dead actor!");
+		return;
+	}
+
+	if (!LastTarget) {
+		Log(ERROR, "Actor", "Attack without valid target ID!");
+		return;
+	}
+	//get target
+	Actor *target = area->GetActorByGlobalID(LastTarget);
+	if (!target) {
+		Log(WARNING, "Actor", "Attack without valid target!");
+		return;
+	}
+
+	// also start CombatCounter if a pc is attacked
+	if (!InParty && target->IsPartyMember()) {
+		core->GetGame()->PartyAttack = true;
+	}
+
+	if ((target->IsInvisibleTo((Scriptable *) this) || (target->GetSafeStat(IE_STATE_ID) & STATE_DEAD))) return;
+	target->AttackedBy(this);
+	ieDword state = GetStat(IE_STATE_ID);
+	if (state&STATE_BERSERK) {
+		BaseStats[IE_CHECKFORBERSERK]=3;
+	}
+
+	WeaponInfo& wi = weaponInfo[usedLeftHand];
+	if (!wi.extHeader && usedLeftHand) {
+		// nothing in left hand, use right
+		// this is an offhand attack though, so leave
+		return;
+	}
+
+	const ITMExtHeader* hittingheader = wi.extHeader;
+	int tohit;
+	int DamageBonus, CriticalBonus;
+	int speed, style;
+
+	//will return false on any errors (eg, unusable weapon)
+	if (!GetCombatDetails(tohit, usedLeftHand, DamageBonus, speed, CriticalBonus, style, target)) {
+		return;
+	}
+
+	if (PCStats) {
+		PCStats->RegisterFavourite(weaponInfo[usedLeftHand && IsDualWielding()].item->Name, FAV_WEAPON);
+	}
+
 	//debug messages
 	if (usedLeftHand && IsDualWielding()) {
 		buffer.append("(Off) ");
@@ -7319,16 +7378,11 @@ void Actor::UpdateActorState()
 	}
 
 	const auto& anim = currentStance.anim;
-	if (attackProjectile) {
-		// default so that the projectile fires if we dont have an animation for some reason
+	if (performingAttack) {
 		unsigned int frameCount = anim.empty() ? 9 : anim[0].first->GetFrameCount();
 		unsigned int currentFrame = anim.empty() ? 8 : anim[0].first->GetCurrentFrameIndex();
-
-		//IN BG1 and BG2, this is at the ninth frame... (depends on the combat bitmap, which we don't handle yet)
-		// however some critters don't have that long animations (eg. squirrel 0xC400)
 		if ((frameCount > 8 && currentFrame == 8) || (frameCount <= 8 && currentFrame == frameCount/2)) {
-			GetCurrentArea()->AddProjectile(attackProjectile, Pos, LastTarget, false);
-			attackProjectile = NULL;
+			FinishAttack();
 		}
 	}
 	
@@ -9328,7 +9382,7 @@ bool Actor::UseItem(ieDword slot, ieDword header, const Scriptable* target, ieDw
 			// ignore timestop
 			pro->TFlags |= PTF_TIMELESS;
 		}
-		attackProjectile = pro;
+		GetCurrentArea()->AddProjectile(pro, Pos, tar->GetGlobalID(), false);
 	} else { // launch it now as we are not attacking
 		GetCurrentArea()->AddProjectile(pro, Pos, tar->GetGlobalID(), false);
 	}
