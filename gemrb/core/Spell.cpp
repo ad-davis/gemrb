@@ -318,7 +318,11 @@ unsigned int Spell::GetCastingDistance(Scriptable *Sender) const
 	if (seh->Target==TARGET_DEAD) {
 		return 0xffffffff;
 	}
-	return std::min((unsigned int) seh->Range, limit);
+	if (Flags & SF_NO_LOS) {
+		return seh->Range;
+	} else {
+		return std::min((unsigned int) seh->Range, limit);
+	}
 }
 
 // checks if any of the extended headers contains fx_damage
