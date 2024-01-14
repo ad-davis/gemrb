@@ -37,6 +37,7 @@
 
 #define GEMRB_STRING "GemRB v" VERSION_GEMRB
 #define PACKAGE "GemRB"
+#define PACKAGE_LOWER "gemrb"
 
 #include "RGBAColor.h"
 #include "errors.h"

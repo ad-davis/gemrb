@@ -98,34 +98,68 @@ if (config->Open(path) \
 
 		ATTEMPT_INIT;
 
-#ifdef SYSCONF_DIR
-		PathJoinExt( path, SYSCONF_DIR, name, "cfg" );
-		ATTEMPT_INIT
-#endif
-
 #ifndef ANDROID
-		// Now try ~/.gemrb folder
+		// Now try ~/.name folder
 		CopyHomePath(datadir, _MAX_PATH);
-		char confpath[_MAX_PATH] = ".";
-		strcat(confpath, name);
-		PathJoin(datadir, datadir, confpath, nullptr);
+		char nameconfpath[_MAX_PATH] = ".";
+		strcat(nameconfpath, name);
+		PathJoin(datadir, datadir, nameconfpath, nullptr);
 		PathJoinExt( path, datadir, name, "cfg" );
 		ATTEMPT_INIT;
 #endif
 		// Don't try with default binary name if we have tried it already
 		if (strcmp( name, PACKAGE ) != 0) {
+			// try ~/.name/GemRB.conf
 			PathJoinExt( path, datadir, PACKAGE, "cfg" );
-
 			ATTEMPT_INIT;
+		}
+		if (strcmp( name, PACKAGE_LOWER ) != 0) {
+			// try ~/.name/gemrb.conf
+			PathJoinExt( path, datadir, PACKAGE_LOWER, "cfg" );
+			ATTEMPT_INIT;
+
+			// try ~/.gemrb/name.conf
+			CopyHomePath(datadir, _MAX_PATH);
+			char gemconfpath[_MAX_PATH] = ".";
+			strcat(gemconfpath, PACKAGE_LOWER);
+			PathJoin(datadir, datadir, gemconfpath, NULL);
+			PathJoinExt( path, datadir, name, "cfg" );
+			ATTEMPT_INIT;
+
+			// try ~/.gemrb/GemRB.conf
+			PathJoinExt( path, datadir, PACKAGE, "cfg" );
+			ATTEMPT_INIT;
+
+			// try ~/.gemrb/gemrb.conf
+			PathJoinExt( path, datadir, PACKAGE_LOWER, "cfg" );
+			ATTEMPT_INIT;
+		}
 
 #ifdef SYSCONF_DIR
+		PathJoinExt( path, SYSCONF_DIR, name, "cfg" );
+		ATTEMPT_INIT
+
+		if (strcmp( name, PACKAGE ) != 0) {
 			PathJoinExt( path, SYSCONF_DIR, PACKAGE, "cfg" );
 			ATTEMPT_INIT;
-#endif
 		}
+		if (strcmp( name, PACKAGE_LOWER ) != 0) {
+			PathJoinExt( path, SYSCONF_DIR, PACKAGE_LOWER, "cfg" );
+			ATTEMPT_INIT;
+		}
+#endif
+
 		// if all else has failed try current directory
-		PathJoinExt(path, "./", PACKAGE, "cfg");
+		PathJoinExt(path, "./", name, "cfg");
 		ATTEMPT_INIT;
+		if (strcmp( name, PACKAGE ) != 0) {
+			PathJoinExt(path, "./", PACKAGE, "cfg");
+			ATTEMPT_INIT;
+		}
+		if (strcmp( name, PACKAGE_LOWER ) != 0) {
+			PathJoinExt( path, SYSCONF_DIR, PACKAGE_LOWER, "cfg" );
+			ATTEMPT_INIT;
+		}
 	}
 #undef ATTEMPT_INIT
 done:
