@@ -1673,9 +1673,14 @@ void Inventory::BreakItemSlot(ieDword slot)
 	SetSlotItemRes(newItem, slot, 0,0,0);
 	ieDword slotEffects = core->QuerySlotEffects(slot);
 	if (slotEffects == SLOT_EFFECT_MELEE) {
-		EquipBestWeapon(EQUIP_MELEE);
+		EquipBestWeapon(EQUIP_MELEE | EQUIP_FORCE);
 	} else if (slotEffects == SLOT_EFFECT_MISSILE) {
-		EquipBestWeapon(EQUIP_RANGED);
+		EquipBestWeapon(EQUIP_RANGED | EQUIP_FORCE);
+	} else if (slotEffects == SLOT_EFFECT_MAGIC) {
+		EquipBestWeapon(EQUIP_MELEE | EQUIP_RANGED | EQUIP_FORCE);
+	} else {
+		// don't try reequip, just remove the effect
+		KillSlot(slot, false);
 	}
 }
 
@@ -1731,19 +1736,20 @@ bool Inventory::CanEquipRanged(int& maxDamage, ieDword& bestSlot) const
 
 void Inventory::EquipBestWeapon(int flags)
 {
+	bool force = flags & EQUIP_FORCE;
 	int damage = -1;
 	ieDword bestSlot = SLOT_FIST;
 	const ITMExtHeader *header;
 	CREItem *Slot;
 
 	//cannot change equipment when holding magic weapons
-	if (Equipped == SLOT_MAGIC - SLOT_MELEE && !(flags & EQUIP_FORCE)) {
+	if (Equipped == SLOT_MAGIC - SLOT_MELEE && !force) {
 		return;
 	}
 
 	if (flags&EQUIP_RANGED) {
 		CanEquipRanged(damage, bestSlot);
-		if (int(bestSlot) == SLOT_FIST) return;
+		if (int(bestSlot) == SLOT_FIST && !force) return;
 	}
 
 	if (flags&EQUIP_MELEE) {
@@ -1751,7 +1757,7 @@ void Inventory::EquipBestWeapon(int flags)
 			const Item *itm = GetItemPointer(i, Slot);
 			if (!itm) continue;
 			//cannot change equipment when holding a cursed weapon
-			if (Slot->Flags & IE_INV_ITEM_CURSED) {
+			if (Slot->Flags & IE_INV_ITEM_CURSED && !force) {
 				return;
 			}
 			//the Slot flag is enough for this
