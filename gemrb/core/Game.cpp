@@ -350,6 +350,9 @@ int Game::LeaveParty (Actor* actor)
 
 	SelectActor(actor, false, SELECT_NORMAL);
 	int slot = InParty( actor );
+	if (PM_YES && slot == 0) {
+		core->GetGUIScriptEngine()->RunFunction("GUIWORLD", "DeathWindow");
+	}
 	if (slot < 0) {
 		return slot;
 	}
