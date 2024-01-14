@@ -7102,7 +7102,10 @@ void Actor::PerformAttack(ieDword gameTime)
 		buffer.append("[Hit]");
 		Log(COMBAT, "Attack", "{}", buffer);
 	}
-	UseItem(wi.slot, wi.wflags&WEAPON_RANGED?-2:-1, target, (critical?UI_CRITICAL:0)|UI_NOAURA, damage);
+	// don't apply effects if target is immune
+	if (damage != 0) {
+		UseItem(wi.slot, wi.wflags&WEAPON_RANGED?-2:-1, target, (critical?UI_CRITICAL:0)|UI_NOAURA, damage);
+	}
 	ResetState();
 }
 
