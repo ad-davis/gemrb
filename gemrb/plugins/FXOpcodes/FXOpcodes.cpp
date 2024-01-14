@@ -7031,9 +7031,10 @@ int fx_create_item_days (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	target->inventory.AddSlotItemRes( fx->Resource, SLOT_ONLYINVENTORY, fx->Parameter1, fx->Parameter3, fx->Parameter4 );
 
 	int ret = MaybeTransformTo(fx_remove_inventory_item_ref, fx);
-	// duration needs recalculating for days
-	// no idea if this multiplier is ok
-	if (ret == FX_APPLIED) fx->Duration += (fx->Duration - core->GetGame()->GameTime) * core->Time.day_sec / 3;
+	if (ret == FX_APPLIED) {
+		// duration needs recalculating for days, it was originally prepared for seconds
+		fx->Duration = ((fx->Duration - core->GetGame()->GameTime) * core->Time.day_size) + core->GetGame()->GameTime;
+	}
 	return ret;
 }
 
