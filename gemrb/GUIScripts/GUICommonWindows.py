@@ -848,7 +848,8 @@ def ActionRightPressed ():
 	pc = GemRB.GameGetFirstSelectedActor ()
 	TopIndex = GemRB.GetVar ("TopIndex")
 	Type = GemRB.GetVar ("Type")
-	print("Type:", Type)
+	Max = -1
+	#print("Type:", Type)
 	#Type is a bitfield if there is no level given
 	#This is to make sure cleric/mages get all spells listed
 	if GemRB.GetVar ("ActionLevel") == UAW_ALLMAGE:
@@ -856,15 +857,15 @@ def ActionRightPressed ():
 			Max = len(Spellbook.GetKnownSpells (pc, IE_SPELL_TYPE_PRIEST) + Spellbook.GetKnownSpells (pc, IE_SPELL_TYPE_WIZARD))
 		else:
 			Max = GemRB.GetKnownSpellsCount (pc, Type, -1) # this can handle only one type at a time
-	else:
+	elif level != UAW_EQUIPMENT: # any other types we don't want to check memorized for?
 		Max = GemRB.GetMemorizedSpellsCount(pc, Type, -1, 1)
-	print("Max:", Max)
+	#print("Max:", Max)
 	TopIndex += 10
 	if TopIndex > Max - 10:
 		if Max>10:
 			if TopIndex > Max:
 				TopIndex = Max - 10
-		else:
+		elif Max >= 0:
 			TopIndex = 0
 	GemRB.SetVar ("TopIndex", TopIndex)
 	UpdateActionsWindow ()

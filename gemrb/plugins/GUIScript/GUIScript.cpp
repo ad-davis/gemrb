@@ -10651,29 +10651,52 @@ static PyObject* GemRB_Window_SetupEquipmentIcons(PyObject* self, PyObject* args
 	GET_ACTOR_GLOBAL();
 
 	// -1 because of the left/right scroll icons
-	static std::vector<ItemExtHeader> ItemArray(GUIBT_COUNT);
+	std::vector<ItemExtHeader> ItemArray(GUIBT_COUNT);
 	bool more = actor->inventory.GetEquipmentInfo(ItemArray, Start, GUIBT_COUNT - (Start ? 1 : 0));
-	int i;
-	if (Start||more) {
-		Button* btn = GetControl<Button>(Offset, win);
-		if (!btn || btn->ControlType != IE_GUI_BUTTON) {
-			return RuntimeError("Cannot set action button!\n");
+
+	// set up scrolling buttons
+	for (auto btnType : {ACT_LEFT, ACT_RIGHT}) {
+		bool shouldDisplay;
+		int pos, key;
+		if (btnType == ACT_LEFT) {
+			shouldDisplay = Start;
+			pos = Offset;
+			key = 1;
+		} else {
+			shouldDisplay = more;
+			pos = Offset+GUIBT_COUNT-1;
+			key = GUIBT_COUNT;
 		}
-		const PyObject *ret = SetActionIcon(btn, dict, ACT_LEFT, 0);
-		if (!ret) {
-			return NULL;
+		Button* btn = GetControl<Button>(pos, win);
+		if (!btn || btn->ControlType != IE_GUI_BUTTON) {
+			return RuntimeError("Cannot set scroll action button!\n");
+		}
+		if (shouldDisplay) {
+			const PyObject *ret = SetActionIcon(btn, dict, btnType, key);
+			if (!ret) {
+				return NULL;
+			}
+			btn->SetState(Button::UNPRESSED);
+		} else if (Start||more) {
+			// disable the button
+			btn->SetImage(BUTTON_IMAGE_NONE, NULL);
+			btn->SetAction(nullptr, Control::Click, GEM_MB_ACTION, 0, 1);
+			btn->SetAction(nullptr, Control::Click, GEM_MB_MENU, 0, 1);
+			btn->SetTooltip(L"");
 		}
 	}
+
 	// pst doesn't have a file, but uses the float window instead any way
 	auto bam = gamedata->GetFactoryResourceAs<const AnimationFactory>(GUIResRef[9], IE_BAM_CLASS_ID);
 	if (!bam) {
 		return RuntimeError("guibtbut BAM not found");
 	}
 
-	for (i=0;i<GUIBT_COUNT-(more?1:0);i++) {
-		Button* btn = GetControl<Button>(i+Offset+(Start?1:0), win);
+	// subtract 2 for right and left buttons
+	for (int i=0;i<GUIBT_COUNT-(Start||more?2:0);i++) {
+		Button* btn = GetControl<Button>(Offset+i+(Start||more?1:0), win);
 		if (!btn || btn->ControlType != IE_GUI_BUTTON) {
-			Log(ERROR, "GUIScript", "Button {} not found!", i + Offset + (Start ? 1 : 0));
+			Log(ERROR, "GUIScript", "Button {} not found!", Offset+i+(Start||more?1:0));
 			continue;
 		}
 		PyObject *Function = PyDict_GetItemString(dict, "EquipmentPressed");
@@ -10692,8 +10715,9 @@ static PyObject* GemRB_Window_SetupEquipmentIcons(PyObject* self, PyObject* args
 		}
 
 		if (!Picture) {
-			btn->SetState(Button::DISABLED);
-			btn->SetFlags(IE_GUI_BUTTON_NO_IMAGE, BitOp::SET);
+			btn->SetImage(BUTTON_IMAGE_NONE, NULL);
+			btn->SetAction(nullptr, Control::Click, GEM_MB_ACTION, 0, 1);
+			btn->SetAction(nullptr, Control::Click, GEM_MB_MENU, 0, 1);
 			btn->SetTooltip(L"");
 		} else {
 			SetButtonCycle(bam, btn, 0, Button::UNPRESSED);
@@ -10711,17 +10735,6 @@ static PyObject* GemRB_Window_SetupEquipmentIcons(PyObject* self, PyObject* args
 			} else if (!item.Charges && item.ChargeDepletion == CHG_NONE) {
 				btn->SetState(Button::DISABLED);
 			}
-		}
-	}
-
-	if (more) {
-		Button* btn = GetControl<Button>(i+Offset+1, win);
-		if (!btn || btn->ControlType != IE_GUI_BUTTON) {
-			return RuntimeError("Cannot set action button!\n");
-		}
-		const PyObject *ret = SetActionIcon(btn, dict, ACT_RIGHT, i + 1);
-		if (!ret) {
-			return NULL;
 		}
 	}
 
