@@ -6418,7 +6418,7 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_HELPLESS:
 		// StateCheck(Myself, STATE_HELPLESS)
-		condition = (bool)(target->GetSafeStat(IE_STATE_ID) & STATE_CANTMOVE);
+		condition = (bool)(target->GetSafeStat(IE_STATE_ID) & (STATE_MINDLESS|STATE_STUNNED));
 		break;
 	case COND_POISONED:
 		// StateCheck(Myself, STATE_POISONED)
