@@ -2453,7 +2453,12 @@ Actor::stat_t Actor::ClampStat(unsigned int StatIndex, stat_t Value) const
 	}
 
 	if ((signed) Value < -100) {
-		Value = (stat_t) -100;
+		// workaround for a bug on character creation where hitpoints overflow
+		if (core->GetGame()->GameTime <= 1 && StatIndex==IE_HITPOINTS) {
+			Value = BaseStats[IE_MAXHITPOINTS];
+		} else {
+			Value = (stat_t) -100;
+		}
 	} else {
 		if (maximum_values[StatIndex] > 0) {
 			if ((signed) Value > 0 && Value > maximum_values[StatIndex]) {
