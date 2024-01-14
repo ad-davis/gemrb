@@ -4892,8 +4892,8 @@ int fx_replace_creature (Scriptable* Owner, Actor* target, Effect *fx)
 	default:;
 	}
 	// don't unsummon replacement creatures
-	// the monster should appear near the effect position
-	core->SummonCreature(fx->Resource, fx->Resource2, Owner, nullptr, fx->Pos, EAM_DEFAULT, -1, nullptr, false);
+	// the monster should appear over the target
+	core->SummonCreature(fx->Resource, fx->Resource2, Owner, nullptr, target->Pos, EAM_DEFAULT, -1, nullptr, false);
 	return FX_NOT_APPLIED;
 }
 
