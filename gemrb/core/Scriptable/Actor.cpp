@@ -9536,11 +9536,11 @@ void Actor::InitButtons(ieDword cls, bool forced) const
 		return;
 	}
 
-	ActionButtonRow& myrow = DefaultButtons;
+	ActionButtonRow myrow = DefaultButtons;
 	if (cls >= (ieDword) classcount) {
 		for (const auto& otherButtons : OtherGUIButtons) {
 			if (cls == otherButtons.clss) {
-				myrow  = otherButtons.buttons;
+				myrow = otherButtons.buttons;
 				break;
 			}
 		}

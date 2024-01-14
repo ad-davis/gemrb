@@ -1995,6 +1995,7 @@ Actor *Interface::SummonCreature(const ResRef& resource, const ResRef& animRes, 
 		}
 
 		map->AddActor(ab, true);
+		Log(DEBUG, "Map", "Summoned creature with id {}", ab->GetGlobalID());
 		ab->SetPosition(position, true, 0, 0, ab->circleSize);
 		ab->RefreshEffects();
 
