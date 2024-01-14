@@ -1230,8 +1230,8 @@ int Scriptable::CastSpellPoint(const Point& target, bool deplete, bool instant, 
 	}
 	if (!instant) {
 		SpellcraftCheck(actor, SpellResRef);
-		if (actor) actor->CureInvisibility();
 	}
+	if (actor) actor->CureInvisibility();
 	return SpellCast(instant, nullptr, level);
 }
 
@@ -1272,9 +1272,9 @@ int Scriptable::CastSpell(Scriptable* target, bool deplete, bool instant, bool n
 
 	if (!instant) {
 		SpellcraftCheck(actor, SpellResRef);
-		// self-targetted spells that are not hostile maintain invisibility
-		if (actor && target != this) actor->CureInvisibility();
 	}
+	// self-targeted spells that are not hostile maintain invisibility
+	if (actor && target != this) actor->CureInvisibility();
 	return SpellCast(instant, target, level);
 }
 
