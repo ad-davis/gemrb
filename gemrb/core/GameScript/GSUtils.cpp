@@ -1439,7 +1439,7 @@ void MoveToObjectCore(Scriptable *Sender, Action *parameters, ieDword flags, boo
 	if (target->Type == ST_TRIGGER && static_cast<const InfoPoint*>(target)->GetUsePoint()) {
 		dest = static_cast<const InfoPoint*>(target)->UsePoint;
 	}
-	if (untilsee && CanSee(actor, target, true, 0, true)) {
+	if (untilsee && CanSee(actor, target, true, 0)) {
 		Sender->LastSeen = target->GetGlobalID();
 		Sender->ReleaseCurrentAction();
 		actor->ClearPath(true);

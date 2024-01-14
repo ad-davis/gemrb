@@ -7639,7 +7639,7 @@ void Actor::ApplyModal(const ResRef& modalSpell)
 		// target actors around us manually
 		// used for iwd2 songs, as the spells don't use an aoe projectile
 		if (!area) return;
-		std::vector<Actor *> neighbours = area->GetAllActorsInRadius(Pos, GA_NO_LOS|GA_NO_DEAD|GA_NO_UNSCHEDULED, GetSafeStat(IE_VISUALRANGE)/2);
+		std::vector<Actor *> neighbours = area->GetAllActorsInRadius(Pos, GA_NO_LOS|GA_NO_DEAD|GA_NO_UNSCHEDULED, VOODOO_VISUAL_RANGE/2);
 		for (const auto& neighbour : neighbours) {
 			core->ApplySpell(modalSpell, neighbour, this, level);
 		}
@@ -10614,20 +10614,21 @@ bool Actor::SeeAnyOne(bool enemy, bool seenby) const
 		}
 	}
 
-	std::vector<Actor *> visActors = area->GetAllActorsInRadius(Pos, flag, seenby ? VOODOO_VISUAL_RANGE / 2 : GetSafeStat(IE_VISUALRANGE) / 2, this);
-	bool seeEnemy = false;
+	std::vector<Actor *> visActors = area->GetAllActorsInRadius(Pos, flag, seenby ? VOODOO_VISUAL_RANGE : GetSafeStat(IE_VISUALRANGE), this);
 
 	//we need to look harder if we look for seenby anyone
 	for (const Actor *toCheck : visActors) {
 		if (seenby) {
-			if (WithinRange(toCheck, Pos, toCheck->GetStat(IE_VISUALRANGE) / 2)) {
-				seeEnemy = true;
+			if (CanSee(toCheck, this, true, 0)) {
+				return true;
 			}
 		} else {
-			seeEnemy = true;
+			if (CanSee(this, toCheck, true, 0)) {
+				return true;
+			}
 		}
 	}
-	return seeEnemy;
+	return false;
 }
 
 bool Actor::TryToHide()
@@ -10704,7 +10705,7 @@ bool Actor::TryToHideIWD2()
 	} else if (ea <= EA_GOODCUTOFF) {
 		flags |= GA_NO_ALLY;
 	}
-	std::vector<Actor *> neighbours = area->GetAllActorsInRadius(Pos, flags, Modified[IE_VISUALRANGE] / 2, this);
+	std::vector<Actor *> neighbours = area->GetAllActorsInRadius(Pos, flags, Modified[IE_VISUALRANGE], this);
 	ieDword roll = LuckyRoll(1, 20, GetArmorSkillPenalty(0));
 	int targetDC = 0;
 
@@ -10715,7 +10716,7 @@ bool Actor::TryToHideIWD2()
 			continue;
 		}
 		// we need to do an additional visual range check from the perspective of the observer
-		if (!WithinRange(toCheck, Pos, toCheck->GetStat(IE_VISUALRANGE) / 2)) {
+		if (!CanSee(toCheck, this, true, 0)) {
 			continue;
 		}
 		// IE_CLASSLEVELSUM is set for all cres in iwd2 and use here was confirmed by RE
