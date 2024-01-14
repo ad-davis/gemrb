@@ -1838,7 +1838,8 @@ void Highlightable::DetectTrap(int skill, ieDword actorID)
 		displaymsg->DisplayRollStringName(ieStrRef::ROLL13, GUIColors::LIGHTGREY, detective, skill - bonus, TrapDetectionDiff, bonus);
 		check = (skill + bonus) * 7;
 	} else {
-		check = skill/2 + core->Roll(1, skill/2, 0);
+		int roll = detective->LuckyRoll(1, 10, 0);
+		check = skill + roll - 1;
 	}
 	if (check > TrapDetectionDiff) {
 		SetTrapDetected(1); //probably could be set to the player #?
