@@ -204,7 +204,6 @@ def OpenSpellsWindow (actor, table, level, diff, kit=0, gen=0, recommend=True, b
 		if SpellsSelectPointsLeft[i] <= 0:
 			continue
 
-		SpellsSelectPointsLeft[i] = SpellLearnTable.GetValue (str(level), str(i+1), GTV_INT)
 		# luckily the bonus applies both to learning and memorization
 		if IWD2 and chargen:
 			BonusPoints[i] = BonusSpellTable.GetValue (str(CastingStatValue), str(i+1), GTV_INT)
