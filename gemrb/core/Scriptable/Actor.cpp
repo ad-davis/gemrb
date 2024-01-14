@@ -5357,24 +5357,27 @@ void Actor::DestroySelf()
 
 bool Actor::CheckOnDeath()
 {
+	bool ret = false;
+	if (InternalFlags&IF_JUSTDIED || CurrentAction || GetNextAction() || GetStance() == IE_ANI_DIE) {
+		return ret; //actor is currently dying, let him die first
+	}
+	// if we are in cleanup, always want to return true even if other checks fail
+	// we may still want to run some of the below logic though
 	if (InternalFlags&IF_CLEANUP) {
-		return true;
+		ret = true;
 	}
 	// FIXME
-	if (InternalFlags&IF_JUSTDIED || CurrentAction || GetNextAction() || GetStance() == IE_ANI_DIE) {
-		return false; //actor is currently dying, let him die first
-	}
 	if (!(InternalFlags&IF_REALLYDIED) ) {
-		return false;
+		return ret;
 	}
 	//don't mess with the already deceased
 	if (BaseStats[IE_STATE_ID]&STATE_DEAD) {
-		return false;
+		return ret;
 	}
 	// don't destroy actors currently in a dialog
 	const GameControl *gc = core->GetGameControl();
 	if (gc && gc->dialoghandler->InDialog(this)) {
-		return false;
+		return ret;
 	}
 
 	ClearActions();
@@ -5460,7 +5463,7 @@ bool Actor::CheckOnDeath()
 	if (Persistent()) {
 		// hide the corpse artificially
 		SetBase(IE_AVATARREMOVAL, 1);
-		return false;
+		return ret;
 	}
 
 	ieDword time = core->GetGame()->GameTime;
@@ -5468,7 +5471,7 @@ bool Actor::CheckOnDeath()
 		RemovalTime = time;
 		return true;
 	}
-	if (Modified[IE_MC_FLAGS]&MC_KEEP_CORPSE) return false;
+	if (Modified[IE_MC_FLAGS]&MC_KEEP_CORPSE) return ret;
 	RemovalTime = time + core->Time.day_size; // keep corpse around for a day
 
 	//if chunked death, then return true
@@ -5476,7 +5479,7 @@ bool Actor::CheckOnDeath()
 		RemovalTime = time;
 		return true;
 	}
-	return false;
+	return ret;
 }
 
 void Actor::IncrementDeathVariable(Game::kaputz_t& vars, const char *format, StringView name) const {
