@@ -219,7 +219,7 @@ public:
 	Projectile& operator=(Projectile&&) noexcept = default;
 #endif
 
-	ieWord Speed = 20; // (horizontal) pixels / tick
+	ieWord Speed = 0; // (horizontal) pixels / tick. default speed of 0 for instant hit
 	ieDword SFlags = PSF_FLYING;
 	ResRef FiringSound;
 	ResRef ArrivalSound;
