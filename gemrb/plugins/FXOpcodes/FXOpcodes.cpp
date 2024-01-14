@@ -7070,6 +7070,12 @@ int fx_activate_spell_sequencer(Scriptable* Owner, Actor* target, Effect* fx)
 	if (!actor) {
 		return FX_NOT_APPLIED;
 	}
+	// there is some weird logic here - the sequencers generally call remove spell after to
+	// get rid of it, but because they are 8 characters long they don't get removed from the memorized
+	// book, so they still stick around and come back after rest
+	// so forcing it here, which is probably wrong
+	// FIXME: research what actually happens in IE with this 8 character thing
+	actor->spellbook.UnmemorizeSpell(fx->SourceRef, false, 0);
 
 	Effect *sequencer = actor->fxqueue.HasEffectWithSource(fx_spell_sequencer_active_ref, fx->Resource);
 	if (!sequencer) {
