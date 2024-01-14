@@ -275,9 +275,9 @@ def SetupSpellIcons(Window, BookType, Start=0, Offset=0):
 
 		# disable spells that should be cast from the inventory or can't be cast while silenced or ...
 		# see splspec.2da for all the reasons; silence is handled elsewhere
-		specialSpell = GemRB.CheckSpecialSpell(actor, Spell['SpellResRef'])
+		specialSpell = GemRB.CheckSpecialSpell(Spell['SpellResRef'])
 		specialSpell = (specialSpell & SP_IDENTIFY) or ((specialSpell & SP_SURGE) and actionLevel == UAW_ALLMAGE)
-		if specialSpell & SP_SILENCE and Spell['HeaderFlags'] & 0x2000000: # SF_IGNORES_SILENCE
+		if specialSpell & SP_SILENCE and (not GemRB.IsSilenced(actor) or Spell['HeaderFlags'] & 0x2000000): # SF_IGNORES_SILENCE
 			specialSpell ^= SP_SILENCE
 
 		disabled = disabled_spellcasting & spellType
@@ -377,6 +377,7 @@ def GetMageSpells (Kit, Alignment, Level, baseClass = -1):
 	MageSpells = []
 	v = CommonTables.Aligns.FindValue (3, Alignment)
 	Usability = Kit | CommonTables.Aligns.GetValue(v, 5)
+	# FIXME: wild mage logic not working
 	WildMages = True
 
 	if GameCheck.IsIWD2():
@@ -389,7 +390,9 @@ def GetMageSpells (Kit, Alignment, Level, baseClass = -1):
 		ms = GemRB.GetSpell (SpellName, 1)
 		if ms == None:
 			continue
-
+		hla = bool(GemRB.CheckSpecialSpell(ms['SpellResRef']) & SP_HLA)
+		if hla:
+			continue
 		SpellType = 1
 		if Usability & ms['SpellExclusion']:
 			SpellType = 0
@@ -461,6 +464,9 @@ def GetLearnablePriestSpells (Class, Alignment, Level, booktype=0):
 		SpellName = "SPPR%d%02d"%(Level,i+1)
 		ms = GemRB.GetSpell(SpellName, 1)
 		if ms == None:
+			continue
+		hla = bool(GemRB.CheckSpecialSpell(ms['SpellResRef']) & SP_HLA)
+		if hla:
 			continue
 		if Class & ms['SpellDivine']:
 			continue

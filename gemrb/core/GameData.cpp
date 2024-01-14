@@ -764,29 +764,6 @@ int GameData::GetSpecialSpell(const ResRef& resref)
 	return 0;
 }
 
-// disable spells based on some circumstances
-int GameData::CheckSpecialSpell(const ResRef& resRef, const Actor* actor)
-{
-	int sp = GetSpecialSpell(resRef);
-
-	// the identify spell is always disabled on the menu
-	if (sp & SpecialSpell::Identify) {
-		return SpecialSpell::Identify;
-	}
-
-	// if actor is silenced, and spell cannot be cast in silence, disable it
-	if (!(sp & SpecialSpell::Silence) && actor->CheckSilenced()) {
-		return SpecialSpell::Silence;
-	}
-
-	// disable spells causing surges to be cast while in a surge (prevents nesting)
-	if (sp & SpecialSpell::Surge) {
-		return SpecialSpell::Surge;
-	}
-
-	return 0;
-}
-
 const SurgeSpell& GameData::GetSurgeSpell(unsigned int idx)
 {
 	if (SurgeSpells.empty()) {

@@ -70,7 +70,8 @@ enum SpecialSpell : int8_t {
 	Silence = 2, // any spell that can be cast in silence
 	Surge = 4, // any spell that cannot be cast during a wild surge
 	Rest = 8, // any spell that is cast upon rest if memorized
-	HealAll = 16 // any healing spell that is cast upon rest at more than one target (healing circle, mass cure)
+	HealAll = 16, // any healing spell that is cast upon rest at more than one target (healing circle, mass cure)
+	HLA = 32, // any spell that is also an hla
 };
 
 struct SurgeSpell {
@@ -174,7 +175,6 @@ public:
 	int GetAreaAlias(const ResRef &areaName);
 	int GetSpecialSpell(const ResRef& resref);
 	const std::vector<SpecialSpellType>& GetSpecialSpells() const { return SpecialSpells; }
-	int CheckSpecialSpell(const ResRef& resRef, const Actor* actor);
 	const SurgeSpell& GetSurgeSpell(unsigned int idx);
 	bool ReadResRefTable(const ResRef& tableName, std::vector<ResRef>& data);
 	const IWDIDSEntry& GetSpellProt(index_t idx);

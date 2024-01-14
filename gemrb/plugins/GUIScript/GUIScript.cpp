@@ -8462,10 +8462,9 @@ PyDoc_STRVAR( GemRB_CheckSpecialSpell__doc,
 \n\
 **Prototype:** GemRB.CheckSpecialSpell (globalID, SpellResRef)\n\
 \n\
-**Description:** Checks if an actor's spell is considered special (splspec.2da).\n\
+**Description:** Checks if spell is considered special (splspec.2da).\n\
 \n\
 **Parameters:**\n\
-  * globalID - global ID of the actor to use\n\
   * SpellResRef - spell resource to check\n\
 \n\
 **Return value:** bitfield\n\
@@ -8473,22 +8472,18 @@ PyDoc_STRVAR( GemRB_CheckSpecialSpell__doc,
   * SP_IDENTIFY - any spell that cannot be cast from the menu\n\
   * SP_SILENCE  - any spell that can be cast in silence\n\
   * SP_SURGE    - any spell that cannot be cast during a wild surge\n\
-  * SP_REST     - any spell that is cast upon rest if memorized"
+  * SP_REST     - any spell that is cast upon rest if memorized\n\
+  * SP_HEALALL  - any healing spell that is cast upon rest at more than one target (healing circle, mass cure)\n\
+  * SP_HLA      - any spell that is also an hla"
 );
 
 static PyObject* GemRB_CheckSpecialSpell(PyObject * /*self*/, PyObject* args)
 {
-	int globalID;
 	PyObject* SpellResRef = nullptr;
-	PARSE_ARGS(args,  "iO", &globalID, &SpellResRef);
+	PARSE_ARGS(args,  "O", &SpellResRef);
 	GET_GAME();
 
-	const Actor* actor = game->GetActorByGlobalID(globalID);
-	if (!actor) {
-		return RuntimeError( "Actor not found!\n" );
-	}
-
-	int ret = gamedata->CheckSpecialSpell(ResRefFromPy(SpellResRef), actor);
+	int ret = gamedata->GetSpecialSpell(ResRefFromPy(SpellResRef));
 	return PyLong_FromLong(ret);
 }
 
@@ -12561,6 +12556,31 @@ static PyObject* GemRB_IsDualWielding(PyObject * /*self*/, PyObject* args)
 	return PyLong_FromLong(dualwield);
 }
 
+PyDoc_STRVAR( GemRB_IsSilenced__doc,
+"===== IsSilenced =====\n\
+\n\
+**Prototype:** GemRB.IsSilenced (globalID)\n\
+\n\
+**Description:** true if the actor is silenced; false otherwise.\n\
+\n\
+**Parameters:**\n\
+  * globalID - party ID or global ID of the actor to use\n\
+\n\
+**Return value:** bool\n\
+"
+);
+
+static PyObject* GemRB_IsSilenced(PyObject * /*self*/, PyObject* args)
+{
+	int globalID;
+	PARSE_ARGS( args, "i", &globalID);
+
+	GET_GAME();
+	GET_ACTOR_GLOBAL();
+
+	return PyBool_FromLong(actor->CheckSilenced());
+}
+
 PyDoc_STRVAR( GemRB_GetSelectedSize__doc,
 "===== GetSelectedSize =====\n\
 \n\
@@ -13233,6 +13253,7 @@ static PyMethodDef GemRBMethods[] = {
 	METHOD(IncreaseReputation, METH_VARARGS),
 	METHOD(IsDraggingItem, METH_NOARGS),
 	METHOD(IsDualWielding, METH_VARARGS),
+	METHOD(IsSilenced, METH_VARARGS),
 	METHOD(IsValidStoreItem, METH_VARARGS),
 	METHOD(LearnSpell, METH_VARARGS),
 	METHOD(LeaveContainer, METH_VARARGS),
