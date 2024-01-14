@@ -427,6 +427,10 @@ def SetupHP (pc, Level=None, LevelDiff=None):
 			HiLevel = 0
 		elif HiLevel > MaxLevel:
 			HiLevel = MaxLevel
+		#only here if dual is active
+		#this prevents massive level jumps from gaining extra hp
+		if (Dual[0]):
+		    LowLevel = max(Levels[1], LowLevel)
 
 		#add all the hp for the given level
 		#we use ceil to ensure each class gets hp
