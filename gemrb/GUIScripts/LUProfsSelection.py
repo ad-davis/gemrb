@@ -189,11 +189,21 @@ def SetupProfsWindow (pc, proftype, window, callback, level1=[0,0,0], level2=[1,
 	IsDual = GUICommon.IsDualClassed (pc, 1)
 	if classid: #for dual classes when we can't get the class dualing to
 		Class = classid
-	elif IsDual[0] == 3:
-		Class = CommonTables.KitList.GetValue (IsDual[2], 7)
 	elif IsDual[0]:
-		Class = GUICommon.GetClassRowName(IsDual[2], "index")
-		Class = CommonTables.Classes.GetValue (Class, "ID")
+		Level = GemRB.GetPlayerStat (pc, IE_LEVEL)
+		Level2 = GemRB.GetPlayerStat (pc, IE_LEVEL2)
+		DualActive = False
+		if (GUICommon.IsDualSwap (pc)):
+			DualActive = Level2 > Level
+		else:
+			DualActive = Level > Level2
+		if DualActive:
+			Class = GemRB.GetPlayerStat (pc, IE_CLASS)
+		elif IsDual[0] == 3:
+			Class = CommonTables.KitList.GetValue (IsDual[2], 7)
+		else:
+			Class = GUICommon.GetClassRowName (IsDual[2], "index")
+			Class = CommonTables.Classes.GetValue (Class, "ID")
 	else:
 		Class = GemRB.GetPlayerStat (pc, IE_CLASS)
 	ClassName = GUICommon.GetClassRowName (Class, "class")
