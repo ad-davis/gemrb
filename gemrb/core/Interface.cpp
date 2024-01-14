@@ -565,11 +565,21 @@ void Interface::DisableMusicPlaylist(size_t SongType)
 	}
 }
 
+void Interface::SetupModDetection() {
+	// check if overriden by config
+	if (config.modDetection != 0) return;
+	if (gamedata->Exists("spwi405a", IE_SPL_CLASS_ID, true)) {
+		config.modDetection |= MD_FIXPACK_IMPROVED_INVIS;
+	}
+}
+
 /** this is the main loop */
 void Interface::Main()
 {
 	int speed = GetVariable("Mouse Scroll Speed", 10);
 	SetMouseScrollSpeed(speed);
+
+	SetupModDetection();
 
 	// We had 36 at 30fps originally, so more fps
 	// should not speed this up unless adjusted
@@ -788,6 +798,7 @@ int Interface::Init(const InterfaceConfig* cfg)
 	CONFIG_INT("SaveAsOriginal", config.SaveAsOriginal =);
 	CONFIG_INT("SpriteFogOfWar", config.SpriteFoW =);
 	CONFIG_INT("DebugMode", config.debugMode =);
+	CONFIG_INT("OverrideModDetection", config.modDetection =);
 	int touchInput = -1;
 	CONFIG_INT("TouchInput", touchInput =);
 	CONFIG_INT("Width", config.Width =);

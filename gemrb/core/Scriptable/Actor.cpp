@@ -334,6 +334,26 @@ struct avType {
 
 static std::vector<avType> avPrefix;
 
+//saving throws:
+//type      bits in file    order in stats
+//0  spells            1    4
+//1  breath            2    3
+//2  death             4    0
+//3  wands             8    1
+//4  polymorph        16    2
+
+//iwd2 (luckily they use the same bits as it would be with bg2):
+//0 not used
+//1 not used
+//2 fortitude          4   0
+//3 reflex             8   1
+//4 will              16   2
+
+// in adnd, the stat represents the limit (DC) that the roll with all the boni has to pass
+// since it is a derived stat, we also store the direct effect bonus/malus in it, but make sure to do it negated
+// in 3ed, the stat is added to the roll and boni (not negated), then compared to some predefined value (DC)
+static const std::array<int, 5> savingThrows = { IE_SAVEVSSPELL, IE_SAVEVSBREATH, IE_SAVEVSDEATH, IE_SAVEVSWANDS, IE_SAVEVSPOLY };
+
 Actor::Actor()
 	: Movable( ST_ACTOR )
 {
@@ -2767,6 +2787,18 @@ void Actor::RefreshEffects(bool first, const stats_t& previous)
 	// FIXME: but the effects may reset this too and we shouldn't touch it in that case (flatfooted!)
 	// flatfooted by invisible attacker: this is handled by GetDefense and ok
 	AC.SetDexterityBonus(GetDexterityAC());
+	// improved invisibility bonuses. don't know behaviour for third edition
+	if (!third && GetStat(IE_STATE_ID)&STATE_INVIS2) {
+		 // ac bonus gets taken off in GetDefense if the attacker can bypass invisibility
+		AC.SetGenericBonus(AC.GetGenericBonus()-4);
+		// this is getting set by bg2fixpack as a separate effect. that behaviour is likely problematic as it won't get removed by the cure invisibility states
+		// the real fix is just to move those files out, but it will result in warnings
+		if (!core->ModDetected(MD_FIXPACK_IMPROVED_INVIS)) {
+			for (auto stat : savingThrows) {
+				Modified[stat] -= 4;
+			}
+		}
+	}
 
 	if (HasPlayerClass()) {
 		RefreshPCStats();
@@ -3182,26 +3214,6 @@ static int AdjustSaveVsSchool(int base, ieDword school, const Effect* fx)
 	}
 	return base;
 }
-
-//saving throws:
-//type      bits in file    order in stats
-//0  spells            1    4
-//1  breath            2    3
-//2  death             4    0
-//3  wands             8    1
-//4  polymorph        16    2
-
-//iwd2 (luckily they use the same bits as it would be with bg2):
-//0 not used
-//1 not used
-//2 fortitude          4   0
-//3 reflex             8   1
-//4 will              16   2
-
-// in adnd, the stat represents the limit (DC) that the roll with all the boni has to pass
-// since it is a derived stat, we also store the direct effect bonus/malus in it, but make sure to do it negated
-// in 3ed, the stat is added to the roll and boni (not negated), then compared to some predefined value (DC)
-static const std::array<int, 5> savingThrows = { IE_SAVEVSSPELL, IE_SAVEVSBREATH, IE_SAVEVSDEATH, IE_SAVEVSWANDS, IE_SAVEVSPOLY };
 
 /** returns true if actor made the save against saving throw type */
 bool Actor::GetSavingThrow(ieDword type, int modifier, const Effect *fx)
@@ -6643,6 +6655,12 @@ int Actor::GetToHit(ieDword Flags, const Actor *target)
 			break;
 	}
 
+	// invisibility
+	if (GetStat(IE_STATE_ID)&state_invisible) {
+		// should this apply if the target sees through invisibility?
+		generic += 4;
+	}
+
 	if (target) {
 		// if the target is using a ranged weapon while we're meleeing, we get a +4 bonus
 		if ((Flags & WEAPON_STYLEMASK) != WEAPON_RANGED && target->weaponInfo[0].wflags & WEAPON_RANGED) {
@@ -6789,12 +6807,27 @@ int Actor::GetDefense(int DamageType, ieDword wflags, const Actor *attacker) con
 		}
 	}
 
-	// is the attacker invisible? We don't care if we know the right uncanny dodge
-	if (third && attacker && attacker->GetStat(state_invisible)) {
-		if ((GetStat(IE_UNCANNY_DODGE) & 0x100) == 0) {
-			// oops, we lose the dex bonus (like flatfooted)
-			defense -= AC.GetDexterityBonus();
+	// is the attacker invisible?
+	if (attacker && attacker->GetStat(state_invisible)) {
+		if (third) {
+			if ((GetStat(IE_UNCANNY_DODGE) & 0x100) == 0) {
+				// oops, we lose the dex bonus (like flatfooted)
+				defense -= AC.GetDexterityBonus();
+			}
+		} else {
+			if (attacker->IsBehind(this) && attacker->GetStat(IE_BACKSTABDAMAGEMULTIPLIER) > 1) {
+				// 2e rules removes shield bonus as well, but we don't have any distinction for shields in those games
+				// only remove if actually a bonus
+				if (AC.GetDexterityBonus() < 0) {
+					defense -= AC.GetDexterityBonus();
+				}
+			}
 		}
+	}
+
+	// not sure if this applies for third too
+	if (!third && GetStat(IE_STATE_ID)&STATE_INVIS2 && !(attacker && attacker->GetStat(IE_SEEINVISIBLE))) {
+		defense += 4;
 	}
 
 	if (attacker) {
@@ -10732,9 +10765,10 @@ bool Actor::TryToHideIWD2()
 	return true;
 }
 
-//cannot target actor (used by GUI)
-bool Actor::Untargetable(const ResRef& spellRef) const
+//cannot target actor
+bool Actor::Untargetable(const Scriptable* caster, const ResRef& spellRef) const
 {
+	if (caster && caster == this) return false;
 	if (!spellRef.IsEmpty()) {
 		const Spell *spl = gamedata->GetSpell(spellRef, true);
 		if (spl && (spl->Flags&SF_TARGETS_INVISIBLE)) {
@@ -10743,7 +10777,7 @@ bool Actor::Untargetable(const ResRef& spellRef) const
 		}
 		gamedata->FreeSpell(spl, spellRef, false);
 	}
-	return IsInvisibleTo(NULL);
+	return IsInvisibleTo(caster, true);
 }
 
 //it is futile to try to harm target (used by AI scripts)
@@ -10970,7 +11004,7 @@ int Actor::GetArmorFailure(int &armor, int &shield) const
 }
 
 // checks whether the actor is visible to another scriptable
-bool Actor::IsInvisibleTo(const Scriptable *checker) const
+bool Actor::IsInvisibleTo(const Scriptable *checker, bool partially) const
 {
 	// consider underground ankhegs completely invisible to everyone
 	if (GetStance() == IE_ANI_WALK && GetAnims()->GetAnimType() == IE_ANI_TWO_PIECE) {
@@ -10983,7 +11017,8 @@ bool Actor::IsInvisibleTo(const Scriptable *checker) const
 		canSeeInvisibles = checker2->GetSafeStat(IE_SEEINVISIBLE);
 	}
 	bool invisible = GetSafeStat(IE_STATE_ID) & state_invisible;
-	if (!canSeeInvisibles && (invisible || HasSpellState(SS_SANCTUARY))) {
+	bool partiallyVisible = GetSafeStat(IE_STATE_ID) & STATE_INVIS2;
+	if (!canSeeInvisibles && (invisible || HasSpellState(SS_SANCTUARY) || (partially && partiallyVisible))) {
 		return true;
 	}
 

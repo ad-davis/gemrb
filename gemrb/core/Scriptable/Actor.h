@@ -993,7 +993,7 @@ public:
 	/* checks if the alignment matches one of the masking constants */
 	//bool MatchesAlignmentMask(ieDword mask);
 	/** untargetable by spells/attack due to invisibility or sanctuary */
-	bool Untargetable(const ResRef& spellRef) const;
+	bool Untargetable(const Scriptable* caster, const ResRef& spellRef) const;
 	/* returns true if this it is futile to try to harm actor (dead/sanctuaried) */
 	bool InvalidSpellTarget() const;
 	/* returns true if the spell is useless to cast on target
@@ -1018,7 +1018,7 @@ public:
 	int GetTotalArmorFailure() const;
 	int GetArmorFailure(int &armor, int &shield) const;
 	bool IsDead() const;
-	bool IsInvisibleTo(const Scriptable *checker) const;
+	bool IsInvisibleTo(const Scriptable *checker, bool partially = false) const;
 	int UpdateAnimationID(bool derived);
 	void MovementCommand(std::string command);
 	/* shows hp/maxhp as overhead text */

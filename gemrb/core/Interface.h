@@ -291,6 +291,10 @@ enum DebugModeBits {
 	ID_MISC = 1024
 };
 
+enum ModDetectionBits {
+	MD_FIXPACK_IMPROVED_INVIS = 1, // if fixpack improved invisibility is installed we need to change our behaviour to not overlap
+};
+
 // TODO: there is no reason why this can't be generated directly from
 // the inventory button drag event using the button value as the slot id
 // to get the appropriate CREItem
@@ -353,6 +357,8 @@ struct CFGConfigData {
 	int SaveAsOriginal = 1; // if true, saves files in compatible mode
 	std::string VideoDriverName = "sdl"; // consider deprecating? It's now a hidden option
 	std::string AudioDriverName = "openal";
+
+	int modDetection = 0;
 };
 
 /**
@@ -632,6 +638,7 @@ public:
 	bool StupidityDetector(const char* Pt) const;
 	bool InDebugMode(int mode) const { return config.debugMode & mode; };
 	void SetDebugMode(int mode) { config.debugMode = mode; };
+	bool ModDetected(int mods) const { return config.modDetection & mods; };
 	/*handles the load screen*/
 	void LoadProgress(int percent);
 
@@ -726,6 +733,7 @@ public:
 	/** Saves config variables to a file */
 	bool SaveConfig();
 private:
+	void SetupModDetection();
 	int LoadSprites();
 	int LoadFonts();
 	bool LoadGemRBINI();

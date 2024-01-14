@@ -1766,20 +1766,25 @@ int fx_intelligence_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x14 State:Invisible
 // this is more complex, there is a half-invisibility state
 // and there is a hidden state
-int fx_set_invisible_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_set_invisible_state (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	switch (fx->Parameter2) {
-	case 1:
-			STATE_SET(STATE_INVIS2); // TODO: actually use STATE_INVIS2 in code
-			// intentional fallthrough
 	case 0:
 		if (core->HasFeature(GFFlags::PST_STATE_FLAGS)) {
 			STATE_SET( STATE_PST_INVIS );
 		} else {
 			STATE_SET( STATE_INVISIBLE );
 		}
-		if (fx->FirstApply || fx->TimingMode != FX_DURATION_INSTANT_PERMANENT) {
-			target->ToHit.HandleFxBonus(4, fx->TimingMode==FX_DURATION_INSTANT_PERMANENT);
+		break;
+	case 1:
+		STATE_SET(STATE_INVIS2);
+	    // create normal invisible effect
+		if (fx->FirstApply) {
+			Effect *newfx;
+			newfx = EffectQueue::CreateEffectCopy(fx, fx_set_invisible_state_ref, fx->Parameter1, 0);
+			if (newfx) {
+				core->ApplyEffect(newfx, target, Owner);
+			}
 		}
 		break;
 	case 2:// EE: weak invisibility, like improved after being revelead (no backstabbing)
@@ -1803,8 +1808,6 @@ int fx_set_invisible_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	}
 	fx->Parameter4 = Trans;
 	STAT_SET( IE_TRANSLUCENT, Trans);
-	//FIXME: probably FX_PERMANENT, but TRANSLUCENT has no saved base stat
-	// we work around it by only applying the tohit/ac bonus once
 	return FX_APPLIED;
 }
 
@@ -6714,12 +6717,10 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		newfx = EffectQueue::CreateEffectCopy(fx, fx_set_invisible_state_ref, 0, 0);
 		if (newfx) {
 			core->ApplyEffect(newfx, target, target);
-			delete newfx;
 		}
 		newfx = EffectQueue::CreateEffectCopy(fx, fx_set_invisible_state_ref, 0, 1);
 		if (newfx) {
 			core->ApplyEffect(newfx, target, target);
-			delete newfx;
 		}
 		break;
 	case 2:
@@ -6728,7 +6729,6 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		newfx = EffectQueue::CreateEffect(fx_explore_modifier_ref, 0, 0, FX_DURATION_INSTANT_PERMANENT);
 		if (newfx) {
 			core->ApplyEffect(newfx, copy, copy);
-			delete newfx;
 		}
 		break;
 	case 3:
