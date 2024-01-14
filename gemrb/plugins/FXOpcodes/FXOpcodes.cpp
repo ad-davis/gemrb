@@ -3452,7 +3452,7 @@ int fx_set_regenerating_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		//we can have multiple calls at the same gameTime, so we
 		//just go to gameTime+1 to ensure one call
 		ieDword nextHeal = fx->Parameter5;
-		if (nextHeal>=gameTime) return FX_APPLIED;
+		if (nextHeal>=gameTime || core->GetGame()->TimeStoppedFor(target)) return FX_APPLIED;
 	}
 
 	HandlePercentageDamage(fx, target);
