@@ -212,8 +212,10 @@ void Scriptable::TickScripting()
 	}
 
 	ieDword actorState = 0;
+	ieDword actorAvatarRemoved = 0;
 	if (Type == ST_ACTOR) {
 		actorState = static_cast<Actor*>(this)->Modified[IE_STATE_ID];
+		actorAvatarRemoved = static_cast<Actor *>(this)->Modified[IE_AVATARREMOVAL];
 	}
 
 	// Dead actors only get one chance to run a new script.
@@ -239,6 +241,11 @@ void Scriptable::TickScripting()
 
 	// Charmed actors don't get frequent updates.
 	if ((actorState & STATE_CHARMED) && IdleTicks < 5) {
+		needsUpdate = false;
+	}
+
+	// states that pause scripts
+	if ((actorState & (STATE_HELPLESS|STATE_PETRIFIED|STATE_FROZEN)) || actorAvatarRemoved) {
 		needsUpdate = false;
 	}
 

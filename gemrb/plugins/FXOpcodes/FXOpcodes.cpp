@@ -5283,6 +5283,7 @@ int fx_hold_creature (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		return FX_NOT_APPLIED;
 	}
 	target->SetSpellState(SS_HELD);
+	STATE_SET(STATE_HELPLESS);
 	STAT_SET( IE_HELD, 1);
 	target->AddPortraitIcon(PI_HELD);
 	return FX_APPLIED;
@@ -6417,11 +6418,11 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_HELPLESS:
 		// StateCheck(Myself, STATE_HELPLESS)
-		condition = (bool)(target->GetStat(IE_STATE_ID) & STATE_CANTMOVE);
+		condition = (bool)(target->GetSafeStat(IE_STATE_ID) & STATE_CANTMOVE);
 		break;
 	case COND_POISONED:
 		// StateCheck(Myself, STATE_POISONED)
-		condition = (bool)(target->GetStat(IE_STATE_ID) & STATE_POISONED);
+		condition = (bool)(target->GetSafeStat(IE_STATE_ID) & STATE_POISONED);
 		break;
 	case COND_ATTACKED:
 		// AttackedBy([ANYONE])
@@ -6466,7 +6467,7 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_STATECHECK:
 		// StateCheck(Myself, 'Extra')
-		condition = (target->GetStat(IE_STATE_ID) & fx->IsVariable) > 0;
+		condition = (target->GetSafeStat(IE_STATE_ID) & fx->IsVariable) > 0;
 		break;
 	case COND_DIED_ME:
 		// Die()

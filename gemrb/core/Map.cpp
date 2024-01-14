@@ -728,21 +728,6 @@ void Map::UpdateScripts()
 		//definitely try to move it up if you experience freezes after timestop
 		actor->fxqueue.Cleanup();
 
-		//if the actor is immobile, don't run the scripts
-		//FIXME: this is not universally true, only some states have this effect
-		// paused targets do something similar, but are handled in the effect
-		if (!game->StateOverrideFlag && !game->StateOverrideTime) {
-			//it looks like STATE_SLEEP allows scripts, probably it is STATE_HELPLESS what disables scripts
-			//if that isn't true either, remove STATE_HELPLESS
-			//need to disable scripts for deadlike states at least
-			if (actor->GetStat(IE_STATE_ID) & (STATE_HELPLESS|STATE_PETRIFIED|STATE_FROZEN)
-			    || actor->GetStat(IE_AVATARREMOVAL))
-			{
-				actor->SetInternalFlag(IF_JUSTDIED, BitOp::NAND);
-				continue;
-			}
-		}
-
 		/*
 		 * we run scripts all at once because one of the actions in ProcessActions
 		 * might remove us from a cutscene and then bad things can happen when
