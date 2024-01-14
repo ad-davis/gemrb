@@ -77,6 +77,7 @@ struct PathListNode {
 
 struct PathList {
 	PathListNode* node = nullptr;
+	bool fullPath = false;
 	unsigned int maxDistance = 0;
 };
 

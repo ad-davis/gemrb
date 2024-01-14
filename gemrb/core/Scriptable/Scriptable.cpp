@@ -322,6 +322,7 @@ void Scriptable::ExecuteScript(int scriptCount)
 	for (scriptlevel = 0;scriptlevel<scriptCount;scriptlevel++) {
 		GameScript *Script = Scripts[scriptlevel];
 		if (Script) {
+			//Log(DEBUG, "Scriptable", "{} running script {}", scriptName, Script->GetName());
 			changed |= Script->Update(&continuing, &done);
 			if (Script->dead) {
 				delete Script;
@@ -2072,20 +2073,33 @@ void Movable::DoStep(unsigned int walkScale, ieDword time) {
 		double dx = nmptStep.x - Pos.x;
 		double dy = nmptStep.y - Pos.y;
 		Map::NormalizeDeltas(dx, dy, double(gamedata->GetStepTime()) / double(walkScale));
+		if (dx == 0 && dy == 0) {
+			// probably shouldn't happen, but it does when running bg2's cut28a set of cutscenes
+			ClearPath(true);
+			Log(DEBUG, "PathFinderWIP", "Abandoning because I'm exactly at the goal");
+			pathAbandoned = true;
+			return;
+		}
+
 		Actor *actorInTheWay = nullptr;
 		// We can't use GetActorInRadius because we want to only check directly along the way
 		// and not be blocked by actors who are on the sides
 		int collisionLookaheadRadius = ((circleSize < 3 ? 3 : circleSize) - 1) * 3;
 		for (int r = collisionLookaheadRadius; r > 0 && !actorInTheWay; r--) {
-			double xCollision = Pos.x + dx * r;
-			double yCollision = Pos.y + dy * r * 0.75;
+			double xCollision = Pos.x + dx + r;
+			double yCollision = Pos.y + dy + r * 0.75;
 			Point nmptCollision(xCollision, yCollision);
 			actorInTheWay = area->GetActor(nmptCollision, GA_NO_DEAD|GA_NO_UNSCHEDULED|GA_NO_SELF, this);
 		}
 
 		const Actor* actor = Scriptable::As<Actor>(this);
 		bool blocksSearch = BlocksSearchMap();
+		// FIXME: I've commented out pathAbandoned as it is really annoying that we can't just repath in this situation
+		//        however that's not a complete solution because we should really just abandon the path if the endgoal
+		//        is not actually reachable. maybe the repathing takes care of that though?
+		//        backoff is also stupid and probably gets you trapped in a lot of scenarios. maybe backoff should just be shorter
 		if (actorInTheWay && blocksSearch && actorInTheWay->BlocksSearchMap()) {
+			if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "PathFinder", "{}: Blocked by actor {}", actor ? MBStringFromString(actor->GetShortName()) : scriptName, MBStringFromString(actorInTheWay->GetShortName()));
 			// Give up instead of bumping if you are close to the goal
 			if (!(step->Next) && PersonalDistance(nmptStep, this) < MAX_OPERATING_DISTANCE) {
 				ClearPath(true);
@@ -2099,7 +2113,9 @@ void Movable::DoStep(unsigned int walkScale, ieDword time) {
 			if (actor && actor->ValidTarget(GA_CAN_BUMP) && actorInTheWay->ValidTarget(GA_ONLY_BUMPABLE)) {
 				actorInTheWay->BumpAway();
 			} else {
-				Backoff();
+				ClearPath(true);
+				NewOrientation = Orientation;
+				//Backoff();
 				return;
 			}
 		}
@@ -2108,6 +2124,7 @@ void Movable::DoStep(unsigned int walkScale, ieDword time) {
 			if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "PathFinder", "{}: Getting blocked by sidewall", actor ? MBStringFromString(actor->GetShortName()) : scriptName);
 			ClearPath(true);
 			NewOrientation = Orientation;
+			Backoff();
 			return;
 		}
 		if (blocksSearch) {
@@ -2151,6 +2168,7 @@ void Movable::AddWayPoint(const Point &Des)
 		WalkTo(Des);
 		return;
 	}
+	const Actor* actor = Scriptable::As<Actor>(this);
 	Destination = Des;
 	//it is tempting to use 'step' here, as it could
 	//be about half of the current path already
@@ -2160,7 +2178,7 @@ void Movable::AddWayPoint(const Point &Des)
 	}
 	Point p = endNode->point;
 	area->ClearSearchMapFor(this);
-	PathList path2 = area->FindPath(p, Des, circleSize);
+	PathList path2 = area->FindBestPath(p, Des, circleSize, actor);
 	// if the waypoint is too close to the current position, no path is generated
 	if (!path2.node) {
 		if (BlocksSearchMap()) {
@@ -2199,24 +2217,10 @@ void Movable::WalkTo(const Point &Des, int distance)
 	}
 
 	if (BlocksSearchMap()) area->ClearSearchMapFor(this);
-	PathList finalPath;
-	// we first find a simple path without caring about actors (non-bumpables still are considered)
-	// we then use that as a basis for giving up if the path with actors gets too long
-	PathList firstPath = area->FindPath(Pos, Des, circleSize, distance, PF_SIGHT, actor);
-	// if we can't find a path when actors don't block, there is no chance when they do
-	if (firstPath.node) {
-		unsigned int distanceLimit = 0;
-		if (firstPath.maxDistance) distanceLimit = firstPath.maxDistance*(2+100/firstPath.maxDistance); // if is just to guard against division by zero
-		finalPath = area->FindPath(Pos, Des, circleSize, distance, PF_SIGHT | PF_ACTORS_ARE_BLOCKING, actor, distanceLimit);
-		if (!finalPath.node && actor && actor->ValidTarget(GA_CAN_BUMP)) {
-			Log(DEBUG, "WalkTo", "{} re-pathing ignoring actors", fmt::WideToChar{actor->GetShortName()});
-			finalPath = firstPath;
-		}
-	}
-
-	if (finalPath.node) {
+	PathList foundPath = area->FindBestPath(Pos, Des, circleSize, actor, distance);
+	if (foundPath.node) {
 		ClearPath(false);
-		path = finalPath.node;
+		path = foundPath.node;
 		step = path;
 		HandleAnkhegStance(false);
 	}  else {

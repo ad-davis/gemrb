@@ -50,6 +50,15 @@ constexpr std::array<double, RAND_DEGREES_OF_FREEDOM> dxRand{{0.000, -0.383, -0.
 // Sines
 constexpr std::array<double, RAND_DEGREES_OF_FREEDOM> dyRand{{1.000, 0.924, 0.707, 0.383, 0.000, -0.383, -0.707, -0.924, -1.000, -0.924, -0.707, -0.383, 0.000, 0.383, 0.707, 0.924}};
 
+static inline void freePath(PathListNode* start) {
+	PathListNode *thisNode = start;
+	while (thisNode) {
+		PathListNode *nextNode = thisNode->Next;
+		delete thisNode;
+		thisNode = nextNode;
+	}
+}
+
 // Find the best path of limited length that brings us the farthest from d
 PathList Map::RunAway(const Point &s, const Point &d, unsigned int size, int maxPathLength, bool backAway, const Actor *caller) const
 {
@@ -126,16 +135,11 @@ bool Map::TargetUnreachable(const Point &s, const Point &d, unsigned int size, b
 	int flags = PF_SIGHT;
 	if (actorsAreBlocking) flags |= PF_ACTORS_ARE_BLOCKING;
 	PathList path = FindPath(s, d, size, 0, flags);
-	bool targetUnreachable = path.node == nullptr;
-	if (!targetUnreachable) {
-		PathListNode *thisNode = path.node;
-		while (thisNode) {
-			PathListNode *nextNode = thisNode->Next;
-			delete thisNode;
-			thisNode = nextNode;
-		}
+	bool foundPath = path.node != nullptr;
+	if (foundPath) {
+		freePath(path.node);
 	}
-	return targetUnreachable;
+	return !foundPath || !path.fullPath;
 }
 
 // Use this function when you target something by a straight line projectile (like a lightning bolt, arrow, etc)
@@ -286,13 +290,44 @@ PathListNode* Map::GetLine(const Point &p, int steps, orient_t orient) const
 	return step;
 }
 
+PathList Map::FindBestPath(const Point &s, const Point &d, unsigned int size, const Actor *caller, unsigned int minDistance) const {
+	// we first find a simple path without caring about actors (non-bumpables still are considered)
+	// we then use that as a basis for giving up if the path with actors gets too long
+	PathList firstPath = FindPath(s, d, size, minDistance, PF_SIGHT, caller);
+	// if we can't find a path when actors don't block, there is no chance when they do
+	if (firstPath.node && firstPath.fullPath) {
+		PathList finalPath;
+		unsigned int distanceLimit = 0;
+		if (firstPath.maxDistance) distanceLimit = firstPath.maxDistance*(2+100/firstPath.maxDistance); // if is just to guard against division by zero
+		finalPath = FindPath(s, d, size, minDistance, PF_SIGHT | PF_ACTORS_ARE_BLOCKING, caller, distanceLimit);
+		if (!finalPath.fullPath && caller && caller->ValidTarget(GA_CAN_BUMP)) {
+			// TODO: at this point, it might be worth attempting to recalculate the path with a slightly different starting point
+			if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "FindBestPath", "{} re-pathing ignoring actors", fmt::WideToChar{caller->GetShortName()});
+			freePath(finalPath.node);
+			finalPath = firstPath;
+		} else {
+			freePath(firstPath.node);
+			if (!finalPath.fullPath) {
+				if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "FindBestPath", "{} re-pathing for closest possible", fmt::WideToChar{caller->GetShortName()});
+				// for now, taking this option off the table
+				//freePath(finalPath.node);
+				//finalPath.node = nullptr;
+			}
+		}
+		return finalPath;
+	} else {
+		return firstPath;
+	}
+}
+
 // Find a path from start to goal, ending at the specified distance from the
 // target (the goal must be in sight of the end, if PF_SIGHT is specified)
 PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsigned int minDistance, int flags, const Actor *caller, unsigned int maxDistance) const
 {
 	PathList result;
 
-	if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "FindPath", "s = {}, d = {}, caller = {}, dist = {}, size = {}", s, d, caller ? MBStringFromString(caller->GetShortName()) : "nullptr", minDistance, size);
+	bool actorsAreBlocking = flags & PF_ACTORS_ARE_BLOCKING;
+	if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "FindPath", "s = {}, d = {}, caller = {}, size = {}, minDist = {}, maxDist = {}, actorsBlock = {}", s, d, caller ? MBStringFromString(caller->GetShortName()) : "nullptr", size, minDistance, maxDistance, actorsAreBlocking);
 	
 	// TODO: we could optimize this function further by doing everything in SearchmapPoint and converting at the end
 	NavmapPoint nmptDest = d;
@@ -320,7 +355,6 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 
 	// Initialize data structures
 	FibonacciHeap<PQNode> open;
-	std::vector<bool> isClosed(mapSize.Area(), false);
 	std::vector<NavmapPoint> parents(mapSize.Area(), Point(0, 0));
 	std::vector<unsigned short> distFromStart(mapSize.Area(), std::numeric_limits<unsigned short>::max());
 	std::vector<unsigned int> distances(mapSize.Area(), 0);
@@ -329,6 +363,8 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 	open.emplace(PQNode(nmptSource, 0));
 	bool foundPath = false;
 	unsigned int squaredMinDist = minDistance * minDistance;
+	unsigned int closestDist = std::numeric_limits<unsigned int>::max();
+	NavmapPoint nmptClosest;
 
 	while (!open.empty()) {
 		NavmapPoint nmptCurrent = open.top().point;
@@ -342,33 +378,36 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 			nmptDest = nmptCurrent;
 			foundPath = true;
 			break;
-		} else if (minDistance) {
-			if (parents[smptCurrent.y * mapSize.w + smptCurrent.x] != nmptCurrent &&
-					SquaredDistance(nmptCurrent, nmptDest) < squaredMinDist) {
+		} else if (parents[smptCurrent.y * mapSize.w + smptCurrent.x] != nmptCurrent) {
+			auto sqrDist = SquaredDistance(nmptCurrent, nmptDest);
+			if (minDistance && sqrDist < squaredMinDist) {
 				if (!(flags & PF_SIGHT) || IsVisibleLOS(nmptCurrent, d)) {
+					if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "FindPath", "{} settled for minimum distance", caller ? MBStringFromString(caller->GetShortName()) : "nullptr");
 					smptDest = smptCurrent;
 					nmptDest = nmptCurrent;
 					foundPath = true;
 					break;
 				}
+			} else if (sqrDist < closestDist) {
+				closestDist = sqrDist;
+				nmptClosest = nmptCurrent;
 			}
 		}
-		isClosed[smptCurrent.y * mapSize.w + smptCurrent.x] = true;
 
 		for (size_t i = 0; i < DEGREES_OF_FREEDOM; i++) {
 			NavmapPoint nmptChild(nmptCurrent.x + 16 * dxAdjacent[i], nmptCurrent.y + 12 * dyAdjacent[i]);
 			SearchmapPoint smptChild = Map::ConvertCoordToTile(nmptChild);
 			// Outside map
 			if (smptChild.x < 0 ||	smptChild.y < 0 || smptChild.x >= mapSize.w || smptChild.y >= mapSize.h) continue;
-			// Already visited
-			if (isClosed[smptChild.y * mapSize.w + smptChild.x]) continue;
-			// If there's an actor, check it can be bumped away
-			const Actor* childActor = GetActor(nmptChild, GA_NO_DEAD | GA_NO_UNSCHEDULED);
-			bool childIsUnbumpable = childActor && childActor != caller && (flags & PF_ACTORS_ARE_BLOCKING || !childActor->ValidTarget(GA_ONLY_BUMPABLE));
-			if (childIsUnbumpable) continue;
+			if (actorsAreBlocking) {
+				// If there's an actor, check it can be bumped away
+				const Actor* childActor = GetActor(nmptChild, GA_NO_DEAD | GA_NO_UNSCHEDULED);
+				bool childIsUnbumpable = childActor && childActor != caller && (actorsAreBlocking || !childActor->ValidTarget(GA_ONLY_BUMPABLE));
+				if (childIsUnbumpable) continue;
+			}
 
 			PathMapFlags childBlockStatus = GetBlockedInRadius(nmptChild, size);
-			bool childBlocked = !(childBlockStatus & (PathMapFlags::PASSABLE | PathMapFlags::ACTOR | PathMapFlags::TRAVEL));
+			bool childBlocked = !(childBlockStatus & (PathMapFlags::PASSABLE | (actorsAreBlocking ? PathMapFlags::UNMARKED : PathMapFlags::ACTOR) | PathMapFlags::TRAVEL));
 			if (childBlocked) continue;
 
 			// Weighted heuristic. Finds sub-optimal paths but should be quite a bit faster
@@ -379,7 +418,7 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 
 			// if the new distance will be shorter, check if it is reachable and if so do the update
 			unsigned short newDist = distFromStart[smptCurrent2.y * mapSize.w + smptCurrent2.x] + Distance(smptCurrent2, smptChild);
-			if (newDist < oldDist && IsWalkableTo(nmptCurrent, nmptChild, flags & PF_ACTORS_ARE_BLOCKING, caller)) {
+			if (newDist < oldDist && IsWalkableTo(nmptCurrent, nmptChild, actorsAreBlocking, caller)) {
 				parents[smptChild.y * mapSize.w + smptChild.x] = nmptCurrent;
 				distFromStart[smptChild.y * mapSize.w + smptChild.x] = newDist;
 			}
@@ -404,59 +443,67 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 		}
 	}
 
+	NavmapPoint nmptCurrent;
 	if (foundPath) {
-		// we build the path backwards here
-		PathListNode *resultPath = nullptr;
-		NavmapPoint nmptCurrent = nmptDest;
-		SearchmapPoint smptCurrent = Map::ConvertCoordToTile(nmptCurrent);
-		NavmapPoint nmptNext = parents[smptCurrent.y * mapSize.w + smptCurrent.x];
-		auto greatestDist = distances[smptCurrent.y * mapSize.w + smptCurrent.x];
-		while (!resultPath || nmptCurrent != nmptNext) {
-			// this is independent of piecing together the path, it's just convenient to calculate the greatest distance in this loop
-			auto dist = distances[smptCurrent.y * mapSize.w + smptCurrent.x];
-			if (dist > greatestDist) greatestDist = dist;
-
-			SearchmapPoint smptNext = Map::ConvertCoordToTile(nmptNext);
-
-			// smooth out the path by skipping next if we have line of sight to the node after the next
-			NavmapPoint nmptNext2 = parents[smptNext.y * mapSize.w + smptNext.x];
-			if (nmptNext != nmptNext2 && IsWalkableTo(nmptNext2, nmptCurrent, flags & PF_ACTORS_ARE_BLOCKING, caller)) {
-				nmptNext = nmptNext2;
-				continue;
-			}
-
-			PathListNode *newStep = new PathListNode;
-			newStep->point = nmptCurrent;
-			newStep->Next = resultPath;
-			// movement in general allows characters to walk backwards given that
-			// the destination is behind the character (within a threshold), and
-			// that the distance isn't too far away
-			// we approximate that with a relaxed collinearity check and intentionally
-			// skip the first step, otherwise it doesn't help with iwd beetles in ar1015
-			if (flags & PF_BACKAWAY && resultPath && std::abs(area2(nmptCurrent, resultPath->point, nmptNext)) < 300) {
-				newStep->orient = GetOrient(nmptNext, nmptCurrent);
+		nmptCurrent = nmptDest;
+	} else if (!nmptClosest.IsZero()) {
+		nmptCurrent = nmptClosest;
+	} else {
+		if (core->InDebugMode(ID_PATHFINDER)) {
+			if (caller) {
+				Log(DEBUG, "FindPath", "Pathing failed for {}", fmt::WideToChar{caller->GetShortName()});
 			} else {
-				newStep->orient = GetOrient(nmptCurrent, nmptNext);
+				Log(DEBUG, "FindPath", "Pathing failed");
 			}
-			if (resultPath) {
-				resultPath->Parent = newStep;
-			}
-			resultPath = newStep;
-
-			nmptCurrent = nmptNext;
-			smptCurrent = smptNext;
-			nmptNext = nmptNext2;
 		}
-		result.node = resultPath;
-		result.maxDistance = greatestDist;
 		return result;
-	} else if (core->InDebugMode(ID_PATHFINDER)) {
-		if (caller) {
-			Log(DEBUG, "FindPath", "Pathing failed for {}", fmt::WideToChar{caller->GetShortName()});
-		} else {
-			Log(DEBUG, "FindPath", "Pathing failed");
-		}
 	}
+	// we build the path backwards here
+	PathListNode *resultPath = nullptr;
+	SearchmapPoint smptCurrent = Map::ConvertCoordToTile(nmptCurrent);
+	NavmapPoint nmptNext = parents[smptCurrent.y * mapSize.w + smptCurrent.x];
+	auto greatestDist = distances[smptCurrent.y * mapSize.w + smptCurrent.x];
+	while (!resultPath || nmptCurrent != nmptNext) {
+		// this is independent of piecing together the path, it's just convenient to calculate the greatest distance in this loop
+		auto dist = distances[smptCurrent.y * mapSize.w + smptCurrent.x];
+		if (dist > greatestDist) greatestDist = dist;
+
+		SearchmapPoint smptNext = Map::ConvertCoordToTile(nmptNext);
+
+		// smooth out the path by skipping next if we have line of sight to the node after the next
+		NavmapPoint nmptNext2 = parents[smptNext.y * mapSize.w + smptNext.x];
+		// this check always sets actorsAreBlocking to true regardless of flags because otherwise it tends to construct paths
+		// that get stuck on walls. not sure exactly why
+		if (nmptNext != nmptNext2 && IsWalkableTo(nmptNext2, nmptCurrent, true, caller)) {
+			nmptNext = nmptNext2;
+			continue;
+		}
+
+		PathListNode *newStep = new PathListNode;
+		newStep->point = nmptCurrent;
+		newStep->Next = resultPath;
+		// movement in general allows characters to walk backwards given that
+		// the destination is behind the character (within a threshold), and
+		// that the distance isn't too far away
+		// we approximate that with a relaxed collinearity check and intentionally
+		// skip the first step, otherwise it doesn't help with iwd beetles in ar1015
+		if (flags & PF_BACKAWAY && resultPath && std::abs(area2(nmptCurrent, resultPath->point, nmptNext)) < 300) {
+			newStep->orient = GetOrient(nmptNext, nmptCurrent);
+		} else {
+			newStep->orient = GetOrient(nmptCurrent, nmptNext);
+		}
+		if (resultPath) {
+			resultPath->Parent = newStep;
+		}
+		resultPath = newStep;
+
+		nmptCurrent = nmptNext;
+		smptCurrent = smptNext;
+		nmptNext = nmptNext2;
+	}
+	result.node = resultPath;
+	result.fullPath = foundPath;
+	result.maxDistance = greatestDist;
 
 	return result;
 }
