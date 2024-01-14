@@ -3178,20 +3178,16 @@ int Map::CheckRestInterruptsAndPassTime(const Point &pos, int hours, int day)
 	// it was just a hardcoded limit to make the game more forgiving
 	// OR did it increase the number of spawned creatures by 1, 2?
 
+	bool interrupt;
 	//based on ingame timer
 	int chance=day?RestHeader.DayChance:RestHeader.NightChance;
-	bool interrupt = RAND(0, 99) < chance;
 	unsigned int spawncount = 0;
 	int spawnamount = core->GetGame()->GetTotalPartyLevel(true) * RestHeader.Difficulty;
 	if (spawnamount < 1) spawnamount = 1;
 	for (int i=0;i<hours;i++) {
+		interrupt = RAND(0,99) < chance;
 		if (interrupt) {
 			int idx = RAND(0, RestHeader.CreatureNum-1);
-			const Actor *creature = gamedata->GetCreature(RestHeader.CreResRef[idx]);
-			if (!creature) {
-				core->GetGame()->AdvanceTime(core->Time.hour_size);
-				continue;
-			}
 
 			displaymsg->DisplayString(RestHeader.Strref[idx], GUIColors::GOLD, STRING_FLAGS::SOUND);
 			while (spawnamount > 0 && spawncount < RestHeader.Maximum) {
@@ -3202,7 +3198,7 @@ int Map::CheckRestInterruptsAndPassTime(const Point &pos, int hours, int day)
 			return hours-i;
 		}
 		// advance the time in hourly steps, so an interruption is timed properly
-		core->GetGame()->AdvanceTime(core->Time.hour_size);
+		core->GetGame()->AdvanceTime(core->Time.hour_size, false);
 	}
 	return 0;
 }

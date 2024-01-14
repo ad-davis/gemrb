@@ -1785,11 +1785,6 @@ bool Game::RestParty(int checks, int dream, int hp)
 		}
 	}
 
-	// abort the partial rest; we got what we wanted
-	if (hoursLeft) {
-		return false;
-	}
-
 	//movie, cutscene, and still frame dreams
 	bool cutscene = false;
 	if (dream>=0) {
@@ -1816,9 +1811,11 @@ bool Game::RestParty(int checks, int dream, int hp)
 	}
 
 	//set partyrested flags
-	PartyRested();
-	area->PartyRested();
-	core->SetEventFlag(EF_ACTION);
+	if (!hoursLeft) {
+		PartyRested();
+		area->PartyRested();
+		core->SetEventFlag(EF_ACTION);
+	}
 
 	//bg1 has "You have rested for <DURATION>" while pst has "You have
 	//rested for <HOUR> <DURATION>" and then bg1 has "<HOUR> hours" while
@@ -1832,7 +1829,7 @@ bool Game::RestParty(int checks, int dream, int hp)
 	if (hoursMsg == ieStrRef::INVALID || restedMsg == ieStrRef::INVALID) return cutscene;
 
 	core->GetTokenDictionary()["DURATION"] = core->GetString(hoursMsg, STRING_FLAGS::NONE);
-	displaymsg->DisplayString(restedMsg, GUIColors::WHITE, STRING_FLAGS::NONE);
+	displaymsg->DisplayString(restedMsg, hoursLeft ? GUIColors::GOLD : GUIColors::WHITE, STRING_FLAGS::NONE);
 	return cutscene;
 }
 

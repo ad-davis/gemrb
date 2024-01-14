@@ -8714,7 +8714,7 @@ int Actor::RestoreSpellLevel(ieDword maxlevel, ieDword type)
 			break;
 		default:
 			//allow any (including innates)
-			typemask = ~0;
+			typemask = 0;
 	}
 	for (int i=maxlevel;i>0;i--) {
 		CREMemorizedSpell *cms = spellbook.FindUnchargedSpell(typemask, maxlevel);
@@ -8732,7 +8732,10 @@ void Actor::Rest(int hours)
 		// partial (interrupted) rest does not affect fatigue
 		//do remove effects
 		int remaining = hours*10;
-		NewStat (IE_INTOXICATION, -remaining, MOD_ADDITIVE);
+        // don't let it go negative
+        int newIntox = Modified[IE_INTOXICATION] - remaining;
+        if (newIntox < 0) newIntox = 0;
+		NewStat (IE_INTOXICATION, newIntox, MOD_ABSOLUTE);
 		//restore hours*10 spell levels
 		//rememorization starts with the lower spell levels?
 		inventory.ChargeAllItems (remaining);
