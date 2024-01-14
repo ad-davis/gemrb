@@ -74,6 +74,15 @@ def OnLoad ():
 	ScrollBar = LoadWindow.GetControl (25)
 	ScrollBar.OnChange (ScrollBarUpdated)
 	Games = GemRB.GetSaveGames ()
+	# put auto save and quick saves to the top
+	i = 0
+	end = len(Games)
+	while i < (end):
+		if Games[i].GetSaveID() in (0,1):
+			Games.append(Games.pop(i))
+			end -= 1
+		else:
+			i += 1
 	TopIndex = max (0, len(Games) - 4)
 	ScrollBar.SetVarAssoc ("TopIndex", TopIndex, 0, TopIndex)
 	LoadWindow.SetEventProxy (ScrollBar)
