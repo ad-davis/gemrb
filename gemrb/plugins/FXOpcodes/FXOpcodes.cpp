@@ -6341,6 +6341,10 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 	 * non-contingency versions are only allowed to run once per
 	 * frame, we need only check a single trigger per effect run.
 	 */
+	// don't do twice in same tick
+	if (core->GetGame()->GameTime == fx->Parameter5) {
+		return FX_APPLIED;
+	}
 
 	if (fx->FirstApply && fx->Parameter3) {
 		// TODO: display strings
