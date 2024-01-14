@@ -352,6 +352,9 @@ int GameScript::InPartyAllowDead(Scriptable *Sender, const Trigger *parameters)
 int GameScript::InPartySlot(Scriptable *Sender, const Trigger *parameters)
 {
 	const Actor *actor = core->GetGame()->GetPC(parameters->int0Parameter, false);
+	if (!actor) {
+		return 0;
+	}
 	return MatchActor(Sender, actor->GetGlobalID(), parameters->objectParameter);
 }
 
