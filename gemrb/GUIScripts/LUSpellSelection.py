@@ -34,6 +34,7 @@ Class = 0
 SpellsWindow = 0		# << spell selection window
 DoneButton = 0			# << done/next button
 SpellsTextArea = 0		# << spell description area
+SpellsSelectPoints = [0]*9	# << spell selections per level
 SpellsSelectPointsLeft = [0]*9	# << spell selections left per level
 Spells = [0]*9			# << spells learnable per level
 SpellTopIndex = 0		# << scroll bar index
@@ -68,7 +69,7 @@ def OpenSpellsWindow (actor, table, level, diff, kit=0, gen=0, recommend=True, b
 	gen is true if this is for character generation.
 	recommend is used in bg2 for spell recommendation / autopick."""
 
-	global SpellsWindow, DoneButton, SpellsSelectPointsLeft, Spells, chargen, SpellPointsLeftLabel
+	global SpellsWindow, DoneButton, SpellsSelectPoints, SpellsSelectPointsLeft, Spells, chargen, SpellPointsLeftLabel
 	global SpellsTextArea, SpellTopIndex, SpellBook, SpellLevel, pc, SpellStart, BonusPoints
 	global KitMask, EnhanceGUI, Memorization, SpellBookType, SpellsPickButton, ButtonCount, Class
 
@@ -196,36 +197,25 @@ def OpenSpellsWindow (actor, table, level, diff, kit=0, gen=0, recommend=True, b
 
 	AlreadyShown = 0
 	for i in range (9):
+
 		# make sure we always have a value to minus (bards)
 		SecondPoints = SpellsToMemoTable.GetValue (str(level-diff), str(i+1), GTV_INT)
 
-		# make sure we get more spells of each class before continuing
-		SpellsSelectPointsLeft[i] = SpellsToMemoTable.GetValue (str(level), str(i+1), GTV_INT) - SecondPoints
-		if SpellsSelectPointsLeft[i] <= 0:
-			continue
+		SpellsSelectPoints[i] = SpellsToMemoTable.GetValue (str(level), str(i+1), GTV_INT)
+		SpellsSelectPointsLeft[i] = SpellsSelectPoints[i] - SecondPoints
 
 		# luckily the bonus applies both to learning and memorization
 		if IWD2 and chargen:
 			BonusPoints[i] = BonusSpellTable.GetValue (str(CastingStatValue), str(i+1), GTV_INT)
 			SpellsSelectPointsLeft[i] += BonusPoints[i]
 
-		if SpellsSelectPointsLeft[i] <= 0:
-			continue
-		elif chargen and KitMask != 0x4000 and (not IWD2 or SpellBookType == IE_IWD2_SPELL_WIZARD):
+		if chargen and KitMask != 0x4000 and (not IWD2 or SpellBookType == IE_IWD2_SPELL_WIZARD):
 			# specialists get an extra spell per level
 			SpellsSelectPointsLeft[i] += 1
 			BonusPoints[i] += 1
 
 		# get all the spells of the given level
 		Spells[i] = Spellbook.GetMageSpells (KitMask, GemRB.GetPlayerStat (pc, IE_ALIGNMENT), i+1, Class)
-
-		# dump all the spells we already know
-		NumDeleted = 0
-		for j in range (len (Spells[i])):
-			CurrentIndex = j - NumDeleted # this ensure we don't go out of range
-			if Spellbook.HasSpell (pc, SpellBookType, i, Spells[i][CurrentIndex][0]) >= 0:
-				del Spells[i][CurrentIndex]
-				NumDeleted += 1
 
 		# display these spells if it's the first non-zero level
 		if AlreadyShown == 0:
@@ -236,9 +226,17 @@ def OpenSpellsWindow (actor, table, level, diff, kit=0, gen=0, recommend=True, b
 			ScrollBar = SpellsWindow.GetControl (NewScrollBarID)
 			UpdateScrollBar (ScrollBar, len (Spells[i]))
 
+			# dump all the spells we already know
+			for j in range (len (Spells[i])):
+				if Spellbook.HasSpell (pc, SpellBookType, i, Spells[i][j][0]) >= 0:
+					SpellBook[j] = 1
+
 			# show our spells
 			ShowSpells ()
 			AlreadyShown = 1
+
+		if SpellsSelectPointsLeft[i] == 0:
+			DoneButton.SetState (IE_GUI_BUTTON_ENABLED)
 
 	# show the selection window
 	if chargen:
@@ -290,16 +288,18 @@ def SpellsDonePress ():
 
 	# save all the spells
 	if not Memorization:
+		Spellbook.RemoveKnownSpells(pc, SpellBookType, SpellLevel+1, SpellLevel+1)
 		for i in range (len (Spells[SpellLevel])):
 			if SpellBook[i]: # we need to learn this spell
 				if IWD2:
 					GemRB.LearnSpell (pc, Spells[SpellLevel][i][0], 0, 1<<SpellBookType)
 				else:
 					GemRB.LearnSpell (pc, Spells[SpellLevel][i][0])
+		GemRB.ChargeSpells (pc)
 
 		# check to see if we need to update again
 		for i in range (SpellLevel+1, 9):
-			if SpellsSelectPointsLeft[i] > 0:
+			if SpellsSelectPoints[i] > 0:
 				# reset the variables
 				GemRB.SetVar ("SpellTopIndex", 0)
 				SpellLevel = i
@@ -311,7 +311,12 @@ def SpellsDonePress ():
 
 				# show the spells and set the done button to off
 				ShowSpells ()
-				DoneButton.SetDisabled(True)
+				for j in range (len (Spells[i])):
+					if Spellbook.HasSpell (pc, SpellBookType, i, Spells[i][j][0]) >= 0:
+						SpellBook[j] = 1
+				ShowSelectedSpells ()
+				if SpellsSelectPointsLeft[i] > 0:
+					DoneButton.SetDisabled(True)
 				return
 
 		# bg1 lets you memorize spells too (iwd too, but it does it by itself)
