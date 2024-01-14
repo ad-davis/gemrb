@@ -1168,14 +1168,8 @@ static void pcf_hitpoint(Actor *actor, ieDword oldValue, ieDword hp)
 	}
 }
 
-static void pcf_maxhitpoint(Actor *actor, ieDword oldValue, ieDword newValue)
+static void pcf_maxhitpoint(Actor *actor, ieDword /*oldValue*/, ieDword /*newValue*/)
 {
-	if (actor->hpChangeAfterMaxChange) {
-		int newhp = ((float)(newValue))*((float)actor->Modified[IE_HITPOINTS]/oldValue);
-		actor->BaseStats[IE_HITPOINTS] = newhp;
-	} else {
-		actor->hpChangeAfterMaxChange = true;
-	}
 	if (!actor->checkHP) {
 		actor->checkHP = 1;
 		actor->checkHPTime = core->GetGame()->GameTime;

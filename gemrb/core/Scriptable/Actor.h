@@ -444,9 +444,6 @@ public:
 	int checkHP = 2;
 	// to determine that a tick has passed
 	ieDword checkHPTime = 0;
-	// if set to false, will not recalculate current hp after changing max hp
-	// when the pcf runs it changes this to true
-	bool hpChangeAfterMaxChange = false;
 	/**
 	 * We don't know how to profit of them, but PST needs them saved.
 	 * Otherwise, some actors are badly drawn, like TNO but not Morte.

@@ -1709,12 +1709,9 @@ int fx_maximum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	bool base = fx->TimingMode==FX_DURATION_INSTANT_PERMANENT;
 
-	// modes 3,4,5 and are the same as 0,1,2 but they don't change current hp
-	if (fx->Parameter2 >= 3) {
-		// set this to prevent changing current hp
-		target->hpChangeAfterMaxChange = false;
-	}
+	int conBonus = target->GetLastConBonus();
 
+	// modes 3,4,5 and are the same as 0,1,2 but they don't change current hp
 	switch (fx->Parameter2 % 3) {
 	case 0:
 		// random value Parameter1 is set by level_check in EffectQueue
@@ -1735,11 +1732,18 @@ int fx_maximum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		if (base) {
 			BASE_MUL(IE_MAXHITPOINTS, fx->Parameter1 );
 		} else {
-			// take into account the con bonus, which gets applied after
-			int conBonus = target->GetLastConBonus();
+			// take into account the con bonus, but take it off after as it gets applied on top of this
 			STAT_SET(IE_MAXHITPOINTS, (BASE_GET(IE_MAXHITPOINTS)+conBonus)*fx->Parameter1/100 - conBonus);
 		}
 		break;
+	}
+	if (fx->Parameter2 < 3 && fx->FirstApply) {
+		// the previous value will have the bonuses on top
+		int difference = (int)target->GetStat(IE_MAXHITPOINTS) - (int)target->GetSafeStat(IE_MAXHITPOINTS) + conBonus;
+		if (difference > 0) {
+			// con bonus hasn't been applied yet so the pcf would clamp the max hitpoints
+			target->SetBaseNoPCF(IE_HITPOINTS, target->GetBase(IE_HITPOINTS) + difference);
+		}
 	}
 	return FX_PERMANENT;
 }
