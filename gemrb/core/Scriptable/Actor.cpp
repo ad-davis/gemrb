@@ -3242,6 +3242,7 @@ bool Actor::GetSavingThrow(ieDword type, int modifier, const Effect *fx)
 	const Effect* sfx = fxqueue.HasEffect(fx_save_vs_school_bonus_ref);
 
 	if (!third) {
+		int against = GetStat(savingThrows[type]);
 		ret += modifier + GetStat(IE_LUCK);
 
 		// also take any "vs school" bonus into account
@@ -3259,7 +3260,7 @@ bool Actor::GetSavingThrow(ieDword type, int modifier, const Effect *fx)
 		if (core->HasFeedback(FT_COMBAT) && (lastSave.prevType != type || lastSave.prevRoll != ret)) {
 			// "Save Vs Death" in all games except pst: "Save Vs. Death:"
 			String msg = core->GetString(DisplayMessage::GetStringReference(HCStrings(ieDword(HCStrings::SaveSpell) + type)));
-			msg += L" " + fmt::to_wstring(ret);
+			msg += fmt::format(L": {} vs {}", ret, against);
 			displaymsg->DisplayStringName(std::move(msg), GUIColors::WHITE, this);
 		}
 		lastSave.prevType = type;
