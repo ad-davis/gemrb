@@ -4188,14 +4188,14 @@ int fx_set_aid_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (fx->FirstApply) {
 		BASE_ADD(IE_HITPOINTS, fx->Parameter2);
 	}
-	HandleBonus(target, IE_SAVEVSDEATH, fx->Parameter1, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSWANDS, fx->Parameter1, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSPOLY, fx->Parameter1, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSBREATH, fx->Parameter1, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSSPELL, fx->Parameter1, fx->TimingMode);
+	HandleBonus(target, IE_SAVEVSDEATH, fx->Parameter1, 0);
+	HandleBonus(target, IE_SAVEVSWANDS, fx->Parameter1, 0);
+	HandleBonus(target, IE_SAVEVSPOLY, fx->Parameter1, 0);
+	HandleBonus(target, IE_SAVEVSBREATH, fx->Parameter1, 0);
+	HandleBonus(target, IE_SAVEVSSPELL, fx->Parameter1, 0);
 
 	//bless effect too?
-	target->ToHit.HandleFxBonus(fx->Parameter1, fx->TimingMode==FX_DURATION_INSTANT_PERMANENT);
+	target->ToHit.HandleFxBonus(fx->Parameter1, 0);
 	STAT_ADD( IE_DAMAGEBONUS, fx->Parameter1);
 	if (core->HasFeature(GFFlags::ENHANCED_EFFECTS)) {
 		target->AddPortraitIcon(PI_AID);
@@ -6072,11 +6072,11 @@ int fx_leveldrain_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	}
 	STAT_ADD(IE_LEVELDRAIN, mod);
 	STAT_SUB(IE_MAXHITPOINTS, x);
-	HandleBonus(target, IE_SAVEVSDEATH, -mod, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSWANDS, -mod, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSPOLY, -mod, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSBREATH, -mod, fx->TimingMode);
-	HandleBonus(target, IE_SAVEVSSPELL, -mod, fx->TimingMode);
+	HandleBonus(target, IE_SAVEVSDEATH, -mod, 0);
+	HandleBonus(target, IE_SAVEVSWANDS, -mod, 0);
+	HandleBonus(target, IE_SAVEVSPOLY, -mod, 0);
+	HandleBonus(target, IE_SAVEVSBREATH, -mod, 0);
+	HandleBonus(target, IE_SAVEVSSPELL, -mod, 0);
 
 	// to-hit gets recalculated based on class, but we just estimate it
 	STAT_SUB(IE_TOHIT, mod / 2);
