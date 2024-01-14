@@ -7313,10 +7313,18 @@ int fx_apply_effect_repeat (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (oldfx && oldfx->Duration < fx->Duration) {
 		return FX_NOT_APPLIED;
 	}
-	
+
 	Effect *newfx = core->GetEffect(fx->Resource, fx->Power, fx->Pos);
 	if (!newfx) {
 		return FX_NOT_APPLIED;
+	}
+
+	// don't apply twice in the same tick
+	ieDword gametime = core->GetGame()->GameTime;
+	if (fx->Parameter5 == gametime) {
+		return FX_APPLIED;
+	} else {
+		fx->Parameter5 = gametime;
 	}
 
 	// fx->Parameter4 is an optional frequency multiplier
