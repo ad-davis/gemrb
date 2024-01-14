@@ -1460,9 +1460,9 @@ int fx_damage (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		return FX_NOT_APPLIED;
 	}
 
-	target->Damage(fx->Parameter1, damagetype, caster, modtype, fx->IsVariable, fx->SavingThrowType, fx->IsVariable);
-	//this effect doesn't stick
-	return FX_NOT_APPLIED;
+	DamageResult damage = target->Damage(fx->Parameter1, damagetype, caster, modtype, fx->IsVariable, fx->SavingThrowType, fx->IsVariable);
+	// if the target completely resists, don't add subsequent effects
+	return damage.avoided ? FX_ABORT : FX_NOT_APPLIED;
 }
 
 // 0x0d Death

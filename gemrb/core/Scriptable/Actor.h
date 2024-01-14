@@ -351,6 +351,11 @@ enum DamageFlags {
 	NoAwake = 0x200
 };
 
+struct GEM_EXPORT DamageResult {
+	const int damage;
+	const bool avoided; // used to abort subsequent effects
+};
+
 GEM_EXPORT void UpdateActorConfig(); //call this from guiscripts when some variable has changed
 
 bool VVCSort(const ScriptedAnimation* lhs, const ScriptedAnimation* rhs);
@@ -711,7 +716,7 @@ public:
 	/* check and perform a cleave movement */
 	void CheckCleave();
 	/* deals damage to this actor */
-	int Damage(int damage, int damagetype, Scriptable* hitter, int modtype = MOD_ADDITIVE, int critical = 0, int saveflags = 0, int specialFlags = 0);
+	DamageResult Damage(int damage, int damagetype, Scriptable* hitter, int modtype = MOD_ADDITIVE, int critical = 0, int saveflags = 0, int specialFlags = 0);
 	/* displays the damage taken and other details (depends on the game type) */
 	void DisplayCombatFeedback(int damage, int resisted, int damagetype, const Scriptable *hitter, bool mirrorimage, bool stoneskin);
 	/* play a random footstep sound */

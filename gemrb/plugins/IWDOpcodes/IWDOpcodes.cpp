@@ -653,8 +653,8 @@ int fx_vampiric_touch (Scriptable* Owner, Actor* target, Effect* fx)
 		default:
 			return FX_NOT_APPLIED;
 	}
-	int damage = donor->Damage(fx->Parameter1, DAMAGE_MAGIC, owner, MOD_ADDITIVE, fx->IsVariable, fx->SavingThrowType);
-	receiver->SetBase(IE_HITPOINTS, receiver->GetBase(IE_HITPOINTS) + damage);
+	DamageResult damage = donor->Damage(fx->Parameter1, DAMAGE_MAGIC, owner, MOD_ADDITIVE, fx->IsVariable, fx->SavingThrowType);
+	receiver->SetBase(IE_HITPOINTS, receiver->GetBase(IE_HITPOINTS) + damage.damage);
 	return FX_NOT_APPLIED;
 }
 

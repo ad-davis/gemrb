@@ -4142,18 +4142,18 @@ static void ChunkActor(Actor* actor)
 }
 
 //returns actual damage
-int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, int critical, int saveflags, int specialFlags)
+DamageResult Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, int critical, int saveflags, int specialFlags)
 {
 	bool stoneskin, mirrorimage;
 	stoneskin = mirrorimage = false;
 	//won't get any more hurt
 	if (InternalFlags & IF_REALLYDIED) {
-		return 0;
+		return {0, true};
 	}
 	// hidden creatures are immune too, iwd2 Targos palisade attack relies on it (12cspn1a.bcs)
 	// same for seagulls and other non-jumpers
 	if (Modified[IE_AVATARREMOVAL] || Modified[IE_DONOTJUMP] == DNJ_BIRD) {
-		return 0;
+		return {0, true};
 	}
 
 	// only pst has special crits and they share the same storage
@@ -4185,7 +4185,7 @@ int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, i
 	default:
 		//this shouldn't happen
 		Log(ERROR, "Actor", "Invalid damage modifier type!");
-		return 0;
+		return {0, true};
 	}
 
 	if (GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_MAGE) {
@@ -4383,7 +4383,7 @@ int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, i
 			core->SetEventFlag(EF_PORTRAIT);
 		}
 	}
-	return damage;
+	return {damage, mirrorimage};
 }
 
 void Actor::DisplayCombatFeedback(int damage, int resisted, int damagetype, const Scriptable *hitter, bool mirrorimage, bool stoneskin)
