@@ -4802,7 +4802,7 @@ int fx_find_traps (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	ieDword id = target->GetGlobalID();
 	ieDword skill;
 	bool detecttraps = true;
-	bool halveRange = true;
+	bool halveRange = !core->GetVariable("Larger Trapfinding Range", 0);
 
 	switch(fx->Parameter2) {
 		case 1:
