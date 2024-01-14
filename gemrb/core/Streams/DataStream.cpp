@@ -98,7 +98,7 @@ strret_t DataStream::WriteFilling(strpos_t len)
 	return ret;
 }
 
-strret_t DataStream::ReadPoint(Point &p)
+strret_t DataStream::ReadPoint(Point& p)
 {
 	// in the data files Points are 16bit per coord as opposed to our 32ish
 	strret_t ret = ReadScalar<int, ieWordSigned>(p.x);
@@ -106,7 +106,7 @@ strret_t DataStream::ReadPoint(Point &p)
 	return ret;
 }
 
-strret_t DataStream::WritePoint(const Point &p)
+strret_t DataStream::WritePoint(const Point& p)
 {
 	// in the data files Points are 16bit per coord as opposed to our 32ish
 	strret_t ret = WriteScalar<int, ieWordSigned>(p.x);
@@ -124,10 +124,13 @@ strret_t DataStream::ReadSize(class Size& s)
 strret_t DataStream::ReadRegion(Region& r, bool asPoints)
 {
 	strret_t ret = ReadPoint(r.origin);
-	ret += ReadSize(r.size);
 	if (asPoints) { // size is really the "max" coord
-		r.w -= r.x;
-		r.h -= r.y;
+		Point max;
+		ReadPoint(max);
+		r.w = max.x - r.x;
+		r.h = max.y - r.y;
+	} else {
+		ret += ReadSize(r.size);
 	}
 	return ret;
 }
