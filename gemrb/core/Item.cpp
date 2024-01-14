@@ -101,6 +101,8 @@ EffectQueue Item::GetEffectBlock(Scriptable *self, const Point &pos, int usage, 
 		if (usage >= 0) {
 			//this is not coming from the item header, but from the recharge flags
 			fx->SourceFlags = ext_headers[usage].RechargeFlags;
+			fx->PrimaryType = ext_headers[usage].PrimaryType;
+			fx->SecondaryType = ext_headers[usage].SecondaryType;
 		} else {
 			fx->SourceFlags = 0;
 		}

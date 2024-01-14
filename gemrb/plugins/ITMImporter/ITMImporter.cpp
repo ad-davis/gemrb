@@ -294,8 +294,10 @@ void ITMImporter::GetExtHeader(const Item *s, ITMExtHeader* eh)
 	str->Read(&eh->Speed, 1);
 	str->Read(&eh->AltDamageBonus, 1);
 	str->ReadWord(eh->THAC0Bonus);
-	str->ReadWord(eh->DiceSides);
-	str->ReadWord(eh->DiceThrown);
+	str->Read(&eh->DiceSides, 1);
+	str->Read(&eh->PrimaryType, 1);
+	str->Read(&eh->DiceThrown, 1);
+	str->Read(&eh->SecondaryType, 1);
 	str->ReadScalar<ieWordSigned>(eh->DamageBonus);
 	str->ReadWord(eh->DamageType);
 	ieWord featureCount;

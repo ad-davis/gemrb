@@ -7095,17 +7095,15 @@ void Actor::FinishAttack() {
 	ieDword damagetype = hittingheader->DamageType;
 	int damage = 0;
 
-	if (hittingheader->DiceThrown<256) {
-		// another bizarre 2E feature that's unused, but working
-		if (!third && hittingheader->AltDiceSides && target->GetStat(IE_MC_FLAGS) & MC_LARGE_CREATURE) {
-			// make sure not to discard other damage bonuses from above
-			int dmgBon = DamageBonus - hittingheader->DamageBonus + hittingheader->AltDamageBonus;
-			damage += LuckyRoll(hittingheader->AltDiceThrown, hittingheader->AltDiceSides, dmgBon, LR_DAMAGELUCK);
-		} else {
-			damage += LuckyRoll(hittingheader->DiceThrown, hittingheader->DiceSides, DamageBonus, LR_DAMAGELUCK);
-		}
-		if (damage <= 0) damage = 1; // bad luck, effects and/or profs on lowlevel chars
+	// another bizarre 2E feature that's unused, but working
+	if (!third && hittingheader->AltDiceSides && target->GetStat(IE_MC_FLAGS) & MC_LARGE_CREATURE) {
+		// make sure not to discard other damage bonuses from above
+		int dmgBon = DamageBonus - hittingheader->DamageBonus + hittingheader->AltDamageBonus;
+		damage += LuckyRoll(hittingheader->AltDiceThrown, hittingheader->AltDiceSides, dmgBon, LR_DAMAGELUCK);
+	} else {
+		damage += LuckyRoll(hittingheader->DiceThrown, hittingheader->DiceSides, DamageBonus, LR_DAMAGELUCK);
 	}
+	if (damage <= 0) damage = 1; // bad luck, effects and/or profs on lowlevel chars
 
 	bool critical = criticalroll >= attackRollDiceSides;
 	bool success = critical;

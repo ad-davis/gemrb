@@ -1680,10 +1680,10 @@ void EffectQueue::RemoveLevelEffects(ieDword level, ieDword Flags, ieDword match
 		if (removed && removed != fx.SourceRef) {
 			continue;
 		}
-		if (Flags & RL_MATCHSCHOOL && fx.PrimaryType != match) {
+		if (Flags & RL_MATCHSCHOOL && (fx.PrimaryType != match)) {
 			continue;
 		}
-		if (Flags & RL_MATCHSECTYPE && fx.SecondaryType != match) {
+		if (Flags & RL_MATCHSECTYPE && (fx.SecondaryType != match)) {
 			continue;
 		}
 		//if dispellable was not set, or the effect is dispellable
@@ -2181,7 +2181,7 @@ std::string EffectQueue::dump(bool print) const
 			return buffer;
 		}
 		const auto& opcodeName = Opcodes[fx.Opcode].Name ? Opcodes[fx.Opcode].Name : "unknown opcode";
-		AppendFormat(buffer, " {:2d}: 0x{:02x}: {} ({}, {}) S:{}\n", i++, fx.Opcode, opcodeName, fx.Parameter1, fx.Parameter2, fx.SourceRef);
+		AppendFormat(buffer, " {:2d}: 0x{:02x}: {} ({}, {}) Source:{}, School:{}, SecondaryType:{}\n", i++, fx.Opcode, opcodeName, fx.Parameter1, fx.Parameter2, fx.SourceRef, fx.PrimaryType, fx.SecondaryType);
 	}
 	if (print) Log(DEBUG, "EffectQueue", "{}", buffer);
 	return buffer;

@@ -154,8 +154,10 @@ public:
 	ieByte Speed = 0;
 	ieByte AltDamageBonus = 0;
 	ieWord THAC0Bonus = 0;
-	ieWord DiceSides = 0;
-	ieWord DiceThrown = 0;
+	ieByte DiceSides = 0;
+	ieByte DiceThrown = 0;
+	ieByte PrimaryType = 0;
+	ieByte SecondaryType = 0;
 	ieWordSigned DamageBonus = 0; // this must be signed!!!
 	ieWord DamageType = 0;
 	ieWord FeatureOffset = 0;
