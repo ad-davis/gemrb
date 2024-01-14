@@ -6735,7 +6735,12 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		core->ApplySpell(puppetRef, copy, copy, 0);
 	}
 
-	copy->ApplyEffectCopy(fx, fx_puppetmarker_ref, copy, fx->CasterID, fx->Parameter2);
+	if (target->InParty) {
+		copy->ApplyEffectCopy(fx, fx_puppetmarker_ref, copy, target->InParty, fx->Parameter2);
+	} else {
+		copy->ApplyEffectCopy(fx, fx_puppetmarker_ref, copy, fx->CasterID, fx->Parameter2);
+	}
+
 	return FX_NOT_APPLIED;
 }
 
@@ -6743,7 +6748,13 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 int fx_puppet_marker (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_puppet_marker(%2d): Value: %d, Stat: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
-	Actor *master = core->GetGame()->GetActorByGlobalID(fx->Parameter1);
+	// this doesn't behave well for NPCs as global ids change between loads - a save/load kills the summon
+	Actor *master = NULL;
+	if (fx->Parameter1>1000) {
+		master = core->GetGame()->GetActorByGlobalID(fx->Parameter1);
+	} else {
+		master = core->GetGame()->FindPC(fx->Parameter1);
+	}
 	// selfdestruct if the master is gone
 	if (!master || master->Modified[IE_STATE_ID]&STATE_DEAD) {
 		target->DestroySelf();

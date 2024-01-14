@@ -2571,6 +2571,12 @@ void Actor::CheckPuppet(Actor *puppet, ieDword type)
 	if (!puppet) return;
 	if (puppet->Modified[IE_STATE_ID]&STATE_DEAD) return;
 
+	// check if the puppet has a name, it won't if just loaded
+	if (puppet->GetShortName().empty()) {
+		puppet->SetName(GetShortName(), 0);
+		puppet->SetName(GetName(), 1);
+	}
+
 	switch(type) {
 		case 1:
 			Modified[IE_STATE_ID] |= state_invisible;
