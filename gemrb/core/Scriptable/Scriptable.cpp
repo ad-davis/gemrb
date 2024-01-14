@@ -1337,7 +1337,6 @@ int Scriptable::SpellCast(bool instant, Scriptable* target, int level)
 		} else {
 			fxqueue.AddAllEffects(actor, actor->Pos);
 		}
-		actor->WMLevelMod = 0;
 		if (actor->Modified[IE_FORCESURGE] == 1) {
 			// affects only the next spell cast, but since the timing is permanent,
 			// we have to remove it manually
@@ -1428,7 +1427,7 @@ bool Scriptable::HandleHardcodedSurge(const ResRef& surgeSpell, const Spell *spl
 	// format: ID or ID.param1 or +SPELLREF
 	int types = caster->spellbook.GetTypes();
 	int lvl = spl->SpellLevel-1;
-	int count, i, tmp, tmp3;
+	int count, i, tmp;
 	Scriptable *target = NULL;
 	Point targetpos(-1, -1);
 	ResRef newSpell;
@@ -1457,7 +1456,6 @@ bool Scriptable::HandleHardcodedSurge(const ResRef& surgeSpell, const Spell *spl
 			// force surge and then cast
 			// force the surge roll to be < 100, so we cast a spell from the surge table
 			tmp = caster->Modified[IE_FORCESURGE];
-			tmp3 = caster->WMLevelMod; // also save caster level; the original didn't reroll the bonus
 			caster->Modified[IE_FORCESURGE] = 7;
 			if (LastSpellTarget) {
 				target = area->GetActorByGlobalID(LastSpellTarget);
@@ -1476,12 +1474,10 @@ bool Scriptable::HandleHardcodedSurge(const ResRef& surgeSpell, const Spell *spl
 				if (target) {
 					caster->CastSpell(target, false, true, false, level);
 					newSpell = SpellResRef;
-					caster->WMLevelMod = tmp3;
 					caster->CastSpellEnd(level, true);
 				} else {
 					caster->CastSpellPoint(targetpos, false, true, false, level);
 					newSpell = SpellResRef;
-					caster->WMLevelMod = tmp3;
 					caster->CastSpellPointEnd(level, true);
 				}
 				// reset the ref, since CastSpell*End destroyed it

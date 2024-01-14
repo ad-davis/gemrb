@@ -4816,10 +4816,10 @@ int Actor::GetWildMod(int level)
 	}
 
 	// avoid rerolling the mod, since we get called multiple times per each cast
-	// TODO: also handle a reroll to 0
-	if (WMLevelMod) {
+	if (WMLevelModRolled) {
 		return 0;
 	}
+	WMLevelModRolled = true;
 
 	level = Clamp(level, 1, MAX_LEVEL);
 	static int modRange = int(wmLevelMods.size());
@@ -10920,6 +10920,7 @@ void Actor::DisplayHeadHPRatio()
 void Actor::ReleaseCurrentAction()
 {
 	disarmTrap = -1;
+	WMLevelModRolled = false;
 	Scriptable::ReleaseCurrentAction();
 }
 

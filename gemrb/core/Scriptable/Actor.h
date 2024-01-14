@@ -406,7 +406,6 @@ public:
 	unsigned char WeaponType = 0;
 	ieDword multiclass = 0;
 	bool GotLUFeedback = false;
-	int WMLevelMod = 0;
 
 	int LastDamageType = 0;
 	int LastDamage = 0;
@@ -485,6 +484,8 @@ private:
 	tick_t lastTalkTimeCheckAt = 0;
 	ieDword lastScriptCheck = 0;
 	int lastConBonus;
+	int WMLevelMod = 0;
+	bool WMLevelModRolled = false;
 	/** paint the actor itself. Called internally by Draw() */
 	void DrawActorSprite(const Point& p, BlitFlags flags,
 						 const std::vector<AnimationPart>& anims, const Color& tint) const;
