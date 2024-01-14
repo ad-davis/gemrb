@@ -7050,10 +7050,10 @@ int fx_create_spell_sequencer(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		return FX_NOT_APPLIED;
 	}
 	//just a call to activate the spell sequencer creation gui
-	if (target->InParty) {
+	if (target->GetStat(IE_EA) <= EA_CONTROLLABLE) {
 		auto& vars = core->GetDictionary();
 
-		vars["P0"] = target->InParty;
+		vars["P0"] = target->GetGlobalID();
 		vars["P1"] = fx->Parameter1;
 		vars["P2"] = fx->Parameter2 | (2 << 16);
 		core->SetEventFlag(EF_SEQUENCER);
