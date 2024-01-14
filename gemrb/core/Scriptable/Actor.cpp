@@ -8856,7 +8856,7 @@ int Actor::RestoreSpellLevel(ieDword maxlevel, ieDword type)
 			typemask = 0;
 	}
 	for (int i=maxlevel;i>0;i--) {
-		CREMemorizedSpell *cms = spellbook->FindUnchargedSpell(typemask, maxlevel);
+		CREMemorizedSpell *cms = spellbook->FindUnchargedSpell(typemask, i);
 		if (cms) {
 			spellbook->ChargeSpell(cms);
 			return i;
