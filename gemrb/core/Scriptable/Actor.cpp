@@ -446,9 +446,17 @@ void Actor::SetName(ieStrRef strref, unsigned char type)
 
 void Actor::SetAnimationID(unsigned int AnimID)
 {
+	bool refresh = !currentStance.anim.empty() || !currentStance.shadow.empty();
 	//if the palette is locked, then it will be transferred to the new animation
 	PaletteHolder recover = nullptr;
 	ResRef paletteResRef;
+
+	auto newAnims = new CharAnimations(AnimID & 0xffff, BaseStats[IE_ARMOR_TYPE]);
+	if (!newAnims || newAnims->ResRefBase.IsEmpty()) {
+		delete newAnims;
+		Log(ERROR, "Actor", "Missing animation for {}", fmt::WideToChar{GetName()});
+		return;
+	}
 
 	if (anims) {
 		if (anims->lockPalette) {
@@ -472,13 +480,7 @@ void Actor::SetAnimationID(unsigned int AnimID)
 		BaseStats[IE_COLORCOUNT] = 0;
 	}
 
-	anims = new CharAnimations(AnimID & 0xffff, BaseStats[IE_ARMOR_TYPE]);
-	if (!anims || anims->ResRefBase.IsEmpty()) {
-		delete anims;
-		anims = nullptr;
-		Log(ERROR, "Actor", "Missing animation for {}", fmt::WideToChar{GetName()});
-		return;
-	}
+	anims = newAnims;
 	anims->SetOffhandRef(ShieldRef);
 	anims->SetHelmetRef(HelmetRef);
 	anims->SetWeaponRef(WeaponRef);
@@ -528,6 +530,8 @@ void Actor::SetAnimationID(unsigned int AnimID)
 
 	// set internal speed too, since we may need it in the same tick (eg. csgolem in the bg2 intro)
 	SetSpeed(false);
+	// refreshes the stance animations as we deleted them above
+	if (refresh) AdvanceAnimations();
 }
 
 CharAnimations* Actor::GetAnims() const
