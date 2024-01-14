@@ -799,7 +799,11 @@ def TypeSetStats(stats, pc=0):
 				if base == stat:
 					res.append (base_str)
 				else:
-					res.append (base_str + " (" + str(stat-base) + ")")
+					change = stat-base
+					if change > 0:
+						res.append (base_str + " (+" + str(stat-base) + ")")
+					else:
+						res.append (base_str + " (" + str(stat-base) + ")")
 			elif stattype == 'x': #x character before value
 				res.append (GemRB.GetString (strref) +': x' + str (val) )
 			elif stattype == 'a': #value (portrait icon) + string
