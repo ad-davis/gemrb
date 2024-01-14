@@ -10064,6 +10064,8 @@ ieDword Actor::GetLevelInClass(ieDword classid) const
 //lowlevel internal function, isclass is NOT the class id, but an internal index
 ieDword Actor::GetClassLevel(const ieDword isClass) const
 {
+	ieDword levelStat;
+
 	if (isClass >= ISCLASSES)
 		return 0;
 
@@ -10075,13 +10077,14 @@ ieDword Actor::GetClassLevel(const ieDword isClass) const
 	ieDword classID = BaseStats[IE_CLASS] - 1;
 	if (!HasPlayerClass()) return 0;
 
-	// handle barbarians specially, since they're kits and not in levelStats
+	//handle barbarians specially, since they're kits and not in levelslots
 	if ((isClass == ISBARBARIAN) && levelStats[classID][ISFIGHTER] && (BaseStats[IE_KIT] == KIT_BARBARIAN)) {
-		return BaseStats[IE_LEVEL];
+		levelStat = levelStats[classID][ISFIGHTER];
+	} else {
+		//get the levelid (IE_LEVEL,*2,*3)
+		levelStat = levelStats[classID][isClass];
 	}
 
-	// get the level stat (IE_LEVEL,*2,*3)
-	ieDword levelStat = levelStats[classID][isClass];
 	if (!levelStat) return 0;
 
 	//do dual-swap
