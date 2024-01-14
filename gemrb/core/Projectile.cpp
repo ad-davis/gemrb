@@ -552,7 +552,8 @@ void Projectile::Payload()
 			effects.SetOwner(Owner);
 			EffectQueue projQueue;
 			ProcessEffects(projQueue, Owner, target, true);
-			projQueue.AddAllEffects(target, Destination);
+			projQueue.SetDestination(Destination);
+			target->AddEffects(std::move(projQueue));
 		}
 	}
 	effects = EffectQueue();
@@ -580,7 +581,7 @@ void Projectile::ProcessEffects(EffectQueue& projQueue, Scriptable* owner, Actor
 	}
 
 	if (apply && selfQueue.GetEffectsCount()) {
-		core->ApplyEffectQueue(&selfQueue, target, owner);
+		core->ApplyEffectQueue(std::move(selfQueue), target, owner);
 	}
 }
 
@@ -1128,7 +1129,7 @@ void Projectile::LineTarget(Path::const_iterator beg, Path::const_iterator end) 
 					target->SetColorMod(0xff, RGBModifier::ADD, ColorSpeed, RGB);
 				}
 
-				eff.AddAllEffects(target, target->Pos);
+				target->AddEffects(std::move(eff));
 			}
 		}
 	} while (iter != end);

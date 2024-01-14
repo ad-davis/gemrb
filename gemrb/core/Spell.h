@@ -31,6 +31,7 @@
 #include "exports.h"
 #include "ie_types.h"
 
+#include "Audio.h"
 #include "EffectQueue.h"
 
 namespace GemRB {
@@ -168,8 +169,10 @@ public:
 	int GetHeaderIndexFromLevel(int level) const;
 	//-1 will return the cfb
 	EffectQueue GetEffectBlock(Scriptable *self, const Point &pos, int block_index, int level, ieDword pro=0);
-	// add appropriate casting glow effect
-	void AddCastingGlow(EffectQueue *fxqueue, ieDword duration, int gender) const;
+	// creates casting glow effect
+	Effect* CreateCastingGlow(ieDword duration) const;
+	// creates casting sound
+	Holder<SoundHandle> CreateCastingSound(ieDword duration, int gender, Point p) const;
 	//returns a projectile created from an extended header
 	Projectile *GetProjectile(Scriptable *self, int headerindex, int level, const Point &pos);
 	unsigned int GetCastingDistance(Scriptable *Sender) const;

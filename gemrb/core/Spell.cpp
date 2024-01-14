@@ -91,10 +91,18 @@ int Spell::GetHeaderIndexFromLevel(int level) const
 //otherwise set to caster level
 static EffectRef fx_casting_glow_ref = { "CastingGlow", -1 };
 
-void Spell::AddCastingGlow(EffectQueue *fxqueue, ieDword duration, int gender) const
+Effect* Spell::CreateCastingGlow(ieDword duration) const
 {
-	char g, t;
 	Effect *fx;
+	fx = EffectQueue::CreateEffect(fx_casting_glow_ref, 0, CastingGraphics, FX_DURATION_ABSOLUTE);
+	fx->Duration = core->GetGame()->GameTime + duration;
+	fx->InventorySlot = 0xffff;
+	fx->Projectile = 0;
+	return fx;
+}
+
+Holder<SoundHandle> Spell::CreateCastingSound(ieDword duration, int gender, Point p) const {
+	char g, t;
 	ResRef Resource;
 
 	int cgsound = CastingSound;
@@ -133,15 +141,10 @@ void Spell::AddCastingGlow(EffectQueue *fxqueue, ieDword duration, int gender) c
 			Resource.Format("CHA_{}{}{:02d}", g, t, std::min(cgsound & 0xff, 99));
 		}
 		// only actors have fxqueue's and also the parent function checks for that
-		Actor *caster = (Actor *) fxqueue->GetOwner();
-		caster->casting_sound = core->GetAudioDrv()->Play(Resource, SFX_CHAN_CASTING, caster->Pos);
+		return core->GetAudioDrv()->Play(Resource, SFX_CHAN_CASTING, p);
+	} else {
+		return nullptr;
 	}
-
-	fx = EffectQueue::CreateEffect(fx_casting_glow_ref, 0, CastingGraphics, FX_DURATION_ABSOLUTE);
-	fx->Duration = core->GetGame()->GameTime + duration;
-	fx->InventorySlot = 0xffff;
-	fx->Projectile = 0;
-	fxqueue->AddEffect(fx);
 }
 
 // pst did some nasty hardcoding ...
@@ -270,7 +273,7 @@ EffectQueue Spell::GetEffectBlock(Scriptable *self, const Point &pos, int block_
 		}
 	}
 	if (self && selfqueue) {
-		core->ApplyEffectQueue(&selfqueue, caster, self);
+		core->ApplyEffectQueue(std::move(selfqueue), caster, self);
 	}
 	return fxqueue;
 }

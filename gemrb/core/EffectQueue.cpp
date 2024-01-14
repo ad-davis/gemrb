@@ -477,7 +477,7 @@ void EffectQueue::Cleanup()
 }
 
 //Handle the target flag when the effect is applied first
-int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const Point &dest) const
+int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const
 {
 	int i;
 	const Game *game;
@@ -510,7 +510,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 	switch (fx->Target) {
 	case FX_TARGET_ORIGINAL:
 		assert(self != nullptr);
-		fx->SetPosition(self->Pos);
+		fx->SetPosition(destination);
 
 		flg = ApplyEffect( st, fx, 1 );
 		if (fx->TimingMode != FX_DURATION_JUST_EXPIRED && st) {
@@ -520,7 +520,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 		}
 		break;
 	case FX_TARGET_SELF:
-		fx->SetPosition(dest);
+		fx->SetPosition(destination);
 
 		flg = ApplyEffect( st, fx, 1 );
 		if (fx->TimingMode != FX_DURATION_JUST_EXPIRED && st) {
@@ -541,7 +541,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 				continue;
 			}
 			Effect* new_fx = new Effect(*fx);
-			new_fx->SetPosition(actor->Pos);
+			new_fx->SetPosition(destination);
 
 			flg = ApplyEffect( actor, new_fx, 1 );
 			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
@@ -613,7 +613,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const
 	case FX_TARGET_PRESET:
 		//fx->SetPosition(pretarget->Pos);
 		//knock needs this
-		fx->SetPosition(dest);
+		fx->SetPosition(destination);
 
 		flg = ApplyEffect( pretarget, fx, 1 );
 		if (fx->TimingMode != FX_DURATION_JUST_EXPIRED && pretarget) {
@@ -701,7 +701,7 @@ all_party:
 //will get copied (hence the fxqueue.AddEffect call)
 //if this returns FX_NOT_APPLIED, then the whole stack was resisted
 //or expired
-int EffectQueue::AddAllEffects(Actor* target, const Point &destination)
+int EffectQueue::AddAllEffects(Actor* target)
 {
 	int res = FX_NOT_APPLIED;
 	// pre-roll dice for fx needing them and stow them in the effect
@@ -716,7 +716,7 @@ int EffectQueue::AddAllEffects(Actor* target, const Point &destination)
 		//if applyeffect returns true, we stop adding the future effects
 		//this is to simulate iwd2's on the fly spell resistance
 
-		int tmp = AddEffect(new Effect(fx), Owner, target, destination);
+		int tmp = AddEffect(new Effect(fx), Owner, target);
 		//lets try without Owner, any crash?
 		//If yes, then try to fix the individual effect
 		//If you use target for Owner here, the wand in chateau irenicus will work
@@ -2339,7 +2339,7 @@ void EffectQueue::AffectAllInRange(const Map *map, const Point &pos, int idstype
 		if( !map->IsVisibleLOS(actor->Pos, pos)) {
 			continue;
 		}
-		AddAllEffects(actor, actor->Pos);
+		actor->AddEffects(EffectQueue(*this));
 	}
 }
 

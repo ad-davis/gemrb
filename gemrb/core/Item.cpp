@@ -122,7 +122,7 @@ EffectQueue Item::GetEffectBlock(Scriptable *self, const Point &pos, int usage, 
 		}
 	}
 	if (target && selfqueue.GetEffectsCount()) {
-		core->ApplyEffectQueue(&selfqueue, target, self);
+		core->ApplyEffectQueue(std::move(selfqueue), target, self);
 	}
 
 	//adding a pulse effect for weapons (PST)

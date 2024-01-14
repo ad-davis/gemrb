@@ -469,6 +469,8 @@ private:
 	SaveInfo lastSave;
 	ieByte weapSlotCount = 4;
 	int walkScale = 0;
+	std::list<EffectQueue*> queued_fxqueues;
+	bool inAddEffects = false;
 	// true when command has been played after select
 	bool playedCommandSound = false;
 	//true every second round of attack
@@ -490,7 +492,7 @@ private:
 	tick_t remainingTalkSoundTime = 0;
 	tick_t lastTalkTimeCheckAt = 0;
 	ieDword lastScriptCheck = 0;
-	int lastConBonus;
+	int lastConBonus = 0;
 	int WMLevelMod = 0;
 	bool WMLevelModRolled = false;
 	/** paint the actor itself. Called internally by Draw() */
@@ -545,6 +547,7 @@ private:
 	void IncrementDeathVariable(Game::kaputz_t& vars, const char *format, StringView name) const;
 
 	stats_t ResetStats(bool init);
+	void AddEffects(EffectQueue* eqfx);
 	void RefreshEffects(bool init, const stats_t& prev);
 
 public:
@@ -1047,6 +1050,7 @@ public:
 	bool ShouldModifyMorale() const;
 	bool HibernateIfAble();
 	bool ForceScriptCheck();
+	int GetLastConBonus() const { return lastConBonus; }
 };
 }
 

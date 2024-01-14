@@ -1007,7 +1007,7 @@ inline int HandlePercentageDamage(Effect* fx, const Actor* target) {
 	if (fx->Parameter2 == RPD_PERCENT && fx->FirstApply) {
 		// distribute the damage to one second intervals
 		int seconds = (fx->Duration - core->GetGame()->GameTime) / core->Time.defaultTicksPerSec;
-		damage = target->GetStat(IE_MAXHITPOINTS) * fx->Parameter1 / 100;
+		damage = target->GetSafeStat(IE_MAXHITPOINTS) * fx->Parameter1 / 100;
 		fx->Parameter1 = static_cast<ieDword>(damage / seconds);
 	}
 	return damage;
@@ -1696,29 +1696,17 @@ int fx_maximum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	bool base = fx->TimingMode==FX_DURATION_INSTANT_PERMANENT;
 
-	switch (fx->Parameter2) {
+	// modes 3,4,5 and are the same as 0,1,2 but they don't change current hp
+	switch (fx->Parameter2 % 3) {
 	case 0:
 		// random value Parameter1 is set by level_check in EffectQueue
 		if (base) {
 			BASE_ADD( IE_MAXHITPOINTS, fx->Parameter1 );
-			BASE_ADD( IE_HITPOINTS, fx->Parameter1 );
-		} else {
-			STAT_ADD( IE_MAXHITPOINTS, fx->Parameter1 );
-			if (fx->FirstApply) {
-				BASE_ADD( IE_HITPOINTS, fx->Parameter1 );
-			}
-		}
-		break;
-	case 3: // no current hp bonus
-		// random value Parameter1 is set by level_check in EffectQueue
-		if (base) {
-			BASE_ADD( IE_MAXHITPOINTS, fx->Parameter1 );
 		} else {
 			STAT_ADD( IE_MAXHITPOINTS, fx->Parameter1 );
 		}
 		break;
-	case 1: // with current hp bonus, but unimplemented in the original
-	case 4:
+	case 1:
 		if (base) {
 			BASE_SET( IE_MAXHITPOINTS, fx->Parameter1 );
 		} else {
@@ -1728,19 +1716,10 @@ int fx_maximum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	case 2:
 		if (base) {
 			BASE_MUL(IE_MAXHITPOINTS, fx->Parameter1 );
-			BASE_MUL(IE_HITPOINTS, fx->Parameter1 );
 		} else {
-			target->NewStat( IE_MAXHITPOINTS, target->GetStat(IE_MAXHITPOINTS)*fx->Parameter1/100, MOD_ABSOLUTE);
-			if (fx->FirstApply) {
-				target->NewBase( IE_HITPOINTS, target->GetSafeStat(IE_HITPOINTS)*fx->Parameter1/100, MOD_ABSOLUTE);
-			}
-		}
-		break;
-	case 5: // no current hp bonus
-		if (base) {
-			BASE_MUL( IE_MAXHITPOINTS, fx->Parameter1 );
-		} else {
-			STAT_MUL( IE_MAXHITPOINTS, fx->Parameter1 );
+			// take into account the con bonus, which gets applied after
+			int conBonus = target->GetLastConBonus();
+			STAT_SET(IE_MAXHITPOINTS, (BASE_GET(IE_MAXHITPOINTS)+conBonus)*fx->Parameter1/100 - conBonus);
 		}
 		break;
 	}
@@ -6418,15 +6397,15 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_HP_HALF:
 		// HPPercentLT(Myself, 50)
-		condition = target->GetBase(IE_HITPOINTS) < (target->GetStat(IE_MAXHITPOINTS) / 2);
+		condition = target->GetBase(IE_HITPOINTS) < (target->GetSafeStat(IE_MAXHITPOINTS) / 2);
 		break;
 	case COND_HP_QUART:
 		// HPPercentLT(Myself, 25)
-		condition = target->GetBase(IE_HITPOINTS) < (target->GetStat(IE_MAXHITPOINTS) / 4);
+		condition = target->GetBase(IE_HITPOINTS) < (target->GetSafeStat(IE_MAXHITPOINTS) / 4);
 		break;
 	case COND_HP_LOW:
 		// HPPercentLT(Myself, 10)
-		condition = target->GetBase(IE_HITPOINTS) < (target->GetStat(IE_MAXHITPOINTS) / 10);
+		condition = target->GetBase(IE_HITPOINTS) < (target->GetSafeStat(IE_MAXHITPOINTS) / 10);
 		break;
 	case COND_HELPLESS:
 		// StateCheck(Myself, STATE_HELPLESS)
@@ -6502,7 +6481,7 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_HP_PERCENT_LT:
 		// HPPercentLT(Myself, 'Extra')
-		condition = target->GetBase(IE_HITPOINTS) < (fx->IsVariable * target->GetStat(IE_MAXHITPOINTS)) / 100;
+		condition = target->GetBase(IE_HITPOINTS) < (fx->IsVariable * target->GetSafeStat(IE_MAXHITPOINTS)) / 100;
 		break;
 	case COND_SPELLSTATE:
 		// CheckSpellState(Myself,'Extra')
@@ -6978,7 +6957,7 @@ int fx_set_area_effect (Scriptable* Owner, Actor* target, Effect* fx)
 
 	const Actor* caster = Scriptable::As<const Actor>(Owner);
 	if (caster) {
-		skill = caster->GetStat(IE_SETTRAPS);
+		skill = caster->GetSafeStat(IE_SETTRAPS);
 		roll = target->LuckyRoll(1,100,0,LR_NEGATIVE);
 		// assuming functioning thief, but allowing modded exceptions
 		// thieves aren't casters, so 0 for a later spell type lookup is not good enough

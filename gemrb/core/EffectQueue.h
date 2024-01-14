@@ -215,6 +215,8 @@ private:
 	queue_t effects;
 	/** Actor which is target of the Effects */
 	Scriptable* Owner = nullptr;
+	Point destination;
+	bool destinationSet = false;
 
 public:
 	EffectQueue() noexcept {};
@@ -232,12 +234,12 @@ public:
 	void AddEffect(Effect* fx, bool insert=false);
 	/** Adds an Effect to the queue, subject to level and other checks.
 	 * Returns FX_ABORT if unsuccessful. */
-	int AddEffect(Effect* fx, Scriptable* self, Actor* pretarget, const Point &dest) const;
+	int AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const;
 	/** Removes first Effect matching fx from the queue.
 	 * Effects are matched based on their contents */
 	bool RemoveEffect(const Effect* fx);
 
-	int AddAllEffects(Actor* target, const Point &dest);
+	int AddAllEffects(Actor* target);
 	void ApplyAllEffects(Actor* target);
 	/** remove effects marked for removal */
 	void Cleanup();
@@ -341,6 +343,8 @@ public:
 	static bool OverrideTarget(const Effect *fx);
 	bool HasHostileEffects() const;
 	static bool CheckIWDTargeting(Scriptable* Owner, Actor* target, ieDword value, ieDword type, Effect *fx = nullptr);
+	void SetDestination(Point dest) { destination = dest; }
+	bool IsDestinationSet() { return destination.IsZero(); }
 private:
 	/** counts effects of specific opcode, parameters and resource */
 	ieDword CountEffects(ieDword opcode, ieDword param1, ieDword param2, const ResRef& = ResRef()) const;

@@ -3880,8 +3880,7 @@ void Interface::ApplySpell(const ResRef& spellRef, Actor *actor, Scriptable *cas
 
 	int header = spell->GetHeaderIndexFromLevel(level);
 
-	auto block = spell->GetEffectBlock(caster, actor->Pos, header, level);
-	ApplyEffectQueue(&block, actor, caster, actor->Pos);
+	ApplyEffectQueue(spell->GetEffectBlock(caster, actor->Pos, header, level), actor, caster);
 }
 
 void Interface::ApplySpellPoint(const ResRef& spellRef, Map* area, const Point &pos, Scriptable *caster, int level) const
@@ -3896,49 +3895,32 @@ void Interface::ApplySpellPoint(const ResRef& spellRef, Map* area, const Point &
 	area->AddProjectile(pro, caster->Pos, pos);
 }
 
-//-1 means the effect was reflected back to the caster
-//0 means the effect was resisted and should be removed
-//1 means the effect was applied
-int Interface::ApplyEffect(Effect *effect, Actor *actor, Scriptable *caster) const
+void Interface::ApplyEffect(Effect *effect, Actor *actor, Scriptable *caster) const
 {
 	if (!effect) {
-		return 0;
+		return;
 	}
 
 	EffectQueue fxqueue;
 	fxqueue.AddEffect(effect);
-	int res = ApplyEffectQueue(&fxqueue, actor, caster);
-	return res;
+	ApplyEffectQueue(std::move(fxqueue), actor, caster);
 }
 
-int Interface::ApplyEffectQueue(EffectQueue *fxqueue, Actor *actor, Scriptable *caster) const
+void Interface::ApplyEffectQueue(EffectQueue&& fxqueue, Actor *actor, Scriptable *caster) const
 {
-	Point p(-1, -1); //the effect should have all its coordinates already set
-	return ApplyEffectQueue(fxqueue, actor, caster, p);
-}
-
-//FIXME: AddAllEffects will directly apply the effects outside of the mechanisms of Actor::RefreshEffects
-//This means, pcf functions may not be executed when the effect is first applied
-//Adding this new effect block via RefreshEffects is possible, but that might apply existing effects twice
-
-int Interface::ApplyEffectQueue(EffectQueue *fxqueue, Actor *actor, Scriptable *caster, Point p) const
-{
-	int res = fxqueue->CheckImmunity ( actor );
+	int res = fxqueue.CheckImmunity ( actor );
 	if (res) {
 		if (res == -1 && caster) {
 			//bounced back at a nonliving caster
 			if (caster->Type!=ST_ACTOR) {
-				return 0;
+				return;
 			}
 			actor = (Actor *) caster;
 		}
-		fxqueue->SetOwner( caster );
+		fxqueue.SetOwner( caster );
 
-		if (fxqueue->AddAllEffects( actor, p)==FX_NOT_APPLIED) {
-			res=0;
-		}
+		actor->AddEffects(std::move(fxqueue));
 	}
-	return res;
 }
 
 Effect *Interface::GetEffect(const ResRef& resname, int level, const Point &p)

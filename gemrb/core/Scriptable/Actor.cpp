@@ -965,6 +965,7 @@ static void pcf_level (Actor *actor, ieDword oldValue, ieDword newValue, ieDword
 		actor->GetRangerLevel()+
 		actor->GetSorcererLevel();
 	actor->SetBase(IE_CLASSLEVELSUM,sum);
+	// FIXME: this breaks things in the middle of Inventory::AddSlotEffects
 	actor->SetupFist();
 	if (newValue!=oldValue) {
 		actor->ApplyKit(false, baseClass, newValue-oldValue, true);
@@ -1165,8 +1166,10 @@ static void pcf_hitpoint(Actor *actor, ieDword oldValue, ieDword hp)
 	}
 }
 
-static void pcf_maxhitpoint(Actor *actor, ieDword /*oldValue*/, ieDword /*newValue*/)
+static void pcf_maxhitpoint(Actor *actor, ieDword oldValue, ieDword newValue)
 {
+	int newhp = ((float)(newValue))*((float)actor->Modified[IE_HITPOINTS]/oldValue);
+	actor->BaseStats[IE_HITPOINTS] = newhp;
 	if (!actor->checkHP) {
 		actor->checkHP = 1;
 		actor->checkHPTime = core->GetGame()->GameTime;
@@ -2662,13 +2665,36 @@ Actor::stats_t Actor::ResetStats(bool init)
 }
 
 /** call this after load, to apply effects */
-void Actor::AddEffects(EffectQueue&& fx)
+void Actor::AddEffects(EffectQueue&& fx) {
+	if (!inAddEffects) {
+		inAddEffects = true;
+	} else {
+		queued_fxqueues.push_back(new EffectQueue(fx));
+		return;
+	}
+	AddEffects(&fx);
+	// here is where we iterate through a list of effects to apply on top of the previous
+	// in practice how that will work is you remove the lock, pop off the list and then run the function again
+	if (inAddEffects) {
+		inAddEffects = false;
+		if (queued_fxqueues.size() > 0) {
+			EffectQueue* nextFx = queued_fxqueues.front();
+			queued_fxqueues.pop_front();
+			AddEffects(nextFx);
+			delete nextFx;
+		}
+	}
+}
+
+// internal version with pointer
+void Actor::AddEffects(EffectQueue* fx)
 {
 	bool first = !(InternalFlags&IF_INITIALIZED); //initialize base stats
 	stats_t prev = ResetStats(first);
 	
-	fx.SetOwner(this);
-	fx.AddAllEffects(this, Pos);
+	if (!fx->GetOwner()) fx->SetOwner(this);
+	if (!fx->IsDestinationSet()) fx->SetDestination(Pos);
+	fx->AddAllEffects(this);
 
 	if (SpellStatesSize) {
 		memset(spellStates, 0, sizeof(ieDword) * SpellStatesSize);
@@ -2806,7 +2832,6 @@ void Actor::RefreshEffects(bool first, const stats_t& previous)
 	if (Modified[IE_SANCTUARY] != BaseStats[IE_SANCTUARY]) {
 		pcf_sanctuary(this, BaseStats[IE_SANCTUARY], Modified[IE_SANCTUARY]);
 	}
-
 	//add wisdom/casting_ability bonus spells
 	if (spellbook.IsIWDSpellBook()) {
 		// check each class separately for the casting stat and booktype (luckily there is no bonus for domain spells)
@@ -10138,12 +10163,15 @@ Actor *Actor::CopySelf(bool mislead) const
 
 	newActor->CreateDerivedStats();
 
+
+	//apply initial pcfs, needs to be done before AddActor
+	newActor->RefreshEffects();
 	area->AddActor(newActor, true);
 	newActor->SetPosition( Pos, CC_CHECK_IMPASSABLE, 0 );
 	newActor->SetOrientation(GetOrientation(), false);
 	newActor->SetStance( IE_ANI_READY );
 
-	//copy the running effects
+	//copy the running effects and apply them
 	newActor->AddEffects(EffectQueue(fxqueue));
 	return newActor;
 }

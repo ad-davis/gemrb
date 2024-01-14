@@ -682,10 +682,9 @@ public:
 	/** applies the spell on the area or on a scriptable object */
 	void ApplySpellPoint(const ResRef& spellRef, Map *area, const Point &pos, Scriptable *caster, int level) const;
 	/** applies a single effect on the target */
-	int ApplyEffect(Effect *fx, Actor *target, Scriptable *caster) const;
+	void ApplyEffect(Effect *fx, Actor *target, Scriptable *caster) const;
 	/** applies an effect queue on the target */
-	int ApplyEffectQueue(EffectQueue *fxqueue, Actor *actor, Scriptable *caster) const;
-	int ApplyEffectQueue(EffectQueue *fxqueue, Actor *actor, Scriptable *caster, Point p) const;
+	void ApplyEffectQueue(EffectQueue&& fxqueue, Actor *actor, Scriptable *caster) const;
 	Effect *GetEffect(const ResRef& resname, int level, const Point &p);
 	/** dumps an area object to the cache */
 	int SwapoutArea(Map *map) const;
