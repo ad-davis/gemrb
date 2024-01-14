@@ -7471,7 +7471,7 @@ void Actor::UpdateActorState()
 
 	Animation* first = anim[0].first;
 	
-	if (first->endReached) {
+	if (first && first->endReached) {
 		// possible stance change
 		if (HandleActorStance()) {
 			// restart animation for next time it is needed
