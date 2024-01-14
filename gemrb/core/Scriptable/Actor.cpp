@@ -2613,13 +2613,6 @@ void Actor::CheckPuppet(Actor *puppet, ieDword type)
 	}
 
 	switch(type) {
-		case 1:
-			Modified[IE_STATE_ID] |= state_invisible;
-			//also set the improved invisibility flag where available
-			if (!pstflags) {
-				Modified[IE_STATE_ID]|=STATE_INVIS2;
-			}
-			break;
 		case 2:
 			if (InterruptCasting) {
 				// dispel the projected image if there is any
