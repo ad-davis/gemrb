@@ -3058,11 +3058,11 @@ int fx_set_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 			target->AddPortraitIcon(PI_BLIND);
 			if (reverse) {
 				//BG2
-				target->AC.HandleFxBonus(-4, fx->TimingMode==FX_DURATION_INSTANT_PERMANENT);
-				target->ToHit.HandleFxBonus(-4, fx->TimingMode==FX_DURATION_INSTANT_PERMANENT);
+				target->AC.HandleFxBonus(-4, 0);
+				target->ToHit.HandleFxBonus(-4, 0);
 			} else {
 				//IWD2
-				target->AC.HandleFxBonus(-2, fx->TimingMode==FX_DURATION_INSTANT_PERMANENT);
+				target->AC.HandleFxBonus(-2, 0);
 				// no dexterity bonus to AC (caught flatfooted) is handled in core
 			}
 		}
@@ -4246,7 +4246,7 @@ int fx_set_bless_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	STATE_SET( STATE_BLESS );
 	target->SetSpellState(SS_BLESS);
-	target->ToHit.HandleFxBonus(fx->Parameter1, fx->TimingMode==FX_DURATION_INSTANT_PERMANENT);
+	target->ToHit.HandleFxBonus(fx->Parameter1, 0);
 	STAT_ADD( IE_DAMAGEBONUS, fx->Parameter1);
 	if (target->ShouldModifyMorale()) STAT_ADD(IE_MORALE, fx->Parameter1);
 	if (core->HasFeature(GFFlags::ENHANCED_EFFECTS)) {
