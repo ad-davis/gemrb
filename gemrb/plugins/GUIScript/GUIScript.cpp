@@ -11592,6 +11592,8 @@ static PyObject* GemRB_SpellCast(PyObject * /*self*/, PyObject* args)
 			//reset the cursor
 			gc->ResetTargetMode();
 			//this is always instant casting without spending the spell
+			//if we ever want to change this, spending the spell should go before applying
+			//as fx_select_spell relies on a SpellInfo it sets up
 			core->ApplySpell(spelldata.spellName, actor, actor, 0);
 			break;
 		case TARGET_AREA:

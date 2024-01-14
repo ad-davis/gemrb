@@ -5965,6 +5965,10 @@ int fx_select_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	auto& vars = core->GetDictionary();
 	// print("fx_select_spell(%2d) %d", fx->Opcode, fx->Parameter2);
 	Spellbook *sb = &target->spellbook;
+
+	// force unmemorization of source spell, this seems required
+	sb->HaveSpell( fx->SourceRef, HS_DEPLETE );
+
 	if(fx->Parameter2) {
 		//all known spells, no need to memorize
 		// the details are all handled by the Spellbook guiscript
@@ -6596,6 +6600,9 @@ int fx_create_contingency (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	//this effect terminates in cutscene mode
 	if (core->InCutSceneMode()) return FX_NOT_APPLIED;
+
+	// force unmemorization of source spell, this seems required
+	target->spellbook.HaveSpell( fx->SourceRef, HS_DEPLETE );
 
 	if (target->fxqueue.HasEffectWithSource(fx_contingency_ref, fx->SourceRef)) {
 		displaymsg->DisplayConstantStringName(HCStrings::ContingencyDupe, GUIColors::WHITE, target);
