@@ -2530,7 +2530,7 @@ std::vector<String> EffectQueue::SpellNames() const {
 	std::set<ResRef> seen;
 	std::vector<String> ret;
 	for (const Effect& fx : effects) {
-		MATCH_LIVE_FX()
+		if (!IsLive(fx.TimingMode) || fx.TimingMode == FX_DURATION_INSTANT_PERMANENT_AFTER_BONUSES) continue;
 		if (!fx.SourceRef.IsEmpty() && !seen.count(fx.SourceRef)) {
 			seen.insert(fx.SourceRef);
 			const Spell* spell = gamedata->GetSpell(fx.SourceRef, true);
