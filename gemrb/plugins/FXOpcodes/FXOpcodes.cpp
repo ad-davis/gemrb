@@ -3024,6 +3024,7 @@ int fx_set_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	static bool reverse = core->HasFeature(GFFlags::REVERSE_TOHIT);
 	if (!STATE_GET(STATE_BLIND)) {
 		STATE_SET( STATE_BLIND );
+		STAT_SET(IE_VISUALRANGE, 4);
 		//the feat normally exists only in IWD2, but won't hurt
 		if (!target->GetFeat(FEAT_BLIND_FIGHT)) {
 			target->AddPortraitIcon(PI_BLIND);
