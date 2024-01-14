@@ -1406,8 +1406,10 @@ void MoveBetweenAreasCore(Actor* actor, const ResRef &area, const Point &positio
 
 //repeat movement, until goal isn't reached
 //if int0parameter is !=0, then it will try only x times
+//FIXME: There are a lot of similarities between this and MoveNearerTo
 void MoveToObjectCore(Scriptable *Sender, Action *parameters, ieDword flags, bool untilsee)
 {
+	Map *myarea, *hisarea;
 	Actor* actor = Scriptable::As<Actor>(Sender);
 	if (!actor) {
 		Sender->ReleaseCurrentAction();
@@ -1417,6 +1419,20 @@ void MoveToObjectCore(Scriptable *Sender, Action *parameters, ieDword flags, boo
 	if (!target) {
 		Sender->ReleaseCurrentAction();
 		return;
+	}
+	myarea = Sender->GetCurrentArea();
+	hisarea = target->GetCurrentArea();
+	if (hisarea && hisarea!=myarea) {
+		target = myarea->GetTileMap()->GetTravelTo(hisarea->GetScriptName());
+
+		if (!target) {
+			Log(WARNING, "GameScript", "MoveNearerTo failed to find an exit");
+			Sender->ReleaseCurrentAction();
+			return;
+		}
+		actor->UseExit(target->GetGlobalID());
+	} else {
+		actor->UseExit(0);
 	}
 
 	Point dest = target->Pos + parameters->pointParameter; // MoveToObjectOffset adds an offset

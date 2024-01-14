@@ -676,7 +676,7 @@ void Map::UpdateScripts()
 	// to work ok anyway in my testing - if you change it you probably
 	// also want to change the actor updating code below so it doesn't
 	// add new actions while we are trying to get rid of the area!)
-	if (!has_pcs && !(MasterArea && !actors.empty()) /*&& !CanFree()*/) {
+	if (!has_pcs && !(MasterArea && !actors.empty()) && CanFree()) {
 		return;
 	}
 
@@ -2749,7 +2749,7 @@ void Map::RemoveActor(Actor* actor)
 }
 
 //returns true if none of the partymembers are on the map
-//and noone is trying to follow the party out
+//and noone is trying to follow the party out or we are in combat
 bool Map::CanFree()
 {
 	for (const auto& actor : actors) {
@@ -2780,8 +2780,8 @@ bool Map::CanFree()
 			return false;
 		}
 	}
-	//we expect the area to be swapped out, so we simply remove the corpses now
-	PurgeArea(false);
+	//if we are in combat, need to keep maps around so enemies can follow through maps
+	if (core->GetGame()->CombatCounter) return false;
 	return true;
 }
 

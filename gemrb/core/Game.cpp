@@ -764,13 +764,13 @@ int Game::DelMap(unsigned int index, int forced)
 				return -1;
 			}
 		}
-		//this check must be the last, because
-		//after PurgeActors you cannot keep the
-		//area in memory
-		//Or the queues should be regenerated!
 		if (!map->CanFree()) {
 			return 1;
 		}
+		//after PurgeArea you cannot keep the
+		//area in memory
+		//Or the queues should be regenerated!
+		map->PurgeArea(false);
 		//if there are still selected actors on the map (e.g. summons)
 		//unselect them now before they get axed
 		for (auto m = selected.begin(); m != selected.end();) {
