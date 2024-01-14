@@ -442,6 +442,21 @@ def GetEffectIcons(pc,LevelDiff):
 
 ########################################################################
 
+
+def GetDamageRange(cdet):
+
+	dice = cdet["HitHeaderNumDice"]
+	if dice < 256:
+		damageBonus = cdet["DamageBonus"] + cdet["WeaponStrBonus"]
+	else:
+		damageBonus = cdet["WeaponStrBonus"]
+	dice = dice % 256
+	diceSides = cdet["HitHeaderDiceSides"] % 256
+	minDamage = dice + damageBonus
+	maxDamage = dice * diceSides + damageBonus
+	return "%d-%d" % (minDamage, maxDamage)
+
+
 def GetProficiencies(pc, cdet):
 
 	stats = []
@@ -455,10 +470,14 @@ def GetProficiencies(pc, cdet):
 	if GameCheck.IsBG2():
 		stats.append ( (61932, tohit["Base"], '0') )
 		if (GemRB.IsDualWielding(pc)):
-			stats.append ( (56911, tohit["Total"], '0') ) # main
-			stats.append ( (56910, GemRB.GetCombatDetails(pc, 1)["ToHitStats"]["Total"], '0') ) # offhand
+			cdet2 = GemRB.GetCombatDetails(pc, 1)
+			#stats.append ( (56911, tohit["Total"], '0') ) # main
+			#stats.append ( (56910, cdet2["ToHitStats"]["Total"], '0') ) # offhand
+			stats.append ( (9457, "%s/%s" % (tohit["Total"], cdet2["ToHitStats"]["Total"]), '0') ) # offhand
+			stats.append ( ("Damage", "%s/%s" % (GetDamageRange(cdet), GetDamageRange(cdet2)), "b") )
 		else:
 			stats.append ( (9457, tohit["Total"], '0') )
+			stats.append ( ("Damage", GetDamageRange(cdet), "b") )
 	else:
 		stats.append ( (9457, str(tohit["Base"])+" ("+str(tohit["Total"])+")", '0') )
 
