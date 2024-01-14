@@ -2123,7 +2123,7 @@ static void InitActorTables()
 			int row = tm->QueryFieldSigned<int>(i,0);
 			if (row<0 || row>=VCONST_COUNT) continue;
 			int value = tm->QueryFieldSigned<int>(i,1);
-			if (value<0 || value>=VCONST_COUNT) continue;
+			if (value<0) continue;
 			VCMap[row]=value;
 		}
 	}
