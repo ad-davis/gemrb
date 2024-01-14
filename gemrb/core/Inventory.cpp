@@ -1963,12 +1963,6 @@ HCStrings Inventory::WhyCantEquip(int slot, int twohanded, bool ranged) const
 		return HCStrings::count;
 	}
 
-	//magic items have the highest priority
-	if (MagicSlotEquipped()) {
-		//magic weapon is in use
-		return HCStrings::MagicWeapon;
-	}
-
 	//can't equip in shield slot if a weapon slot is twohanded or ranged
 	for (int i=SLOT_MELEE; i<=LAST_MELEE;i++) {
 		//see GetShieldSlot
