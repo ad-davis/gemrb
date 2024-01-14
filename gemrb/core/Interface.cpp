@@ -3857,13 +3857,13 @@ Holder<Sprite2D> Interface::GetScrollCursorSprite(orient_t orient, int spriteNum
 /* we should return -1 if it isn't gold, otherwise return the gold value */
 int Interface::CanMoveItem(const CREItem *item) const
 {
-	//This is an inventory slot, switch to IE_ITEM_* if you use Item
-	if (item->Flags & IE_INV_ITEM_UNDROPPABLE && !HasFeature(GFFlags::NO_DROP_CAN_MOVE)) {
-		return 0;
-	}
-	//not gold, we allow only one single coin ResRef, this is good
-	//for all of the original games
 	if (GoldResRef != item->ItemResRef) {
+		//This is an inventory slot, switch to IE_ITEM_* if you use Item
+		if (item->Flags & IE_INV_ITEM_UNDROPPABLE && !HasFeature(GFFlags::NO_DROP_CAN_MOVE)) {
+			return 0;
+		}
+		//not gold, we allow only one single coin ResRef, this is good
+		//for all of the original games
 		return -1;
 	}
 	//gold, returns the gold value (stack size)
