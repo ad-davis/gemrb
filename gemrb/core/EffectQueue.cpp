@@ -1338,7 +1338,8 @@ void EffectQueue::RemoveAllEffects(ieDword opcode)
 {
 	for (auto& fx : effects) {
 		MATCH_OPCODE()
-		MATCH_LIVE_FX()
+		// Even remove delayed
+		// MATCH_LIVE_FX()
 
 		fx.TimingMode = FX_DURATION_JUST_EXPIRED;
 	}
