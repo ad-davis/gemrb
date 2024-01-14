@@ -1697,6 +1697,11 @@ int fx_maximum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	bool base = fx->TimingMode==FX_DURATION_INSTANT_PERMANENT;
 
 	// modes 3,4,5 and are the same as 0,1,2 but they don't change current hp
+	if (fx->Parameter2 >= 3) {
+		// set this to prevent changing current hp
+		target->hpChangeAfterMaxChange = false;
+	}
+
 	switch (fx->Parameter2 % 3) {
 	case 0:
 		// random value Parameter1 is set by level_check in EffectQueue
