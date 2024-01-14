@@ -1846,7 +1846,7 @@ void GameControl::TryToTalk(Actor *source, const Actor *tgt) const
 	//(non interactive demo)
 	//i found no fitting action which would emulate this kind of
 	//dialog initation
-	source->SetModal(MS_NONE);
+	source->ResetState();
 	dialoghandler->SetTarget(tgt); //this is a hack, but not so deadly
 	source->CommandActor(GenerateActionDirect( "NIDSpecial1()", tgt));
 }
