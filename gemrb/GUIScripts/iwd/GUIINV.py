@@ -161,18 +161,19 @@ def RefreshInventoryWindow (Window):
 		if (item['AnimationType'] != ''):
 			Button.SetPLT("WP" + size + item['AnimationType'] + "INV", Color1, Color2, Color3, Color4, Color5, Color6, Color7, 0, 1)
 
-	# Shield
-	slot_item = GemRB.GetSlotItem (pc, 3)
-	if slot_item:
-		itemname = slot_item["ItemResRef"]
-		item = GemRB.GetItem (itemname)
-		if (item['AnimationType'] != ''):
-			if (GemRB.CanUseItemType (SLOT_WEAPON, itemname)):
-				#off-hand weapon
-				Button.SetPLT("WP" + size + item['AnimationType'] + "OIN", Color1, Color2, Color3, Color4, Color5, Color6, Color7, 0, 2)
-			else:
-				#shield
-				Button.SetPLT("WP" + size + item['AnimationType'] + "INV", Color1, Color2, Color3, Color4, Color5, Color6, Color7, 0, 2)
+	if not (slot_item and slot_item["Flags"] & IE_INV_ITEM_TWOHANDED):
+		# Shield
+		slot_item = GemRB.GetSlotItem (pc, 3)
+		if slot_item:
+			itemname = slot_item["ItemResRef"]
+			item = GemRB.GetItem (itemname)
+			if (item['AnimationType'] != ''):
+				if (GemRB.CanUseItemType (SLOT_WEAPON, itemname)):
+					#off-hand weapon
+					Button.SetPLT("WP" + size + item['AnimationType'] + "OIN", Color1, Color2, Color3, Color4, Color5, Color6, Color7, 0, 2)
+				else:
+					#shield
+					Button.SetPLT("WP" + size + item['AnimationType'] + "INV", Color1, Color2, Color3, Color4, Color5, Color6, Color7, 0, 2)
 
 	# Helmet
 	slot_item = GemRB.GetSlotItem (pc, 1)

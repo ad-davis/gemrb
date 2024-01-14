@@ -341,6 +341,8 @@ public:
 	bool IsSlotBlocked(int slot) const;
 	/** returns true if a two handed weapon is in slot */
 	bool TwoHandedInSlot(int slot) const;
+	/** returns true if a two handed weapon is equipped */
+	bool TwoHandedEquipped() const;
 	/** returns the strref for the reason why the item cannot be equipped */
 	HCStrings WhyCantEquip(int slot, int twohanded, bool ranged = false) const;
 	/** returns a slot that has a stealable item */
@@ -379,7 +381,7 @@ private:
 	int FindRangedProjectile(unsigned int type) const;
 	// called by KillSlot
 	void RemoveSlotEffects(ieDword slot);
-	void KillSlot(unsigned int index);
+	void KillSlot(unsigned int index, bool removed = true);
 	inline Item *GetItemPointer(ieDword slot, CREItem *&Slot) const;
 	void UpdateWeaponAnimation();
 	void UpdateShieldAnimation(const Item *it);

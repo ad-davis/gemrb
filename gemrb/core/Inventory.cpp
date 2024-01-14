@@ -341,7 +341,7 @@ bool Inventory::HasItem(const ResRef &resref, ieDword flags) const
 	return false;
 }
 
-void Inventory::KillSlot(unsigned int index)
+void Inventory::KillSlot(unsigned int index, bool removed)
 {
 	if (InventoryType == ieInventoryType::HEAP) {
 		Slots.erase(Slots.begin()+index);
@@ -352,13 +352,15 @@ void Inventory::KillSlot(unsigned int index)
 		return;
 	}
 
-	//the used up item vanishes from the quickslot bar
-	if (Owner->IsSelected()) {
-		core->SetEventFlag( EF_ACTION );
-	}
+	if (removed) {
+		//the used up item vanishes from the quickslot bar
+		if (Owner->IsSelected()) {
+			core->SetEventFlag( EF_ACTION );
+		}
 
-	Slots[index] = NULL;
-	CalculateWeight();
+		Slots[index] = NULL;
+		CalculateWeight();
+	}
 
 	int effect = core->QuerySlotEffects( index );
 	if (!effect) {
@@ -936,10 +938,15 @@ bool Inventory::EquipItem(ieDword slot)
 		SetEquippedSlot(IW_NO_EQUIPPED, 0);
 		break;
 	case SLOT_EFFECT_LEFT:
-		//no idea if the offhand weapon has style, or simply the right
-		//hand style is dominant
-		CacheAllWeaponInfo();
-		UpdateShieldAnimation(itm);
+		// don't do anything if a TwoHanded weapon is equipped
+		if (TwoHandedEquipped()) {
+			effect = 0;
+		} else {
+			//no idea if the offhand weapon has style, or simply the right
+			//hand style is dominant
+			CacheAllWeaponInfo();
+			UpdateShieldAnimation(itm);
+		}
 		break;
 	case SLOT_EFFECT_MELEE:
 		//if weapon is bow, then find quarrel for it and equip that
@@ -1258,6 +1265,7 @@ bool Inventory::SetEquippedSlot(ieWordSigned slotcode, ieWord header, bool noFX)
 	int oldslot = GetEquippedSlot();
 	int newslot = GetWeaponSlot(slotcode);
 
+
 	//remove previous slot effects
 	if (Equipped != IW_NO_EQUIPPED) {
 		RemoveSlotEffects(oldslot);
@@ -1271,9 +1279,21 @@ bool Inventory::SetEquippedSlot(ieWordSigned slotcode, ieWord header, bool noFX)
 		}
 	}
 
-	//unequipping (fist slot will be used now)
 	if (slotcode == IW_NO_EQUIPPED || IsSlotEmpty(newslot)) {
+		//unequipping (fist slot will be used now)
 		Equipped = IW_NO_EQUIPPED;
+	} else {
+		//equipping a weapon
+		Equipped = slotcode;
+	}
+
+	//equip and reequip shield
+	KillSlot(GetShieldSlot(), false);
+	if (!TwoHandedEquipped()) {
+		EquipItem(GetShieldSlot());
+	}
+
+	if (Equipped == IW_NO_EQUIPPED) {
 		//fist slot equipping effects
 		AddSlotEffects(SLOT_FIST);
 		CacheAllWeaponInfo();
@@ -1281,8 +1301,6 @@ bool Inventory::SetEquippedSlot(ieWordSigned slotcode, ieWord header, bool noFX)
 		return true;
 	}
 
-	//equipping a weapon
-	Equipped = slotcode;
 	int effects = core->QuerySlotEffects( newslot);
 	if (effects) {
 		CREItem* item = GetSlotItem(newslot);
@@ -1489,6 +1507,10 @@ CREItem *Inventory::GetUsedWeapon(bool leftorright, int &slot) const
 		}
 	}
 	if (leftorright) {
+		// in this case, always return nothing for the used weapon
+		if (TwoHandedEquipped()) {
+			return NULL;
+		}
 		//no shield slot
 		slot = GetShieldSlot();
 		if (slot>=0) {
@@ -1916,6 +1938,15 @@ inline bool Inventory::TwoHandedInSlot(int slot) const
 	return false;
 }
 
+inline bool Inventory::TwoHandedEquipped() const
+{
+	int slot = GetEquippedSlot();
+	if((core->QuerySlotEffects(slot) & SLOT_EFFECT_MISSILE) == SLOT_EFFECT_MISSILE) {
+		slot = FindRangedWeapon();
+	}
+	return TwoHandedInSlot(slot);
+}
+
 HCStrings Inventory::WhyCantEquip(int slot, int twohanded, bool ranged) const
 {
 	// check only for hand slots
@@ -1940,9 +1971,6 @@ HCStrings Inventory::WhyCantEquip(int slot, int twohanded, bool ranged) const
 		}
 		if (slot != otherslot) continue;
 
-		if (TwoHandedInSlot(i)) {
-			return HCStrings::TwohandedUsed;
-		}
 		if (ranged) {
 			return HCStrings::NoRangedOffhand;
 		}
@@ -1955,10 +1983,6 @@ HCStrings Inventory::WhyCantEquip(int slot, int twohanded, bool ranged) const
 			}
 		} else if (slot == SLOT_LEFT) {
 			return HCStrings::NotInOffhand;
-		}
-		if (IsSlotBlocked(slot)) {
-		//cannot equip two handed while shield slot is in use?
-			return HCStrings::OffhandUsed;
 		}
 	}
 	return HCStrings::count;
