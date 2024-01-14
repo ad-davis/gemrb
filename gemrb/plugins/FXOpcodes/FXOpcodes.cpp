@@ -6544,9 +6544,9 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 					displaymsg->DisplayConstantStringName(HCStrings::ContingencyFail, GUIColors::RED, target);
 					continue;
 				}
-				if (!WithinPersonalRange(target, actor, dist)) {
+				if (PersonalDistance(target, actor) > dist) {
 					//display 'One of the spells has failed.'
-					displaymsg->DisplayConstantStringName(HCStrings::ContingencyFail, GUIColors::RED, target);
+					//displaymsg->DisplayConstantStringName(HCStrings::ContingencyFail, GUIColors::RED, target);
 					continue;
 				}
 			}
