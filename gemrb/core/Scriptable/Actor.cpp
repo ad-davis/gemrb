@@ -6532,13 +6532,14 @@ int Actor::GetToHit(ieDword Flags, const Actor *target)
 	int generic = 0;
 	int attacknum = attackcount;
 
+	// this applies both dual wielding or not, so set here
+	generic = GetStat(IE_HITBONUSRIGHT);
 	//get our dual wielding modifier
 	if (IsDualWielding()) {
 		if (Flags&WEAPON_LEFTHAND) {
 			generic = GetStat(IE_HITBONUSLEFT);
 			attacknum = 1; // shouldn't be needed, but let's play safe
 		} else {
-			generic = GetStat(IE_HITBONUSRIGHT);
 			attacknum--; // remove 1, since it is for the other hand (otherwise we would never use the max tohit for this hand)
 		}
 	}
