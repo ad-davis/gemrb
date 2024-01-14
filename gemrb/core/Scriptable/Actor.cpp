@@ -10181,14 +10181,16 @@ Actor *Actor::CopySelf(int type) const
 
 	//IF_INITIALIZED shouldn't be set here, yet
 	newActor->SetMCFlag(MC_EXPORTABLE, BitOp::NAND);
-
-	// adjust EA
-	if (newActor->BaseStats[IE_EA] <= EA_GOODCUTOFF) {
-		newActor->BaseStats[IE_EA] = EA_ALLY;
-	} else if (newActor->BaseStats[IE_EA] >= EA_EVILCUTOFF) {
-		newActor->BaseStats[IE_EA] = EA_ENEMY;
-	} else {
-		newActor->BaseStats[IE_EA] = EA_NEUTRAL;
+	// clones get the same IE_EA value
+	if (type != 0) {
+		// adjust EA
+		if (newActor->BaseStats[IE_EA] <= EA_GOODCUTOFF) {
+			newActor->BaseStats[IE_EA] = EA_ALLY;
+		} else if (newActor->BaseStats[IE_EA] >= EA_EVILCUTOFF) {
+			newActor->BaseStats[IE_EA] = EA_ENEMY;
+		} else {
+			newActor->BaseStats[IE_EA] = EA_NEUTRAL;
+		}
 	}
 
 	//the creature importer does this too
