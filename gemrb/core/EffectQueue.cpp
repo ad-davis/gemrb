@@ -448,6 +448,10 @@ bool EffectQueue::RemoveEffect(const Effect* fx)
 	return false;
 }
 
+static inline bool IsInsert(int flg) {
+	return flg == FX_INSERT || flg == FX_INSERT_P;
+}
+
 //this is where we reapply all effects when loading a saved game
 //The effects are already in the fxqueue of the target
 //... but some require reinitialisation
@@ -514,7 +518,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const
 
 		flg = ApplyEffect( st, fx, 1 );
 		if (fx->TimingMode != FX_DURATION_JUST_EXPIRED && st) {
-			st->fxqueue.AddEffect(fx, flg == FX_INSERT);
+			st->fxqueue.AddEffect(fx, IsInsert(flg));
 		} else {
 			delete fx;
 		}
@@ -524,7 +528,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const
 
 		flg = ApplyEffect( st, fx, 1 );
 		if (fx->TimingMode != FX_DURATION_JUST_EXPIRED && st) {
-			st->fxqueue.AddEffect(fx, flg == FX_INSERT);
+			st->fxqueue.AddEffect(fx, IsInsert(flg));
 		} else {
 			delete fx;
 		}
@@ -545,7 +549,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const
 
 			flg = ApplyEffect( actor, new_fx, 1 );
 			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
+				actor->fxqueue.AddEffect( new_fx, IsInsert(flg) );
 			} else {
 				delete new_fx;
 			}
@@ -573,7 +577,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const
 
 			flg = ApplyEffect( actor, new_fx, 1 );
 			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
+				actor->fxqueue.AddEffect( new_fx, IsInsert(flg) );
 			} else {
 				delete new_fx;
 			}
@@ -602,7 +606,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const
 			flg = ApplyEffect( actor, new_fx, 1 );
 			//GetActorCount can now return all nonparty critters
 			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
+				actor->fxqueue.AddEffect( new_fx, IsInsert(flg) );
 			} else {
 				delete new_fx;
 			}
@@ -617,7 +621,7 @@ int EffectQueue::AddEffect(Effect* fx, Scriptable* self, Actor* pretarget) const
 
 		flg = ApplyEffect( pretarget, fx, 1 );
 		if (fx->TimingMode != FX_DURATION_JUST_EXPIRED && pretarget) {
-			pretarget->fxqueue.AddEffect(fx, flg == FX_INSERT);
+			pretarget->fxqueue.AddEffect(fx, IsInsert(flg));
 		} else {
 			delete fx;
 		}
@@ -634,7 +638,7 @@ all_party:
 
 			flg = ApplyEffect( actor, new_fx, 1 );
 			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
+				actor->fxqueue.AddEffect( new_fx, IsInsert(flg) );
 			} else {
 				delete new_fx;
 			}
@@ -655,7 +659,7 @@ all_party:
 			flg = ApplyEffect( actor, new_fx, 1 );
 			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
 				new_fx->Target = FX_TARGET_SELF;
-				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
+				actor->fxqueue.AddEffect( new_fx, IsInsert(flg) );
 			} else {
 				delete new_fx;
 			}
@@ -676,7 +680,7 @@ all_party:
 			flg = ApplyEffect( actor, new_fx, 1 );
 			//GetActorCount can now return all nonparty critters
 			if( new_fx->TimingMode != FX_DURATION_JUST_EXPIRED) {
-				actor->fxqueue.AddEffect( new_fx, flg==FX_INSERT );
+				actor->fxqueue.AddEffect( new_fx, IsInsert(flg) );
 			} else {
 				delete new_fx;
 			}
@@ -1281,6 +1285,7 @@ int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieD
 	fx->FirstApply = 0;
 
 	switch (res) {
+		case FX_INSERT:
 		case FX_APPLIED:
 			// normal effect with duration
 			break;
@@ -1290,7 +1295,8 @@ int EffectQueue::ApplyEffect(Actor* target, Effect* fx, ieDword first_apply, ieD
 			// for example, a damage effect
 			fx->TimingMode = FX_DURATION_JUST_EXPIRED;
 			break;
-		case FX_INSERT:
+			// TODO: have a permanent and non-permanent insert
+		case FX_INSERT_P:
 			// put this effect in the beginning of the queue
 			// all known insert effects are 'permanent' too
 			// that is the AC effect only

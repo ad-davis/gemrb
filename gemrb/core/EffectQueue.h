@@ -53,8 +53,10 @@ class Scriptable;
 #define FX_NOT_APPLIED 3
 /** these effects always stick around when applied as permanent or duration */
 #define FX_APPLIED 1	
-/** insert the effect instead of push back */
+/** insert the effect instead of push back (FX_APPLIED) */
 #define FX_INSERT 4
+/** insert the effect instead of push back (FX_PERMANENT) */
+#define FX_INSERT_P 5
 
 //remove level effects flags
 #define RL_DISPELLABLE  1  //only dispellables

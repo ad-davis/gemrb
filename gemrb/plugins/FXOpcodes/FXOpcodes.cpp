@@ -1061,7 +1061,7 @@ int fx_ac_vs_damage_type_modifier (Scriptable* /*Owner*/, Actor* target, Effect*
 				target->AC.SetDeflectionBonus((signed) fx->Parameter1 - target->AC.GetNatural());
 			}
 		}
-		return FX_INSERT;
+		return FX_INSERT_P;
 	}
 
 	//the original engine did work with the combination of these bits
@@ -1100,7 +1100,7 @@ int fx_attacks_per_round_modifier (Scriptable* /*Owner*/, Actor* target, Effect*
 	} else {
 		STAT_MOD_VAR(IE_NUMBEROFATTACKS, tmp);
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x02 Cure:Sleep (Awaken)
@@ -1328,11 +1328,7 @@ int fx_charisma_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_CHR );
 	}
-	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
-		return FX_INSERT;
-	} else {
-		return FX_PERMANENT;
-	}
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x07 Color:SetPalette
@@ -1400,11 +1396,7 @@ int fx_constitution_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_CON );
 	}
-	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
-		return FX_INSERT;
-	} else {
-		return FX_PERMANENT;
-	}
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x0B Cure:Poison
@@ -1589,11 +1581,7 @@ int fx_dexterity_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_DEX );
 	}
-	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
-		return FX_INSERT;
-	} else {
-		return FX_PERMANENT;
-	}
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x10 State:Hasted
@@ -1772,11 +1760,7 @@ int fx_intelligence_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_INT );
 	}
-	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
-		return FX_INSERT;
-	} else {
-		return FX_PERMANENT;
-	}
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x14 State:Invisible
@@ -1863,7 +1847,7 @@ int fx_luck_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		//I checked, it doesn't modify damage luck stat in bg2 (Avenger)
 		//STAT_MOD( IE_DAMAGELUCK );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x17 MoraleModifier
@@ -1885,7 +1869,7 @@ int fx_morale_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (target->ShouldModifyMorale()) {
 		STAT_MOD(IE_MORALE);
 	}
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x18 State:Panic
@@ -2077,7 +2061,7 @@ int fx_acid_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 	} else {
 		STAT_MOD( IE_RESISTACID );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x1c ColdResistanceModifier
@@ -2090,7 +2074,7 @@ int fx_cold_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 	} else {
 		STAT_MOD( IE_RESISTCOLD );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x1d ElectricityResistanceModifier
@@ -2103,7 +2087,7 @@ int fx_electricity_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Ef
 	} else {
 		STAT_MOD( IE_RESISTELECTRICITY );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x1e FireResistanceModifier
@@ -2116,7 +2100,7 @@ int fx_fire_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 	} else {
 		STAT_MOD( IE_RESISTFIRE );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x1f MagicDamageResistanceModifier
@@ -2126,7 +2110,7 @@ int fx_magic_damage_resistance_modifier (Scriptable* /*Owner*/, Actor* target, E
 
 	//This stat has no saved basestat variant, so this effect is always stored (not FX_PERMANENT)
 	STAT_MOD( IE_MAGICDAMAGERESISTANCE );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x20 Cure:Death
@@ -2343,11 +2327,7 @@ int fx_strength_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_STR );
 	}
-	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
-		return FX_INSERT;
-	} else {
-		return FX_PERMANENT;
-	}
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x2D State:Stun
@@ -2462,11 +2442,7 @@ int fx_wisdom_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_WIS );
 	}
-	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
-		return FX_INSERT;
-	} else {
-		return FX_PERMANENT;
-	}
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x32 Color:BriefRGB
@@ -2670,7 +2646,7 @@ int fx_stealth_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print("fx_stealth_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	STAT_MOD( IE_STEALTH );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x3C MiscastMagicModifier
@@ -2985,7 +2961,7 @@ int fx_damage_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	STAT_MOD( IE_DAMAGEBONUS );
 	//the basestat is not saved, so no FX_PERMANENT
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x49 DamageBonusModifier(2)
@@ -3019,7 +2995,7 @@ int fx_damage_bonus_modifier2 (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		default:
 			return FX_NOT_APPLIED;
 	}
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x4a State:Blind
@@ -3295,7 +3271,7 @@ int fx_magical_fire_resistance_modifier (Scriptable* /*Owner*/, Actor* target, E
 	} else {
 		STAT_MOD( IE_RESISTMAGICFIRE );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x55 MagicalColdResistanceModifier
@@ -3308,7 +3284,7 @@ int fx_magical_cold_resistance_modifier (Scriptable* /*Owner*/, Actor* target, E
 	} else {
 		STAT_MOD( IE_RESISTMAGICCOLD );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x56 SlashingResistanceModifier
@@ -3321,7 +3297,7 @@ int fx_slashing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 	} else {
 		STAT_MOD( IE_RESISTSLASHING );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x57 CrushingResistanceModifier
@@ -3334,7 +3310,7 @@ int fx_crushing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 	} else {
 		STAT_MOD( IE_RESISTCRUSHING );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x58 PiercingResistanceModifier
@@ -3347,7 +3323,7 @@ int fx_piercing_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 	} else {
 		STAT_MOD( IE_RESISTPIERCING );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x59 MissilesResistanceModifier
@@ -3360,7 +3336,7 @@ int fx_missiles_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effec
 	} else {
 		STAT_MOD( IE_RESISTMISSILE );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x5A OpenLocksModifier
@@ -3373,7 +3349,7 @@ int fx_open_locks_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_LOCKPICKING );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x5B FindTrapsModifier
@@ -3386,7 +3362,7 @@ int fx_find_traps_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_TRAPS );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x5C PickPocketsModifier
@@ -3399,7 +3375,7 @@ int fx_pick_pockets_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_PICKPOCKET );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x5D FatigueModifier
@@ -3412,7 +3388,7 @@ int fx_fatigue_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_FATIGUE );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x5E IntoxicationModifier
@@ -3425,7 +3401,7 @@ int fx_intoxication_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_INTOXICATION );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x5F TrackingModifier
@@ -3438,7 +3414,7 @@ int fx_tracking_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_TRACKING );
 	}
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x60 LevelModifier
@@ -3448,7 +3424,7 @@ int fx_level_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	STAT_MOD( IE_LEVEL );
 	//While the original can, i would rather not modify the base stat here...
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x61 StrengthBonusModifier
@@ -3461,7 +3437,7 @@ int fx_strength_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 	} else {
 		STAT_MOD( IE_STREXTRA );
 	}
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x62 State:Regenerating
@@ -3632,7 +3608,7 @@ int fx_morale_break_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD(IE_MORALEBREAK);
 	}
-	return FX_PERMANENT; //permanent morale break doesn't stick
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x6b PortraitChange
@@ -4113,7 +4089,7 @@ int fx_movement_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (value < target->GetStat(IE_MOVEMENTRATE)) {
 		target->AddPortraitIcon(PI_HASTED);
 	}
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x7f MonsterSummoning
@@ -5114,7 +5090,7 @@ int fx_pause_target (Scriptable* /*Owner*/, Actor * target, Effect* fx)
 	}
 
 	STAT_MOD( IE_CASTERHOLD );
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0xa6 MagicResistanceModifier
@@ -5130,7 +5106,7 @@ int fx_magic_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect* 
 	}
 
 	STAT_MOD( IE_RESISTMAGIC );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0xa7 MissileHitModifier
@@ -5139,7 +5115,7 @@ int fx_missile_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 	// print("fx_missile_to_hit_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	STAT_MOD( IE_MISSILEHITBONUS );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0xa8 RemoveCreature
@@ -5236,7 +5212,7 @@ int fx_poison_resistance_modifier (Scriptable* /*Owner*/, Actor* target, Effect*
 	// this is a gemrb extension, the original only supported flat setting of this resistance
 	// ... up until EE version 2.5, where it started always incrementing
 	STAT_MOD( IE_RESISTPOISON );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 //0xae PlaySound
@@ -5462,7 +5438,7 @@ int fx_castingspeed_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	STAT_MOD( IE_MENTALSPEED );
 	// BGEE2 has param2==2: Set casting time of spells with casting
 	// time higher than param1 to param1 ... which we handle in the user
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0xbe PhysicalSpeedModifier
@@ -5470,7 +5446,7 @@ int fx_attackspeed_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_attackspeed_modifier(%2d): Type: %d", fx->Opcode, fx->Parameter2);
 	STAT_MOD( IE_PHYSICALSPEED );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0xbf CastingLevelModifier
@@ -5862,7 +5838,7 @@ int fx_minimum_hp_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print("fx_minimum_hp_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	STAT_MOD( IE_MINHITPOINTS );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 //0xd1 PowerWordKill
@@ -6957,7 +6933,7 @@ int fx_damageluck_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_damageluck_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_DAMAGELUCK );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0xfb BardSong
@@ -7200,7 +7176,7 @@ int fx_visual_range_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_visual_range_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_VISUALRANGE );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x107 BackstabModifier
@@ -7213,7 +7189,7 @@ int fx_backstab_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (fx->TimingMode==FX_DURATION_INSTANT_PERMANENT)
 		fx->TimingMode=FX_DURATION_INSTANT_PERMANENT_AFTER_BONUSES;
 	STAT_MOD( IE_BACKSTABDAMAGEMULTIPLIER );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x108 DropWeapon
@@ -7503,7 +7479,7 @@ int fx_hide_in_shadows_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 {
 	// print("fx_hide_in_shadows_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_HIDEINSHADOWS );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x114 DetectIllusionsModifier
@@ -7511,7 +7487,7 @@ int fx_detect_illusion_modifier (Scriptable* /*Owner*/, Actor* target, Effect* f
 {
 	// print("fx_detect_illusion_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_DETECTILLUSIONS );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x115 SetTrapsModifier
@@ -7519,14 +7495,14 @@ int fx_set_traps_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_set_traps_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_SETTRAPS );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 // 0x116 ToHitBonusModifier
 int fx_to_hit_bonus_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_to_hit_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD(IE_HITBONUS);
-	return FX_PERMANENT;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT_P : FX_PERMANENT;
 }
 
 // 0x117 RenableButton
@@ -7543,7 +7519,7 @@ int fx_force_surge_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_force_surge_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD_VAR( IE_FORCESURGE, MOD_ABSOLUTE );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x119 WildSurgeModifier
@@ -7551,7 +7527,7 @@ int fx_wild_surge_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_wild_surge_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_SURGEMOD );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x11a ScriptingState
@@ -7605,7 +7581,7 @@ int fx_melee_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_melee_to_hit_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_MELEETOHIT );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x11d MeleeDamageModifier
@@ -7613,7 +7589,7 @@ int fx_melee_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_melee_damage_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_MELEEDAMAGE );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x11e MissileDamageModifier
@@ -7621,7 +7597,7 @@ int fx_missile_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx
 {
 	// print("fx_missile_damage_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_MISSILEDAMAGE );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x11f NoCircleState
@@ -7637,7 +7613,7 @@ int fx_fist_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_fist_to_hit_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_FISTHIT );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x121 FistDamageModifier
@@ -7645,7 +7621,7 @@ int fx_fist_damage_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_fist_damage_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	STAT_MOD( IE_FISTDAMAGE );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 //0x122 TitleModifier
@@ -7791,7 +7767,7 @@ int fx_npc_bump (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print("fx_npc_bump(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 	//unknown effect, but known stat position
 	STAT_MOD( IE_NPCBUMP );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 //0x12d CriticalHitModifier
 int fx_critical_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
@@ -7802,7 +7778,7 @@ int fx_critical_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	STAT_MOD(IE_CRITICALHITBONUS);
 
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 // 0x12e CanUseAnyItem
 int fx_can_use_any_item_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
@@ -7843,7 +7819,7 @@ int fx_left_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print("fx_left_to_hit_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	STAT_MOD( IE_HITBONUSLEFT );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x132 RightHitModifier
@@ -7852,7 +7828,7 @@ int fx_right_to_hit_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print("fx_right_to_hit_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	STAT_MOD( IE_HITBONUSRIGHT );
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x133 Reveal:Tracks
@@ -7888,7 +7864,7 @@ int fx_protection_from_tracking (Scriptable* /*Owner*/, Actor* target, Effect* f
 	// print("fx_protection_from_tracking(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	STAT_MOD( IE_NOTRACKING ); //highlight creature???
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 // 0x135 ModifyLocalVariable
 int fx_modify_local_variable (Scriptable* /*Owner*/, Actor* target, Effect* fx)
@@ -8171,7 +8147,7 @@ int fx_remove_effects(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 int fx_turnlevel_modifier(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	STAT_MOD(IE_TURNUNDEADLEVEL);
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 0x122 (290) Protection:Spell3 with IWD ids targeting
@@ -8230,7 +8206,7 @@ int fx_save_bonus(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	STAT_MOD(IE_SAVEVSPOLY);
 	STAT_MOD(IE_SAVEVSBREATH);
 	STAT_MOD(IE_SAVEVSSPELL);
-	return FX_APPLIED;
+	return fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE ? FX_INSERT : FX_APPLIED;
 }
 
 // 402 in iwd2, 326 ees
