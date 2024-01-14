@@ -5725,7 +5725,7 @@ bool Actor::ValidTarget(int ga_flags, const Scriptable *checker) const
 	}
 
 	if (ga_flags & GA_NO_UNSCHEDULED && !InParty) {
-		if (Modified[IE_AVATARREMOVAL]) return false;
+		if (GetSafeStat(IE_AVATARREMOVAL)) return false;
 
 		const Game *game = core->GetGame();
 		if (game) {

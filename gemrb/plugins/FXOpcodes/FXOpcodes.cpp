@@ -4296,7 +4296,10 @@ int fx_set_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/
 	}
 
 	BASE_STATE_SET( STATE_PETRIFIED );
-	if (target->InParty) core->GetGame()->LeaveParty(target);
+	if (target->InParty) {
+		GameScript::SetLeavePartyDialogFile(target, NULL);
+		core->GetGame()->LeaveParty(target);
+	}
 	target->SendDiedTrigger();
 
 	// end the game if everyone in the party gets petrified
@@ -4684,7 +4687,11 @@ int fx_cast_spell (Scriptable* Owner, Actor* target, Effect* fx)
 	if (Owner->Type == ST_ACTOR) {
 		const Actor *owner = (const Actor *) Owner;
 		// prevent eg. True Sight continuing after death
-		if (!owner->ValidTarget(GA_NO_DEAD)) {
+		// Also prevent for imprisoned or deadlike type characters
+		// Should the latter check be a flag for ValidTarget?
+		if (!owner->ValidTarget(GA_NO_DEAD|GA_NO_UNSCHEDULED)
+		    || owner->GetSafeStat(IE_STATE_ID) & (STATE_PETRIFIED|STATE_FROZEN))
+		{
 			return FX_NOT_APPLIED;
 		}
 	}
@@ -5901,7 +5908,11 @@ int fx_imprisonment (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/)
 	target->AddPortraitIcon(PI_PRISON);
 	target->SendDiedTrigger();
 	target->Stop();
-	if (target->InParty) core->GetGame()->LeaveParty(target);
+	// we need to set the LeavePartyDialogFile here or otherwise can never rejoin
+	if (target->InParty) {
+		GameScript::SetLeavePartyDialogFile(target, NULL);
+		core->GetGame()->LeaveParty(target);
+	}
 	return FX_APPLIED;
 }
 

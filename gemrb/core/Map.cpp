@@ -733,8 +733,11 @@ void Map::UpdateScripts()
 		// paused targets do something similar, but are handled in the effect
 		if (!game->StateOverrideFlag && !game->StateOverrideTime) {
 			//it looks like STATE_SLEEP allows scripts, probably it is STATE_HELPLESS what disables scripts
-			//if that isn't true either, remove this block completely
-			if (actor->GetStat(IE_STATE_ID) & STATE_HELPLESS) {
+			//if that isn't true either, remove STATE_HELPLESS
+			//need to disable scripts for deadlike states at least
+			if (actor->GetStat(IE_STATE_ID) & (STATE_HELPLESS|STATE_PETRIFIED|STATE_FROZEN)
+			    || actor->GetStat(IE_AVATARREMOVAL))
+			{
 				actor->SetInternalFlag(IF_JUSTDIED, BitOp::NAND);
 				continue;
 			}
