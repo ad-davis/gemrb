@@ -875,6 +875,7 @@ static EffectRef fx_contingency_ref = { "CastSpellOnCondition", -1 }; //0xe8
 static EffectRef fx_puppetmarker_ref = { "PuppetMarker", -1 }; //0xed
 static EffectRef fx_spell_sequencer_active_ref = { "Sequencer:Store", -1 }; //0x100
 static EffectRef fx_protection_from_display_string_ref = { "Protection:String", -1 }; //0x10b
+static EffectRef fx_explore_modifier_ref = { "ExploreModifier", -1 }; //0x10c
 static EffectRef fx_apply_effect_repeat_ref = { "ApplyEffectRepeat", -1 }; //0x110
 static EffectRef fx_death_ward_ref = { "DeathWard", -1 };  //iwd2 specific
 static EffectRef fx_death_magic_ref = { "Death2", -1 };    //iwd2 specific
@@ -6714,6 +6715,11 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	case 2:
 		puppetRef = "projimg";
 		copy->SetBase(IE_SEX, SEX_ILLUSION);
+		newfx = EffectQueue::CreateEffect(fx_explore_modifier_ref, 0, 0, FX_DURATION_INSTANT_PERMANENT);
+		if (newfx) {
+			core->ApplyEffect(newfx, copy, copy);
+			delete newfx;
+		}
 		break;
 	case 3:
 		puppetRef = "simulacr";
