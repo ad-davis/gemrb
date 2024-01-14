@@ -3241,7 +3241,10 @@ int fx_cure_deaf_state (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/)
 int fx_set_ai_script (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	// print("fx_set_ai_state(%2d): Resource: %s, Type: %d", fx->Opcode, fx->Resource, fx->Parameter2);
-	target->SetScript (fx->Resource, fx->Parameter2);
+	// don't allow this on player characters as it breaks things
+	if (!target->InParty) {
+	    target->SetScript (fx->Resource, fx->Parameter2);
+	}
 	return FX_NOT_APPLIED;
 }
 
