@@ -1409,8 +1409,9 @@ void Inventory::CacheWeaponInfo(bool leftOrRight) const
 	if (!hittingHeader) return; // ar2808 elf has the misc3b moonblade equipped ... and it has no headers
 	if (hittingHeader->AttackType == ITEM_AT_PROJECTILE) ranged = true; // throwing weapon
 
+	bool noBackstabRestrictions = core->GetVariable("All Weapons Backstab", 0);
 	if (ranged) {
-		wi.backstabbing = hittingHeader->RechargeFlags & IE_ITEM_BACKSTAB;
+		wi.backstabbing = noBackstabRestrictions || hittingHeader->RechargeFlags & IE_ITEM_BACKSTAB;
 		wi.wflags = WEAPON_RANGED;
 
 		// deal with data we need to use from the launcher
@@ -1456,7 +1457,7 @@ void Inventory::CacheWeaponInfo(bool leftOrRight) const
 
 		// any melee weapon usable by a single class thief is game (UAI does not affect this)
 		// but also check a bit in the recharge flags (modder extension)
-		wi.backstabbing = !(item->UsabilityBitmask & 0x400000) || (hittingHeader->RechargeFlags & IE_ITEM_BACKSTAB);
+		wi.backstabbing = noBackstabRestrictions || !(item->UsabilityBitmask & 0x400000) || (hittingHeader->RechargeFlags & IE_ITEM_BACKSTAB);
 		wi.range = hittingHeader->Range + 1;
 		if (IWD2) {
 			// iwd2 doesn't set the usability mask

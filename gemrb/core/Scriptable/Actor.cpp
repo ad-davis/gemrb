@@ -95,6 +95,7 @@ static ieDword GameDifficulty = DIFF_CORE;
 static ieDword StoryMode = 0;
 static ieDword NoExtraDifficultyDmg = 0;
 static ieDword PreferSneakAttack = 0;
+static ieDword StrengthBackstab = 0;
 static int DifficultyLuckMod = 0;
 static int DifficultyDamageMod = 0;
 static int DifficultySaveMod = 0;
@@ -1543,6 +1544,7 @@ GEM_EXPORT void UpdateActorConfig()
 	footsteps = core->GetVariable("Footsteps", 1);
 	war_cries = core->GetVariable("Attack Sounds", 1);
 	PreferSneakAttack = core->GetVariable("3E Thief Sneak Attack", 0);
+	StrengthBackstab = core->GetVariable("Strength Backstab", 0);
 
 	//Handle Game Difficulty and Nightmare Mode
 	// iwd2 had it saved in the GAM, iwd1 only relied on the ini value
@@ -9142,6 +9144,8 @@ void Actor::ModifyWeaponDamage(WeaponInfo &wi, Actor *target, int &damage, bool 
 	int extraDamage = 0; // damage unaffected by the critical multiplier
 	int level = static_cast<int>(GetXPLevel(false));
 
+	if (StrengthBackstab) damage += WeaponDamageBonus(wi);
+
 	if (third) {
 		// 3ed sneak attack
 		if (multiplier > 0) {
@@ -9185,7 +9189,7 @@ void Actor::ModifyWeaponDamage(WeaponInfo &wi, Actor *target, int &damage, bool 
 		}
 	}
 
-	damage += WeaponDamageBonus(wi);
+	if (!StrengthBackstab) damage += WeaponDamageBonus(wi);
 
 	if (weaponImmunity) {
 		//'my weapon has no effect'
