@@ -573,6 +573,11 @@ def CanDualClass(actor):
 	if Dual[0] > 0:
 		return 1
 
+	# somehow multiclassed
+	Multi = HasMultiClassBits (actor)
+	if Multi and Dual[0] == 0: # true multi class
+		return 1
+
 	DualClassTable = GemRB.LoadTable ("dualclas")
 	ClassName = GetClassRowName(actor)
 	KitIndex = GetKitIndex (actor)
