@@ -338,11 +338,12 @@ void Highlightable::TryDisarm(Actor* actor)
 			trapDC = 100;
 		}
 	} else {
-		roll = core->Roll(1, skill/2, 0);
-		skill /= 2;
+		roll = actor->LuckyRoll(1, 10, 0);
+		bonus = -1;
 	}
 
 	int check = skill + roll + bonus;
+	if (core->InDebugMode(ID_MISC)) Log(DEBUG, "Door", "Attempting trap disarm: skill: {}, roll: {}, bonus: {}, total: {}, dc: {}", skill, roll, bonus, check, trapDC);
 	if (check > trapDC) {
 		AddTrigger(TriggerEntry(trigger_disarmed, actor->GetGlobalID()));
 		//trap removed
@@ -379,19 +380,22 @@ void Door::TryPickLock(Actor* actor)
 		}
 		return;
 	}
+	int check = 0;
 	int stat = actor->GetStat(IE_LOCKPICKING);
 	if (core->HasFeature(GFFlags::RULES_3ED)) {
 		int skill = actor->GetSkill(IE_LOCKPICKING);
-		if (skill == 0) { // a trained skill, make sure we fail
-			stat = 0;
-		} else {
-			stat *= 7; // convert to percent (magic 7 is from RE)
+		if (skill != 0) { // a trained skill, make sure we fail
+			check = stat * 7; // convert to percent (magic 7 is from RE)
 			int dexmod = actor->GetAbilityBonus(IE_DEX);
-			stat += dexmod; // the original didn't use it, so let's not multiply it
+			check += dexmod; // the original didn't use it, so let's not multiply it
 			displaymsg->DisplayRollStringName(ieStrRef::ROLL11, GUIColors::LIGHTGREY, actor, stat-dexmod, LockDifficulty, dexmod);
 		}
+	} else {
+		int roll = actor->LuckyRoll(1, 10, 0);
+		check = stat - 1 + roll;
+		if (core->InDebugMode(ID_MISC)) Log(DEBUG, "Door", "Attempting lockpick. skill: {}, roll: {}, check: {}, dc: {}", stat, roll, check, LockDifficulty);
 	}
-	if (stat < (signed)LockDifficulty) {
+	if (check < (signed)LockDifficulty) {
 		displaymsg->DisplayMsgAtLocation(HCStrings::LockpickFailed, FT_ANY, actor, actor, GUIColors::XPCHANGE);
 		AddTrigger(TriggerEntry(trigger_picklockfailed, actor->GetGlobalID()));
 		core->PlaySound(DS_PICKFAIL, SFX_CHAN_HITS);

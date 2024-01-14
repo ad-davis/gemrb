@@ -63,7 +63,7 @@ namespace GemRB {
 static const std::string blank;
 
 //configurable?
-const ieDword ref_lightness = 43;
+const int ref_lightness = 43;
 
 static int sharexp = SX_DIVIDE|SX_COMBAT;
 static int classcount = -1;
@@ -10596,7 +10596,7 @@ bool Actor::TryToHide()
 		return TryToHideIWD2();
 	}
 
-	ieDword roll = 0;
+	int roll = 0;
 	if (third) {
 		roll = LuckyRoll(1, 20, GetArmorSkillPenalty(0));
 	} else {
@@ -10628,12 +10628,13 @@ bool Actor::TryToHide()
 	// TODO: figure out how iwd2 uses the area lightness and crelight.2da
 	const Game *game = core->GetGame();
 	// check how bright our spot is
-	ieDword lightness = game->GetCurrentArea()->GetLightLevel(Pos);
+	int lightness = game->GetCurrentArea()->GetLightLevel(Pos);
 	// seems to be the color overlay at midnight; lightness of a point with rgb (200, 100, 100)
 	// TODO: but our NightTint computes to a higher value, which one is bad?
-	ieDword light_diff = int((lightness - ref_lightness) * 100 / (100 - ref_lightness)) / 2;
-	ieDword chance = (100 - light_diff) * skill/100;
+	int light_diff = int((lightness - ref_lightness) * 100 / (100 - ref_lightness)) / 2;
+	int chance = (100 - light_diff) * skill/100;
 
+	if (core->InDebugMode(ID_MISC)) Log(DEBUG, "Actor", "Attempting hide: skill: {}, lightness: {}, light_diff: {}, chance: {}, roll: {}", skill, lightness, light_diff, chance, roll);
 	if (roll > chance) {
 		HideFailed(this, 0, skill/7, roll);
 		return false;

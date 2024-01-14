@@ -287,7 +287,8 @@ enum DebugModeBits {
 	ID_WINDOWS = 64,
 	ID_FONTS = 128,
 	ID_TEXT = 256,
-	ID_PATHFINDER = 512
+	ID_PATHFINDER = 512,
+	ID_MISC = 1024
 };
 
 // TODO: there is no reason why this can't be generated directly from
