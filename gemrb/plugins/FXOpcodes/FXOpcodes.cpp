@@ -1328,7 +1328,11 @@ int fx_charisma_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_CHR );
 	}
-	return FX_PERMANENT;
+	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
+		return FX_INSERT;
+	} else {
+		return FX_PERMANENT;
+	}
 }
 
 // 0x07 Color:SetPalette
@@ -1396,7 +1400,11 @@ int fx_constitution_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_CON );
 	}
-	return FX_PERMANENT;
+	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
+		return FX_INSERT;
+	} else {
+		return FX_PERMANENT;
+	}
 }
 
 // 0x0B Cure:Poison
@@ -1581,7 +1589,11 @@ int fx_dexterity_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_DEX );
 	}
-	return FX_PERMANENT;
+	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
+		return FX_INSERT;
+	} else {
+		return FX_PERMANENT;
+	}
 }
 
 // 0x10 State:Hasted
@@ -1760,7 +1772,11 @@ int fx_intelligence_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_INT );
 	}
-	return FX_PERMANENT;
+	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
+		return FX_INSERT;
+	} else {
+		return FX_PERMANENT;
+	}
 }
 
 // 0x14 State:Invisible
@@ -2327,7 +2343,11 @@ int fx_strength_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_STR );
 	}
-	return FX_PERMANENT;
+	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
+		return FX_INSERT;
+	} else {
+		return FX_PERMANENT;
+	}
 }
 
 // 0x2D State:Stun
@@ -2442,7 +2462,11 @@ int fx_wisdom_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	} else {
 		STAT_MOD( IE_WIS );
 	}
-	return FX_PERMANENT;
+	if (fx->FirstApply && fx->Parameter2 == MOD_ABSOLUTE) {
+		return FX_INSERT;
+	} else {
+		return FX_PERMANENT;
+	}
 }
 
 // 0x32 Color:BriefRGB
