@@ -75,7 +75,7 @@ static inline Targets *DoObjectFiltering(const Scriptable *Sender, Targets *tgts
 
 	for (int i = 0; i < MaxObjectNesting; i++) {
 		int filterid = oC->objectFilters[i];
-		if (!filterid) break;
+		if (!filterid || filterid > MAX_OBJECTS) break;
 		if (filterid < 0) continue;
 
 		ObjectFunction func = objects[filterid];
