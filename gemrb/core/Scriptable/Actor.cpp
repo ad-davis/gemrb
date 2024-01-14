@@ -2886,6 +2886,16 @@ void Actor::RefreshEffects(bool first, const stats_t& previous)
 	if (Immobile()) {
 		timeStartStep = game->Ticks;
 	}
+	if (area && !area->DisplayingHeadInfo()) {
+		bool select = Setting::HeadInfo::OnSelect() && IsSelected();
+		bool tooltip = Setting::HeadInfo::Tooltips() && core->GetGameControl()->GetLastActor() == this;
+		if (select || tooltip) {
+			DisplayHeadInfo();
+		} else {
+			ClearHeadInfo();
+		}
+	}
+
 }
 
 void Actor::RefreshEffects()
@@ -4699,6 +4709,10 @@ std::string Actor::dump() const
 	buffer.append(inventory.dump(false));
 	buffer.append(spellbook->dump(false));
 	buffer.append(fxqueue.dump(false));
+	buffer.append("Active spells:\n");
+	for (const String& spell : fxqueue.SpellNames()) {
+		AppendFormat(buffer, "{}\n", fmt::WideToChar{spell});
+	}
 	Log(DEBUG, "Actor", "{}", buffer);
 	return buffer;
 }
@@ -7439,15 +7453,6 @@ void Actor::UpdateActorState()
 			remainingTalkSoundTime -= diffTime;
 		}
 		SetCircleSize();
-	}
-
-	// display pc hitpoints if requested
-	// limit the invocation count to save resources (the text is drawn repeatedly anyway)
-	ieDword overheadHP = core->GetVariable("HP Over Head", 0);
-	assert(game->GameTime);
-	assert(core->Time.round_size);
-	if (overheadHP && Persistent() && (game->GameTime % (core->Time.round_size / 2) == 0)) { // smaller delta to skip fading
-		DisplayHeadHPRatio();
 	}
 
 	const auto& anim = currentStance.anim;
@@ -11077,12 +11082,87 @@ bool Actor::HasVisibleHP() const
 	return true;
 }
 
-// shows hp/maxhp as overhead text
-void Actor::DisplayHeadHPRatio()
-{
-	if (!HasVisibleHP()) return;
+String Actor::HPSummaryText() const {
+	int hp = GetStat(IE_HITPOINTS);
+	int maxhp = GetStat(IE_MAXHITPOINTS);
+	if (core->GetVariable("NPC full hp info", 0)) return fmt::format(L"{}/{}", hp, maxhp);
+	// test for an injured string being present for this game
+	ieStrRef strref = DisplayMessage::GetStringReference(HCStrings::Uninjured);
+	if (strref != ieStrRef::INVALID) {
+		// non-neutral, not in party: display injured string
+		// these boundaries are just a guess
+		HCStrings strIdx = HCStrings::Injured4;
+		if (hp == maxhp) {
+			strIdx = HCStrings::Uninjured;
+		} else if (hp > (maxhp*3)/4) {
+			strIdx = HCStrings::Injured1;
+		} else if (hp > maxhp/2) {
+			strIdx = HCStrings::Injured2;
+		} else if (hp > maxhp/3) {
+			strIdx = HCStrings::Injured3;
+		}
+		strref = DisplayMessage::GetStringReference(strIdx);
+		return core->GetString(strref, STRING_FLAGS::NONE);
+	}
+	return String();
+}
 
-	overHead.SetText(fmt::format(L"{}/{}", Modified[IE_HITPOINTS], Modified[IE_MAXHITPOINTS]), true, false);
+void Actor::ClearHeadInfo() {
+	if (!displayingHeadInfo) return;
+	displayingHeadInfo = false;
+	overHeadInfo.Display(false, 0);
+	overHeadInfo.Display(false, 1);
+}
+
+// shows overhead text
+void Actor::DisplayHeadInfo()
+{
+	// checks to see if we should display at all
+	if (!(InternalFlags&IF_INITIALIZED)) return;
+	if (!(InternalFlags & IF_VISIBLE) || Modified[IE_AVATARREMOVAL]) return;
+	if (!ShouldDrawCircle()) return;
+	std::vector<String> spells;
+	int flags = Setting::HeadInfo::Flags();
+	bool displayName = flags&HEAD_INFO_NAME;
+	bool displayHp = flags&HEAD_INFO_HP && HasVisibleHP() && GetStat(IE_EA) != EA_NEUTRAL;
+	bool displaySpells = false;
+	if (flags&HEAD_INFO_SPELLS) {
+		spells = fxqueue.SpellNames();
+		displaySpells = spells.size();
+	}
+	if (!displayName && !displayHp && !displaySpells) return;
+	displayingHeadInfo = true;
+	String text;
+	if (displayName) {
+		text += GetName();
+	}
+	if (displayHp) {
+		if (InParty) {
+			if (displayName) text += L"\n";
+			text += fmt::format(L"{}/{}", Modified[IE_HITPOINTS], Modified[IE_MAXHITPOINTS]);
+		} else {
+			const String summary = HPSummaryText();
+			if (!summary.empty()) {
+				if (displayName) text += L"\n";
+				text += summary;
+			}
+		}
+	}
+	if (displaySpells) {
+		bool newline = (displayName || displayHp);
+		for (const String& spell : spells) {
+			if (newline) text += L"\n";
+			newline = true;
+			text += spell;
+		}
+	}
+	overHeadInfo.SetText(text, true, false);
+	String secondaryText;
+	if (overHead.IsDisplaying()) {
+		overHeadInfo.SetText(overHead.GetText(), true, false, ColorMagenta, 1);
+	} else {
+		overHeadInfo.Display(false, 1);
+	}
 }
 
 void Actor::ReleaseCurrentAction()

@@ -2520,4 +2520,23 @@ bool EffectQueue::CheckIWDTargeting(Scriptable* Owner, Actor* target, ieDword va
 	}
 }
 
+std::vector<String> EffectQueue::SpellNames() const {
+	std::set<ResRef> seen;
+	std::vector<String> ret;
+	for (const Effect& fx : effects) {
+		MATCH_LIVE_FX()
+		if (!fx.SourceRef.IsEmpty() && !seen.count(fx.SourceRef)) {
+			seen.insert(fx.SourceRef);
+			const Spell* spell = gamedata->GetSpell(fx.SourceRef, true);
+			if (spell && spell->SpellName != ieStrRef::INVALID) {
+				String name = core->GetString(spell->SpellName, STRING_FLAGS::RESOLVE_TAGS);
+				if (!name.empty()) {
+					ret.push_back(name);
+				}
+			}
+		}
+	}
+	return ret;
+}
+
 }

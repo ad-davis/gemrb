@@ -694,13 +694,19 @@ void Map::UpdateScripts()
 		ProcessActions();
 	}
 
+	Game *game = core->GetGame();
+
+	// refresh actor head info if on
+	if (game->GetCurrentArea() == this && displayingHeadInfo) {
+		DisplayHeadInfo();
+	}
+
 	// If scripts frozen, return.
 	// This fixes starting a new IWD game. The above ProcessActions pauses the
 	// game for a textscreen, but one of the actor->ProcessActions calls
 	// below starts a cutscene, hiding the mouse. - wjp, 20060805
 	if (core->GetGameControl()->GetDialogueFlags() & DF_FREEZE_SCRIPTS) return;
 
-	Game *game = core->GetGame();
 	bool timestop = game->IsTimestopActive();
 	if (!timestop) {
 		game->SetTimestopOwner(NULL);
@@ -1389,12 +1395,15 @@ void Map::DrawMap(const Region& viewport, FogRenderer& fogRenderer, uint32_t dFl
 		dr->overHead.Draw();
 	}
 
-	size_t i = actors.size();
-	while (i--) {
+	for (auto actor : actors) {
 		//For each Actor present
 		//This must go AFTER the fog!
 		//(maybe we should be using the queue?)
-		actors[i]->overHead.Draw();
+		if (actor->overHeadInfo.IsDisplaying()) {
+			actor->overHeadInfo.Draw();
+		} else {
+			actor->overHead.Draw();
+		}
 	}
 
 	oldGameTime = gametime;
@@ -3834,6 +3843,30 @@ void Map::SetBackground(const ResRef &bgResRef, ieDword duration)
 
 	Background = bmp->GetSprite2D();
 	BgDuration = duration;
+}
+
+void Map::DisplayHeadInfo() {
+	displayingHeadInfo = true;
+	bool npcs = Setting::HeadInfo::TabNpcs();
+	for (Actor* actor : actors) {
+		if (!npcs && !actor->InParty) continue;
+		if (IsVisible(actor->Pos)) {
+			actor->DisplayHeadInfo();
+		} else {
+			// clear actors that went out of visibility
+			actor->ClearHeadInfo();
+		}
+	}
+}
+
+void Map::ClearHeadInfo() {
+	if (!displayingHeadInfo) return;
+	displayingHeadInfo = false;
+	for (Actor* actor : actors) {
+		if (Setting::HeadInfo::Tooltips() && actor == core->GetGameControl()->GetLastActor()) continue;
+		if (Setting::HeadInfo::OnSelect() && actor->IsSelected()) continue;
+		actor->ClearHeadInfo();
+	}
 }
 
 }

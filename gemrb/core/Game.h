@@ -490,6 +490,7 @@ public:
 	void MovePCs(const ResRef& targetArea, const Point& targetPoint, int orientation) const;
 	void MoveFamiliars(const ResRef& targetArea, const Point& targetPoint, int orientation) const;
 	void DumpKaputz() const;
+
 private:
 	bool DetermineStartPosType(const TableMgr* strTable) const;
 	ResRef *GetDream(Map *area);

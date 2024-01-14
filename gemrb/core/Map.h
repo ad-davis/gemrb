@@ -423,6 +423,7 @@ private:
 	std::vector<Actor*> queue[QUEUE_COUNT];
 	unsigned int lastActorCount[QUEUE_COUNT]{};
 	bool hostilesVisible = false;
+	bool displayingHeadInfo = false;
 
 	VideoBufferPtr wallStencil = nullptr;
 	Region stencilViewport;
@@ -685,6 +686,10 @@ public:
 	unsigned int GetLightLevel(const Point &Pos) const;
 
 	void SetBackground(const ResRef &bgResref, ieDword duration);
+
+	bool DisplayingHeadInfo() const { return displayingHeadInfo; }
+	void DisplayHeadInfo();
+	void ClearHeadInfo();
 
 private:
 	const AreaAnimation *GetNextAreaAnimation(aniIterator &iter, ieDword gametime) const;

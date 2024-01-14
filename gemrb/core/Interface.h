@@ -843,6 +843,32 @@ void SetTokenAsString(const std::string& key, T&& newValue) {
 	core->GetTokenDictionary()[key] = wideString;
 }
 
+namespace Setting {
+	class Setting {
+	private:
+		const std::string stringSetting;
+		const int defaultValue;
+		mutable int value = 0;
+		mutable bool valueSet = false;
+	public:
+		Setting(std::string text, int val) noexcept : stringSetting(text), defaultValue(val) {};
+		int GetValue() const {
+			if (valueSet) return value;
+			value = core->GetVariable(stringSetting, defaultValue);
+			valueSet = true;
+			return value;
+		}
+		int operator()() const { return GetValue(); }
+	};
+	namespace HeadInfo {
+		const Setting OnSelect = {"Head info on select", 0};
+		const Setting TabToggle = {"Tab toggles head info", 0};
+		const Setting Tooltips = {"Replace actor tooltips with head info", 0};
+		const Setting TabNpcs = {"Tabbed head info on npcs", 0};
+		const Setting Flags = {"Head info flags", 2};
+	};
+};
+
 }
 
 #endif

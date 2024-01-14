@@ -30,13 +30,16 @@ namespace GemRB {
 
 const String& OverHeadText::GetText(size_t idx) const
 {
+	if (idx >= messages.size()) return emptyString;
 	return messages[idx].text;
 }
 
 static constexpr int maxScrollOffset = 100;
-void OverHeadText::SetText(String newText, bool display, bool append, const Color& newColor)
+void OverHeadText::SetText(String newText, bool display, bool append, const Color& newColor, size_t idx)
 {
-	size_t idx = 0;
+	while (idx >= messages.size()) {
+		messages.emplace_back();
+	}
 	if (newText.empty()) {
 		messages[idx].pos.Invalidate();
 		Display(false, idx);
@@ -59,26 +62,49 @@ void OverHeadText::SetText(String newText, bool display, bool append, const Colo
 	Display(display, idx);
 }
 
+static tick_t display_time(const OverHeadMsg& msg) {
+	if (msg.timeStartDisplaying == 0) return 0;
+	static constexpr tick_t maxDelay = 6000;
+	tick_t delay = maxDelay;
+	if (core->HasFeature(GFFlags::ONSCREEN_TEXT) && !msg.scrollOffset.IsInvalid()) {
+		// empirically determined estimate to get the right speed and distance and 2px/tick
+		delay = 1800;
+	}
+	tick_t time = core->Time.Ticks2Ms(core->GetGame()->GameTime);
+	time -= msg.timeStartDisplaying;
+	if (time >= delay) {
+		return 0;
+	} else {
+		return (delay - time) / 10;
+	}
+
+}
+
+bool OverHeadText::IsDisplaying() const {
+	bool showing = false;
+	for (const auto& msg : messages) {
+		showing = showing || display_time(msg) != 0;
+	}
+	return showing;
+}
+
 bool OverHeadText::Display(bool show, size_t idx)
 {
+	if (idx >= messages.size()) {
+		return false;
+	}
 	if (show) {
-		isDisplaying = true;
 		messages[idx].timeStartDisplaying = core->Time.Ticks2Ms(core->GetGame()->GameTime);
 		return true;
-	} else if (isDisplaying) {
+	} else {
 		// is this the last displaying message?
-		if (messages.size() == 1) {
-			isDisplaying = false;
+		if (messages.size() == 1 && idx == 0) {
 			messages[idx].timeStartDisplaying = 0;
-		} else {
+			return true;
+		} else if (idx < messages.size()) {
 			messages.erase(messages.begin() + idx);
-			bool showing = false;
-			for (const auto& msg : messages) {
-				showing = showing || msg.timeStartDisplaying != 0;
-			}
-			if (!showing) isDisplaying = false;
+			return true;
 		}
-		return true;
 	}
 	return false;
 }
@@ -86,6 +112,7 @@ bool OverHeadText::Display(bool show, size_t idx)
 // 'fix' the current overhead text - follow owner's position
 void OverHeadText::FixPos(const Point& pos, size_t idx)
 {
+	if (idx >= messages.size()) return;
 	messages[idx].pos = pos;
 }
 
@@ -93,7 +120,7 @@ int OverHeadText::GetHeightOffset() const
 {
 	int offset = 100;
 	if (owner->Type == ST_ACTOR) {
-		offset = static_cast<const Selectable*>(owner)->circleSize * 50;
+		offset = static_cast<const Selectable*>(owner)->circleSize * 30;
 	}
 
 	return offset;
@@ -101,41 +128,25 @@ int OverHeadText::GetHeightOffset() const
 
 void OverHeadText::Draw()
 {
-	if (!isDisplaying) {
-		return;
-	}
-
 	int height = GetHeightOffset();
-	bool show = false;
+	// start displaying from first message's point
+	const Point p = messages[0].pos.IsInvalid() ? owner->Pos : messages[0].pos;
 	for (auto msgIter = messages.begin(); msgIter != messages.end(); ++msgIter) {
 		auto& msg = *msgIter;
-		if (msg.timeStartDisplaying == 0) continue;
-		if (msg.Draw(height, owner->Pos, owner->Type)) {
-			show = true;
-		} else if (msgIter != messages.begin()) { // always keep the one reserved slot
+		bool drawn = msg.Draw(height, p, owner->Type);
+		if (!drawn && msgIter != messages.begin()) { // always keep the one reserved slot
 			msgIter = messages.erase(msgIter);
 			--msgIter;
 		}
-	}
-
-	// if all messages are done, mark as done
-	if (!show) {
-		isDisplaying = false;
 	}
 }
 
 // *******************************************************************
 // OverHeadMsg methods
-bool OverHeadMsg::Draw(int heightOffset, const Point& fallbackPos, int ownerType)
+bool OverHeadMsg::Draw(int& heightOffset, const Point& startPos, int ownerType)
 {
-	static constexpr tick_t maxDelay = 6000;
-	tick_t delay = maxDelay;
-	if (core->HasFeature(GFFlags::ONSCREEN_TEXT) && !scrollOffset.IsInvalid()) {
-		// empirically determined estimate to get the right speed and distance and 2px/tick
-		delay = 1800;
-	}
+	if (text.empty()) return false;
 
-	tick_t time = core->Time.Ticks2Ms(core->GetGame()->GameTime);
 	Color& textColor = color;
 	if (color == ColorBlack) {
 		// use defaults
@@ -149,28 +160,33 @@ bool OverHeadMsg::Draw(int heightOffset, const Point& fallbackPos, int ownerType
 	}
 	Font::PrintColors fontColor = { textColor, ColorBlack };
 
-	time -= timeStartDisplaying;
-	if (time >= delay) {
+	tick_t time = display_time(*this);
+	if (time == 0) {
 		timeStartDisplaying = 0;
 		return false;
-	} else {
-		time = (delay - time) / 10;
+	} else if (time < 256) {
 		// rapid fade-out
-		if (time < 256) {
-			fontColor.fg.a = static_cast<unsigned char>(255 - time);
-		}
+		fontColor.fg.a = static_cast<unsigned char>(255 - time);
 	}
 
-	Point p = pos.IsInvalid() ? fallbackPos : pos;
+	Font* font = core->GetTextFont();
+
+	// in practice things can overflow the height
+	Size textboxSize(200, 400);
+
+	// calculate the height of the resulting string and add it to the offset 
+	Font::StringSizeMetrics metrics = {Size(textboxSize), 0, 0, true};
+	Size stringSize = font->StringSize(text, &metrics);
+	heightOffset += stringSize.h;
+
 	Region vp = core->GetGameControl()->Viewport();
-	// NOTE: in case we just printed a message, should we reduce the offset, so we can draw immediately without interference?
-	Region rgn(p - Point(100, heightOffset) - vp.origin, Size(200, 400));
-	if (delay != maxDelay) {
+	Region rgn(startPos - Point(100, heightOffset) - vp.origin, textboxSize);
+	if (core->HasFeature(GFFlags::ONSCREEN_TEXT) && !scrollOffset.IsInvalid()) {
 		rgn.y -= maxScrollOffset - scrollOffset.y;
 		// rgn.h will be adjusted automatically, we don't need to worry about accidentally hiding other msgs
 		scrollOffset.y -= 2;
 	}
-	core->GetTextFont()->Print(rgn, text, IE_FONT_ALIGN_CENTER | IE_FONT_ALIGN_TOP, fontColor);
+	font->Print(rgn, text, IE_FONT_ALIGN_CENTER | IE_FONT_ALIGN_TOP, fontColor);
 
 	return true;
 }

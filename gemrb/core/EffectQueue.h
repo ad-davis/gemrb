@@ -345,6 +345,7 @@ public:
 	static bool CheckIWDTargeting(Scriptable* Owner, Actor* target, ieDword value, ieDword type, Effect *fx = nullptr);
 	void SetDestination(Point dest) { destination = dest; }
 	bool IsDestinationSet() { return destination.IsZero(); }
+	std::vector<String> SpellNames() const;
 private:
 	/** counts effects of specific opcode, parameters and resource */
 	ieDword CountEffects(ieDword opcode, ieDword param1, ieDword param2, const ResRef& = ResRef()) const;

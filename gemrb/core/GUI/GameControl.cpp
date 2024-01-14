@@ -640,12 +640,15 @@ bool GameControl::DispatchEvent(const Event& event) const
 	}
 
 	if (event.keyboard.keycode == GEM_TAB) {
-		const Game *game = core->GetGame();
-		// show partymember hp/maxhp as overhead text
-		for (int pm=0; pm < game->GetPartySize(false); pm++) {
-			Actor *pc = game->GetPC(pm, true);
-			if (!pc) continue;
-			pc->DisplayHeadHPRatio();
+		Map* area = CurrentArea();
+		if (Setting::HeadInfo::TabToggle()) {
+			if (!area->DisplayingHeadInfo()) {
+				CurrentArea()->DisplayHeadInfo();
+			} else {
+				CurrentArea()->ClearHeadInfo();
+			}
+		} else {
+			CurrentArea()->DisplayHeadInfo();
 		}
 		return true;
 	} else if (event.keyboard.keycode == GEM_ESCAPE) {
@@ -1084,17 +1087,14 @@ bool GameControl::OnKeyRelease(const KeyboardEvent& Key, unsigned short Mod)
 		}
 		return true; //return from cheatkeys
 	}
-	const Game* game = core->GetGame();
 	switch (Key.keycode) {
 //FIXME: move these to guiscript
 		case ' ': //soft pause
 			core->TogglePause();
 			break;
-		case GEM_TAB: // remove overhead partymember hp/maxhp
-			for (int pm = 0; pm < game->GetPartySize(false); pm++) {
-				Actor *pc = game->GetPC(pm, true);
-				if (!pc) continue;
-				pc->overHead.Display(false, 0);
+		case GEM_TAB: // remove overhead
+			if (!Setting::HeadInfo::TabToggle()) {
+				CurrentArea()->ClearHeadInfo();
 			}
 			break;
 		default:
@@ -1115,7 +1115,7 @@ String GameControl::TooltipText() const {
 	}
 
 	const Actor* actor = area->GetActor(gameMousePos, GA_NO_DEAD|GA_NO_UNSCHEDULED);
-	if (actor == NULL) {
+	if (actor == NULL || Setting::HeadInfo::Tooltips()) {
 		return View::TooltipText();
 	}
 
@@ -1142,30 +1142,12 @@ String GameControl::TooltipText() const {
 		} else {
 			tip += L"?";
 		}
-	} else {
-		// a guess at a neutral check
-		bool enemy = actor->GetStat(IE_EA) != EA_NEUTRAL;
-		// test for an injured string being present for this game
-		ieStrRef strref = DisplayMessage::GetStringReference(HCStrings::Uninjured);
-		if (enemy && strref != ieStrRef::INVALID) {
-			// non-neutral, not in party: display injured string
-			// these boundaries are just a guess
-			HCStrings strIdx = HCStrings::Injured4;
-			if (hp == maxhp) {
-				strIdx = HCStrings::Uninjured;
-			} else if (hp > (maxhp*3)/4) {
-				strIdx = HCStrings::Injured1;
-			} else if (hp > maxhp/2) {
-				strIdx = HCStrings::Injured2;
-			} else if (hp > maxhp/3) {
-				strIdx = HCStrings::Injured3;
-			}
-			strref = DisplayMessage::GetStringReference(strIdx);
-			String injuredstring = core->GetString(strref, STRING_FLAGS::NONE);
-			tip += L"\n" + injuredstring;
+	} else if (actor->GetStat(IE_EA) != EA_NEUTRAL) { // a guess at a neutral check
+		const String summary = actor->HPSummaryText();
+		if (!summary.empty()) {
+			tip += L"\n" + summary;
 		}
 	}
-
 	return tip;
 }
 
@@ -1211,36 +1193,46 @@ Holder<Sprite2D> GameControl::Cursor() const
 /** Mouse Over Event */
 bool GameControl::OnMouseOver(const MouseEvent& /*me*/)
 {
-	const Map* area = CurrentArea();
-	if (area == NULL) {
+	Map* area = CurrentArea();
+	if (area == nullptr) {
 		return false;
 	}
 
-	Actor *lastActor = area->GetActorByGlobalID(lastActorID);
+	Actor* newActor = nullptr;
+
+	Actor* lastActor = area->GetActorByGlobalID(lastActorID);
 	if (lastActor) {
 		lastActor->SetOver( false );
 	}
 
 	Point gameMousePos = GameMousePos();
 	// let us target party members even if they are invisible
-	lastActor = area->GetActor(gameMousePos, GA_NO_DEAD|GA_NO_UNSCHEDULED);
-	if (lastActor && lastActor->Modified[IE_EA] >= EA_CONTROLLED) {
-		if (!lastActor->ValidTarget(target_types) || !area->IsVisible(gameMousePos)) {
-			lastActor = NULL;
+	newActor = area->GetActor(gameMousePos, GA_NO_DEAD|GA_NO_UNSCHEDULED);
+	if (newActor && newActor->Modified[IE_EA] >= EA_CONTROLLED) {
+		if (!newActor->ValidTarget(target_types) || !area->IsVisible(gameMousePos)) {
+			newActor = nullptr;
 		}
 	}
 
-	if ((target_types & GA_NO_SELF) && lastActor ) {
-		if (lastActor == core->GetFirstSelectedActor()) {
-			lastActor=NULL;
+	if ((target_types & GA_NO_SELF) && newActor ) {
+		if (newActor == core->GetFirstSelectedActor()) {
+			newActor = nullptr;
 		}
 	}
 
-	if (lastActor && lastActor->GetStat(IE_NOCIRCLE)) {
-		lastActor = nullptr;
+	if (newActor && newActor->GetStat(IE_NOCIRCLE)) {
+		newActor = nullptr;
 	}
 
-	SetLastActor(lastActor);
+	if (Setting::HeadInfo::Tooltips()) {
+		if (lastActor && lastActor != newActor && !(Setting::HeadInfo::OnSelect() && lastActor->IsSelected())) {
+			if (!area->DisplayingHeadInfo()) lastActor->ClearHeadInfo();
+		}
+		if (newActor && newActor != lastActor) {
+			newActor->DisplayHeadInfo();
+		}
+	}
+	SetLastActor(newActor);
 
 	return true;
 }
@@ -1446,12 +1438,6 @@ bool GameControl::OnTouchDown(const TouchEvent& te, unsigned short mod)
 	if (View::OnTouchDown(te, mod)) {
 		if (te.numFingers == 1) {
 			screenMousePos = te.Pos();
-
-			// if an actor is being touched show HP
-			Actor* actor = GetLastActor();
-			if (actor) {
-				actor->DisplayHeadHPRatio();
-			}
 		}
 		return true;
 	}

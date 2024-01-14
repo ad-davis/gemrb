@@ -262,6 +262,11 @@ enum AttackType {
 	ATTACK_OFFH = 2,
 };
 
+#define HEAD_INFO_NAME   1
+#define HEAD_INFO_HP     2
+#define HEAD_INFO_SPELLS 4
+#define HEAD_INFO_ALL (HEAD_INFO_NAME|HEAD_INFO_HP|HEAD_INFO_SPELLS)
+
 using ActionButtonRow = std::array<ieByte, GUIBT_COUNT>;
 struct ActionButtonRow2 {
 	ActionButtonRow buttons;
@@ -454,6 +459,8 @@ public:
 	ieByte pstColorBytes[10]{};
 	
 	Region drawingRegion;
+
+	OverHeadText overHeadInfo{this};
 private:
 	String LongName;
 	String ShortName;
@@ -495,6 +502,7 @@ private:
 	int lastConBonus = 0;
 	int WMLevelMod = 0;
 	bool WMLevelModRolled = false;
+	bool displayingHeadInfo = false;
 	/** paint the actor itself. Called internally by Draw() */
 	void DrawActorSprite(const Point& p, BlitFlags flags,
 						 const std::vector<AnimationPart>& anims, const Color& tint) const;
@@ -1023,7 +1031,9 @@ public:
 	void MovementCommand(std::string command);
 	/* shows hp/maxhp as overhead text */
 	bool HasVisibleHP() const;
-	void DisplayHeadHPRatio();
+	String HPSummaryText() const;
+	void ClearHeadInfo();
+	void DisplayHeadInfo();
 	/* if Lasttarget is gone, call this */
 	void StopAttack();
 	int SetBaseAPRandAB(bool CheckRapidShot);

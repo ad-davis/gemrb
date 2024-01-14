@@ -576,11 +576,13 @@ Actor* Game::GetSelectedPCSingle(bool onlyAlive) const
 
 bool Game::SelectActor(Actor* actor, bool select, unsigned flags)
 {
+	bool headInfoOnSelect = Setting::HeadInfo::OnSelect();
 	// actor was not specified, which means all selectables should be (de)selected
 	if (! actor) {
 		for (auto selectee : selected) {
 			selectee->Select(false);
 			selectee->SetOver(false);
+			if (headInfoOnSelect) selectee->ClearHeadInfo();
 		}
 		selected.clear();
 
@@ -620,6 +622,7 @@ bool Game::SelectActor(Actor* actor, bool select, unsigned flags)
 		if (!(flags&SELECT_QUIET)) {
 			actor->PlaySelectionSound();
 		}
+		if (headInfoOnSelect) actor->DisplayHeadInfo();
 	} else {
 		if (!actor->IsSelected()) {
 			// already not selected
@@ -633,6 +636,7 @@ bool Game::SelectActor(Actor* actor, bool select, unsigned flags)
 		}
 		actor->Select( false );
 		assert(!actor->IsSelected());
+		if (headInfoOnSelect) actor->ClearHeadInfo();
 	}
 
 	if (! (flags & SELECT_QUIET)) {
