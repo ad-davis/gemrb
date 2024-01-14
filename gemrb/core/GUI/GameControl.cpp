@@ -1951,6 +1951,14 @@ bool GameControl::HandleActiveRegion(InfoPoint *trap, Actor * actor, const Point
 			// always display overhead text; totsc's ar0511 library relies on it
 			DisplayString(trap);
 
+			//this needs to be before the next block, as the script execution could
+			//potentially add actions to the actor (say by triggering a cutscene)
+			//which would be cleared by CommandActor
+			if (trap->GetUsePoint() ) {
+				std::string Tmp = fmt::format("TriggerWalkTo(\"{}\")", trap->GetScriptName());
+				actor->CommandActor(GenerateAction(std::move(Tmp)));
+			}
+
 			//the importer shouldn't load the script
 			//if it is unallowed anyway (though
 			//deactivated scripts could be reactivated)
@@ -1977,11 +1985,6 @@ bool GameControl::HandleActiveRegion(InfoPoint *trap, Actor * actor, const Point
 				DisplayString(ip2);
 			}
 
-			if (trap->GetUsePoint() ) {
-				std::string Tmp = fmt::format("TriggerWalkTo(\"{}\")", trap->GetScriptName());
-				actor->CommandActor(GenerateAction(std::move(Tmp)));
-				return true;
-			}
 			return true;
 		default:;
 	}
