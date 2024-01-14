@@ -708,7 +708,7 @@ public:
 	/* deals damage to this actor */
 	int Damage(int damage, int damagetype, Scriptable* hitter, int modtype = MOD_ADDITIVE, int critical = 0, int saveflags = 0, int specialFlags = 0);
 	/* displays the damage taken and other details (depends on the game type) */
-	void DisplayCombatFeedback(unsigned int damage, int resisted, int damagetype, const Scriptable *hitter);
+	void DisplayCombatFeedback(int damage, int resisted, int damagetype, const Scriptable *hitter, bool mirrorimage, bool stoneskin);
 	/* play a random footstep sound */
 	void PlayWalkSound();
 	/* play the proper hit sound (in pst) */
@@ -801,7 +801,7 @@ public:
 	int WeaponDamageBonus(const WeaponInfo &wi) const;
 	/* handles critical, backstab, etc. damage modifications */
 	void ModifyWeaponDamage(WeaponInfo &wi, Actor *target, int &damage, bool &critical);
-	/* adjusts damage dealt to this actor, handles mirror images  */
+	/* adjusts damage dealt to this actor */
 	void ModifyDamage(Scriptable *hitter, int &damage, int &resisted, int damagetype);
 	/* returns the hp adjustment based on constitution */
 	int GetHpAdjustment(int multiplier, bool modified=true) const;

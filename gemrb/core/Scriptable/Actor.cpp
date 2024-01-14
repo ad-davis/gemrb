@@ -4124,6 +4124,8 @@ static void ChunkActor(Actor* actor)
 //returns actual damage
 int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, int critical, int saveflags, int specialFlags)
 {
+	bool stoneskin, mirrorimage;
+	stoneskin = mirrorimage = false;
 	//won't get any more hurt
 	if (InternalFlags & IF_REALLYDIED) {
 		return 0;
@@ -4182,6 +4184,7 @@ int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, i
 				fxqueue.DecreaseParam1OfEffect(fx_mirrorimage_ref, 1);
 				Modified[IE_MIRRORIMAGES]--;
 				damage = 0;
+				mirrorimage = true;
 			}
 		}
 	}
@@ -4200,10 +4203,11 @@ int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, i
 	int resisted = 0;
 	if (damage) {
 		ModifyDamage (hitter, damage, resisted, damagetype);
+		if (damage == 0 && resisted != DR_IMMUNE) stoneskin = true;
 	}
 
 	if (!(specialFlags & DamageFlags::NoFeedback)) {
-		DisplayCombatFeedback(damage, resisted, damagetype, hitter);
+		DisplayCombatFeedback(damage, resisted, damagetype, hitter, mirrorimage, stoneskin);
 	}
 
 	if (damage > 0) {
@@ -4362,10 +4366,10 @@ int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, i
 	return damage;
 }
 
-void Actor::DisplayCombatFeedback(unsigned int damage, int resisted, int damagetype, const Scriptable *hitter)
+void Actor::DisplayCombatFeedback(int damage, int resisted, int damagetype, const Scriptable *hitter, bool mirrorimage, bool stoneskin)
 {
 	// shortcircuit for disintegration, which wouldn't hit any of the below
-	if (damage == 0 && resisted == 0) return;
+	if (damage == 0 && resisted == 0 && !mirrorimage && !stoneskin) return;
 	// skip in dialogs to avoid Saradush spam in non-pausing ones
 	if (core->GetGameControl()->InDialog()) return;
 
@@ -4382,7 +4386,7 @@ void Actor::DisplayCombatFeedback(unsigned int damage, int resisted, int damaget
 	}
 
 	auto& tokens = core->GetTokenDictionary();
-	if (damage > 0 && resisted != DR_IMMUNE) {
+	if (damage > 0) {
 		Log(COMBAT, "Actor", "{} {} damage taken.\n", damage, fmt::WideToChar{type_name});
 
 		if (!core->HasFeedback(FT_STATES)) goto hitsound;
@@ -4430,13 +4434,21 @@ void Actor::DisplayCombatFeedback(unsigned int damage, int resisted, int damaget
 			displaymsg->DisplayStringName(msg + dmg, GUIColors::WHITE, this);
 		} else { //bg2
 			//<DAMAGER> did <AMOUNT> damage to <DAMAGEE>
-			tokens["DAMAGEE"] = GetName();
+			//tokens["DAMAGEE"] = GetName();
 			// wipe the DAMAGER token, so we can color it
-			tokens["DAMAGER"] = String{};
-			SetTokenAsString("AMOUNT", damage);
-			displaymsg->DisplayConstantStringName(HCStrings::Damage2, GUIColors::WHITE, hitter);
+			//tokens["DAMAGER"] = String{};
+			//SetTokenAsString("AMOUNT", damage);
+			if (resisted > 0) {
+				displaymsg->DisplayStringName(fmt::format(L"Did {} damage to {} ({} damage resisted).", damage, GetName(), resisted), GUIColors::WHITE, hitter);
+			} else if (resisted < 0) {
+				displaymsg->DisplayStringName(fmt::format(L"Did {} damage to {} ({} damage bonus).", damage, GetName(), resisted), GUIColors::WHITE, hitter);
+			} else {
+				displaymsg->DisplayStringName(fmt::format(L"Did {} damage to {}.", damage, GetName()), GUIColors::WHITE, hitter);
+			}
+			//displaymsg->DisplayConstantStringName(HCStrings::Damage2, GUIColors::WHITE, hitter);
 		}
-	} else if (resisted == DR_IMMUNE && damager) {
+	}
+	if (resisted == DR_IMMUNE && damager) {
 		Log(COMBAT, "Actor", "is immune to damage type {} from {}.\n", fmt::WideToChar{type_name}, fmt::WideToChar{damager->GetName()});
 		if (detailed) {
 			//<DAMAGEE> was immune to my <TYPE> damage
@@ -4451,8 +4463,17 @@ void Actor::DisplayCombatFeedback(unsigned int damage, int resisted, int damaget
 		} // else: other games don't display anything
 	} else if (resisted == DR_IMMUNE) {
 		Log(COMBAT, "Actor", "is immune to damage type: {}.\n", fmt::WideToChar{type_name});
-	} else {
-		// mirror image or stoneskin: no message
+	} else if (mirrorimage) {
+		displaymsg->DisplayStringName(fmt::format(L"Hit illusionary copy of {}.", GetName()), GUIColors::WHITE, hitter);
+	} else if (stoneskin) {
+		displaymsg->DisplayStringName(fmt::format(L"{} absorbed attack.", GetName()), GUIColors::WHITE, hitter);
+	}
+	if (damage < 0) {
+		if (damage == -1) {
+			displaymsg->DisplayStringName(fmt::format(L"Healed {} 1 hitpoint.", GetName()), GUIColors::WHITE, hitter);
+		} else {
+			displaymsg->DisplayStringName(fmt::format(L"Healed {} {} hitpoints.", GetName(), -damage), GUIColors::WHITE, hitter);
+		}
 	}
 
 	hitsound:
@@ -7344,12 +7365,10 @@ void Actor::ModifyDamage(Scriptable *hitter, int &damage, int &resisted, int dam
 				damage -= resisted;
 			}
 			Log(COMBAT, "ModifyDamage", "Resisted {} of {} at {}% resistance to {}", resisted, damage + resisted, GetSafeStat(it->second.resist_stat), damagetype);
-			// PST and BG1 may actually heal on negative damage
-			if (!core->HasFeature(GFFlags::HEAL_ON_100PLUS)) {
-				if (damage <= 0) {
-					resisted = DR_IMMUNE;
-					damage = 0;
-				}
+			if (damage <= 0) {
+				resisted = DR_IMMUNE;
+				// PST and BG1 may actually heal on negative damage
+				if (!core->HasFeature(GFFlags::HEAL_ON_100PLUS)) damage = 0;
 			}
 		}
 	}

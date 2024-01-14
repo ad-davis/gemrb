@@ -1661,10 +1661,12 @@ int fx_current_hp_modifier (Scriptable* Owner, Actor* target, Effect* fx)
 		return FX_NOT_APPLIED;
 	}
 
+	int healAmount = 0;
 	//current hp percent is relative to modified max hp
 	int type = fx->Parameter2&0xffff;
 	switch(type) {
 	case MOD_ADDITIVE:
+		healAmount = fx->Parameter1;
 	case MOD_ABSOLUTE:
 		target->NewBase( IE_HITPOINTS, fx->Parameter1, type);
 		break;
@@ -1672,8 +1674,18 @@ int fx_current_hp_modifier (Scriptable* Owner, Actor* target, Effect* fx)
 		target->NewBase( IE_HITPOINTS, target->GetSafeStat(IE_MAXHITPOINTS)*fx->Parameter1/100, MOD_ABSOLUTE);
 		break;
 	default: // lay on hands amount, wholeness of body, lathander's renewal
-		target->NewBase( IE_HITPOINTS, GetSpecialHealAmount(type, GetCasterObject()), MOD_ADDITIVE);
+		healAmount = GetSpecialHealAmount(type, GetCasterObject());
+		target->NewBase( IE_HITPOINTS, healAmount, MOD_ADDITIVE);
 		break;
+	}
+	if (healAmount != 0) {
+		String msg;
+		if (healAmount == 1) {
+			msg = L"healed 1 hitpoint.";
+		} else {
+			msg = fmt::format(L"Healed {} hitpoints.", healAmount);
+		}
+		displaymsg->DisplayStringName(msg, GUIColors::WHITE, target);
 	}
 	//never stay permanent
 	return FX_NOT_APPLIED;
