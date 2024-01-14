@@ -581,7 +581,11 @@ void Projectile::ProcessEffects(EffectQueue& projQueue, Scriptable* owner, Actor
 	}
 
 	if (apply && selfQueue.GetEffectsCount()) {
-		core->ApplyEffectQueue(std::move(selfQueue), target, owner);
+		if (target) {
+			core->ApplyEffectQueue(std::move(selfQueue), target, owner);
+		} else {
+			selfQueue.AddAllEffects(nullptr);
+		}
 	}
 }
 
