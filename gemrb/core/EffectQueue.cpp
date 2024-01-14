@@ -2143,6 +2143,10 @@ const Effect *EffectQueue::HasEffectWithSource(EffectRef &effect_reference, cons
 	return HasOpcodeWithSource(effect_reference.opcode, resource);
 }
 
+Effect *EffectQueue::HasEffectWithSource(EffectRef &effect_reference, const ResRef &resource) {
+	return const_cast<Effect*>(static_cast<const EffectQueue*>(this)->HasEffectWithSource(effect_reference, resource));
+}
+
 bool EffectQueue::HasAnyDispellableEffect() const
 {
 	for (const Effect& fx : effects) {

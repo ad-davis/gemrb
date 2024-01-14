@@ -7071,7 +7071,7 @@ int fx_activate_spell_sequencer(Scriptable* Owner, Actor* target, Effect* fx)
 		return FX_NOT_APPLIED;
 	}
 
-	Effect *sequencer = actor->fxqueue.HasEffect(fx_spell_sequencer_active_ref);
+	Effect *sequencer = actor->fxqueue.HasEffectWithSource(fx_spell_sequencer_active_ref, fx->Resource);
 	if (!sequencer) {
 		return FX_NOT_APPLIED;
 	}

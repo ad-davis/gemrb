@@ -311,6 +311,7 @@ public:
 	const Effect *HasEffectWithPower(EffectRef &effect_reference, ieDword power) const;
 	const Effect *HasSource(const ResRef &source) const;
 	const Effect *HasEffectWithSource(EffectRef &effect_reference, const ResRef &source) const;
+	Effect *HasEffectWithSource(EffectRef &effect_reference, const ResRef &source);
 	bool DecreaseParam1OfEffect(EffectRef &effect_reference, ieDword amount);
 	int DecreaseParam3OfEffect(EffectRef &effect_reference, ieDword amount, ieDword param2);
 	int BonusForParam2(EffectRef &effect_reference, ieDword param2) const;

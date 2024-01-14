@@ -918,7 +918,7 @@ int fx_overlay (Scriptable* Owner, Actor* target, Effect* fx)
 			ConvertTiming (fx, duration);
 
 			// improved strength also has a pulse we need to adjust
-			Effect *efx = const_cast<Effect*>(target->fxqueue.HasEffectWithSource(fx_colorpulse_ref, fx->SourceRef)); // FIXME: const_cast
+			Effect *efx = target->fxqueue.HasEffectWithSource(fx_colorpulse_ref, fx->SourceRef);
 			if (efx) {
 				ConvertTiming (efx, duration);
 			}
