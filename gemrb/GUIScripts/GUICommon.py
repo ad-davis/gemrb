@@ -440,7 +440,7 @@ def IsDualClassed(actor, verbose):
 
 	if KittedClassIndex == FirstClassIndex and KitIndex:
 		return (1, KitIndex, SecondClassIndex)
-	elif KittedClassIndex == SecondClassIndex:
+	elif KittedClassIndex == SecondClassIndex and KitIndex:
 		return (3, FirstClassIndex, KitIndex)
 	else:
 		return (2, FirstClassIndex, SecondClassIndex)
