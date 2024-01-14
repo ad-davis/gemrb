@@ -7371,6 +7371,10 @@ void Actor::UpdateModalState(ieDword gameTime)
 	if (Modal.LastApplyTime == gameTime) {
 		return;
 	}
+	// states where you can't do anything
+	if ((Modified[IE_STATE_ID]&(STATE_HELPLESS|STATE_PETRIFIED|STATE_FROZEN)) || Modified[IE_AVATARREMOVAL]) {
+		return;
+	}
 
 	// use the combat round size as the original;  also skald song duration matches it
 	int roundFraction = (gameTime - roundTime) % GetAdjustedTime(core->Time.attack_round_size);
