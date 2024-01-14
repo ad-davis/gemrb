@@ -75,6 +75,11 @@ struct PathListNode {
 	orient_t orient;
 };
 
+struct PathList {
+	PathListNode* node = nullptr;
+	unsigned int maxDistance = 0;
+};
+
 enum {
 	PF_SIGHT = 1,
 	PF_BACKAWAY = 2,

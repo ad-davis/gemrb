@@ -2092,7 +2092,7 @@ void Movable::DoStep(unsigned int walkScale, ieDword time) {
 				NewOrientation = Orientation;
 				// Do not call ReleaseCurrentAction() since other actions
 				// than MoveToPoint can cause movement
-				Log(DEBUG, "PathFinderWIP", "Abandoning because I'm close to the goal");
+				if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "PathFinder", "{}: Abandoning path because close to the goal", actor ? MBStringFromString(actor->GetShortName()) : scriptName);
 				pathAbandoned = true;
 				return;
 			}
@@ -2105,6 +2105,7 @@ void Movable::DoStep(unsigned int walkScale, ieDword time) {
 		}
 		// Stop if there's a door in the way
 		if (blocksSearch && bool(area->GetBlocked(Pos + Point(dx, dy)) & PathMapFlags::SIDEWALL)) {
+			if (core->InDebugMode(ID_PATHFINDER)) Log(DEBUG, "PathFinder", "{}: Getting blocked by sidewall", actor ? MBStringFromString(actor->GetShortName()) : scriptName);
 			ClearPath(true);
 			NewOrientation = Orientation;
 			return;
@@ -2159,17 +2160,17 @@ void Movable::AddWayPoint(const Point &Des)
 	}
 	Point p = endNode->point;
 	area->ClearSearchMapFor(this);
-	PathListNode* path2 = area->FindPath(p, Des, circleSize);
+	PathList path2 = area->FindPath(p, Des, circleSize);
 	// if the waypoint is too close to the current position, no path is generated
-	if (!path2) {
+	if (!path2.node) {
 		if (BlocksSearchMap()) {
 			area->BlockSearchMapFor(this);
 		}
 		return;
 	}
-	endNode->Next = path2;
+	endNode->Next = path2.node;
 	//probably it is wise to connect it both ways?
-	path2->Parent = endNode;
+	path2.node->Parent = endNode;
 }
 
 // This function is called at each tick if an actor is following another actor
@@ -2198,15 +2199,24 @@ void Movable::WalkTo(const Point &Des, int distance)
 	}
 
 	if (BlocksSearchMap()) area->ClearSearchMapFor(this);
-	PathListNode* newPath = area->FindPath(Pos, Des, circleSize, distance, PF_SIGHT | PF_ACTORS_ARE_BLOCKING, actor);
-	if (!newPath && actor && actor->ValidTarget(GA_CAN_BUMP)) {
-		Log(DEBUG, "WalkTo", "{} re-pathing ignoring actors", fmt::WideToChar{actor->GetShortName()});
-		newPath = area->FindPath(Pos, Des, circleSize, distance, PF_SIGHT, actor);
+	PathList finalPath;
+	// we first find a simple path without caring about actors (non-bumpables still are considered)
+	// we then use that as a basis for giving up if the path with actors gets too long
+	PathList firstPath = area->FindPath(Pos, Des, circleSize, distance, PF_SIGHT, actor);
+	// if we can't find a path when actors don't block, there is no chance when they do
+	if (firstPath.node) {
+		unsigned int distanceLimit = 0;
+		if (firstPath.maxDistance) distanceLimit = firstPath.maxDistance*(2+100/firstPath.maxDistance); // if is just to guard against division by zero
+		finalPath = area->FindPath(Pos, Des, circleSize, distance, PF_SIGHT | PF_ACTORS_ARE_BLOCKING, actor, distanceLimit);
+		if (!finalPath.node && actor && actor->ValidTarget(GA_CAN_BUMP)) {
+			Log(DEBUG, "WalkTo", "{} re-pathing ignoring actors", fmt::WideToChar{actor->GetShortName()});
+			finalPath = firstPath;
+		}
 	}
 
-	if (newPath) {
+	if (finalPath.node) {
 		ClearPath(false);
-		path = newPath;
+		path = finalPath.node;
 		step = path;
 		HandleAnkhegStance(false);
 	}  else {
@@ -2221,7 +2231,8 @@ void Movable::RunAwayFrom(const Point &Source, int PathLength, bool noBackAway)
 {
 	ClearPath(true);
 	area->ClearSearchMapFor(this);
-	path = area->RunAway(Pos, Source, circleSize, PathLength, !noBackAway, As<Actor>());
+	PathList p = area->RunAway(Pos, Source, circleSize, PathLength, !noBackAway, As<Actor>());
+	path = p.node;
 	HandleAnkhegStance(false);
 }
 

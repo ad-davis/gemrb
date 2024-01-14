@@ -615,7 +615,7 @@ public:
 	void AdjustPosition(Point &goal, int radiusx = 0, int radiusy = 0, int size = -1) const;
 	void AdjustPositionNavmap(Point &goal, int radiusx = 0, int radiusy = 0) const;
 	/* Finds the path which leads the farthest from d */
-	PathListNode* RunAway(const Point &s, const Point &d, unsigned int size, int maxPathLength, bool backAway, const Actor *caller) const;
+	PathList RunAway(const Point &s, const Point &d, unsigned int size, int maxPathLength, bool backAway, const Actor *caller) const;
 	PathListNode* RandomWalk(const Point &s, int size, int radius, const Actor *caller) const;
 	/* Returns true if there is no path to d */
 	bool TargetUnreachable(const Point &s, const Point &d, unsigned int size, bool actorsAreBlocking = false) const;
@@ -628,7 +628,7 @@ public:
 	PathListNode* GetLine(const Point &start, const Point &dest, int speed, orient_t Orientation, int flags) const;
 	Path GetLinePath(const Point &start, const Point &dest, int speed, orient_t Orientation, int flags) const;
 	/* Finds the path which leads to near d */
-	PathListNode* FindPath(const Point &s, const Point &d, unsigned int size, unsigned int minDistance = 0, int flags = PF_SIGHT, const Actor *caller = NULL) const;
+	PathList FindPath(const Point &s, const Point &d, unsigned int size, unsigned int minDistance = 0, int flags = PF_SIGHT, const Actor *caller = NULL, unsigned int maxDistance = 0) const;
 
 	bool IsVisible(const Point &p) const;
 	bool IsExplored(const Point &p) const;
