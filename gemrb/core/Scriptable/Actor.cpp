@@ -6889,7 +6889,7 @@ void Actor::PerformAttack(ieDword gameTime)
 			usedLeftHand = true;
 		}
 	} else {
-		usedLeftHand = (bool) ((attacksperround - attackcount) & 1);
+		usedLeftHand = (IsDualWielding() && ((attacksperround - attackcount) & 1));
 	}
 
 	WeaponInfo& wi = weaponInfo[usedLeftHand];
