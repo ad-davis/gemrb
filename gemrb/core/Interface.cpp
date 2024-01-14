@@ -2135,7 +2135,7 @@ void Interface::GameLoop(void)
 	bool do_update = GSUpdate(update_scripts);
 
 	if (game) {
-		if (gc && !game->selected.empty()) {
+		if (gc && !(InCutSceneMode() && game->selected.empty())) {
 			gc->ChangeMap(GetFirstSelectedPC(true), false);
 		}
 		//in multi player (if we ever get to it), only the server must call this
@@ -3799,25 +3799,29 @@ Holder<SoundHandle> Interface::PlaySound(size_t index, unsigned int channel)
 
 Actor *Interface::GetFirstSelectedPC(bool forced)
 {
-	Actor *ret = nullptr;
-	int slot = 0;
+	Actor *firstSelected = nullptr;
+	Actor *firstInArea = nullptr;
+	int selectedSlot = 0;
+	int areaSlot = 0;
 	int partySize = game->GetPartySize(false);
 	if (!partySize) return nullptr;
 
 	for (int i = 0; i < partySize; i++) {
 		Actor* actor = game->GetPC(i, false);
-		if (!actor->IsSelected()) continue;
-
-		if (actor->InParty < slot || !ret) {
-			ret = actor;
-			slot = actor->InParty;
+		if (actor->IsSelected() && (actor->InParty < selectedSlot || !firstSelected)) {
+			firstSelected = actor;
+			selectedSlot = actor->InParty;
+		}
+		if (actor->Area == game->CurrentArea && (actor->InParty < areaSlot || !firstInArea)) {
+			firstInArea = actor;
+			areaSlot = actor->InParty;
 		}
 	}
 
-	if (forced && !ret) {
-		return game->FindPC(1);
+	if (forced && !firstSelected) {
+		return firstInArea ? firstInArea : game->FindPC(1);
 	}
-	return ret;
+	return firstSelected;
 }
 
 Actor *Interface::GetFirstSelectedActor()
