@@ -513,7 +513,7 @@ namespace GemRB {
 
 #define IE_ETHEREALNESS         202 // also IGNOREDRAINDEATH in ees, but we don't need the stat
 #define IE_IMMUNITY             203
-#define IE_DISABLEDBUTTON       204
+#define IE_DISABLEDBUTTON       204 // FIXME: possibly shouldn't be a stat as we can't store all possible values in an ieDword
 #define IE_ANIMATION_ID		205 //cd
 #define IE_STATE_ID		206
 #define IE_EXTSTATE_ID		207     //used in how/iwd2
