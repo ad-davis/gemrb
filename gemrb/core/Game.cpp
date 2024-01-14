@@ -1888,7 +1888,7 @@ void Game::CastOnRest() const
 		if ((specialSpell.flags & (SpecialSpell::Rest | SpecialSpell::HealAll)) == (SpecialSpell::Rest | SpecialSpell::HealAll)) {
 			while (ps-- && wholeparty.back().hpneeded > 0) {
 				Actor *tar = GetPC(ps, true);
-				while (tar && tar->spellbook.HaveSpell(specialSpell.resref, 0) && wholeparty.back().hpneeded > 0) {
+				while (tar && tar->spellbook->HaveSpell(specialSpell.resref, 0) && wholeparty.back().hpneeded > 0) {
 					tar->DirectlyCastSpell(tar, specialSpell.resref, 0, true, true);
 					for (auto& injuree : wholeparty) {
 						injuree.hpneeded -= CastOnRestHealingAmount(tar, specialSpell);
@@ -1901,7 +1901,7 @@ void Game::CastOnRest() const
 		} else if (specialSpell.flags & SpecialSpell::Rest) {
 			while (ps--) {
 				Actor *tar = GetPC(ps, true);
-				if (tar && tar->spellbook.HaveSpell(specialSpell.resref, 0)) {
+				if (tar && tar->spellbook->HaveSpell(specialSpell.resref, 0)) {
 					HealingResource resource;
 					resource.caster = tar;
 					resource.resRef = specialSpell.resref;
@@ -1909,8 +1909,8 @@ void Game::CastOnRest() const
 					resource.amounthealed = CastOnRestHealingAmount(tar, specialSpell);
 					// guess the booktype; one will definitely match due to HaveSpell above
 					int booktype = 0;
-					while (resource.amount == 0 && booktype < tar->spellbook.GetTypes()) {
-						resource.amount = tar->spellbook.CountSpells(specialSpell.resref, booktype, 0);
+					while (resource.amount == 0 && booktype < tar->spellbook->GetTypes()) {
+						resource.amount = tar->spellbook->CountSpells(specialSpell.resref, booktype, 0);
 						booktype++;
 					}
 					if (resource.amount == 0) continue;

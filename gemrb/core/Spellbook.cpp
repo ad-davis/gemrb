@@ -123,10 +123,10 @@ void Spellbook::CopyFrom(const Actor *source)
 	}
 	ClearSpellInfo();
 
-	const Spellbook &wikipedia = source->spellbook;
+	const std::shared_ptr<Spellbook> wikipedia = source->spellbook;
 
 	for (int t = 0; t < NUM_BOOK_TYPES; t++) {
-		for (const auto& wm: wikipedia.spells[t]) {
+		for (const auto& wm: wikipedia->spells[t]) {
 			unsigned int k;
 			CRESpellMemorization *sm = new CRESpellMemorization();
 			spells[t].push_back(sm);
@@ -147,7 +147,7 @@ void Spellbook::CopyFrom(const Actor *source)
 		}
 	}
 
-	sorcerer = wikipedia.sorcerer;
+	sorcerer = wikipedia->sorcerer;
 }
 
 //ITEM, SPPR, SPWI, SPIN, SPCL

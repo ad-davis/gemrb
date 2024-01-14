@@ -1347,7 +1347,7 @@ void EffectQueue::RemoveAllEffects(ieDword opcode)
 
 static bool RemoveMemo(Actor* ownerActor, unsigned int type, unsigned int idx, ieDword bonus = 0)
 {
-	CRESpellMemorization* sm = ownerActor->spellbook.GetSpellMemorization(type, idx);
+	CRESpellMemorization* sm = ownerActor->spellbook->GetSpellMemorization(type, idx);
 	size_t diff = sm->SlotCountWithBonus - sm->SlotCount;
 	if (diff == 0) return false;
 
@@ -1385,18 +1385,18 @@ void EffectQueue::RemoveBonusMemorizations(const Effect& fx)
 	// delete granted memorizations
 	if (fx.Parameter2 == 0) {
 		// doubled counts up to fx.Parameter1 level
-		unsigned int level = std::min(fx.Parameter1, ownerActor->spellbook.GetSpellLevelCount(type));
+		unsigned int level = std::min(fx.Parameter1, ownerActor->spellbook->GetSpellLevelCount(type));
 		for (unsigned int i = 0; i < level; i++) {
 			if (!RemoveMemo(ownerActor, type, i)) continue;
 		}
 	} else if (fx.Parameter2 == 0x200) {
 		// doubled counts at fx.Parameter1 level
 		unsigned int level = fx.Parameter1;
-		if (level > ownerActor->spellbook.GetSpellLevelCount(type)) return;
+		if (level > ownerActor->spellbook->GetSpellLevelCount(type)) return;
 		RemoveMemo(ownerActor, type, level);
 	} else {
 		// fx.Parameter1 bonus to all levels in param2 mask
-		unsigned int level = ownerActor->spellbook.GetSpellLevelCount(type);
+		unsigned int level = ownerActor->spellbook->GetSpellLevelCount(type);
 		int mask = 1;
 		for (unsigned int i = 0; i < level; i++) {
 			if (!(fx.Parameter2 & mask)) {

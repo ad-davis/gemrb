@@ -8172,7 +8172,7 @@ static PyObject* GemRB_GetMemorizableSpellsCount(PyObject* /*self*/, PyObject* a
 	GET_ACTOR_GLOBAL();
 
 	//this isn't in the actor's spellbook, handles Wisdom
-	return PyLong_FromLong(actor->spellbook.GetMemorizableSpellsCount((ieSpellType) SpellType, Level, (bool) Bonus));
+	return PyLong_FromLong(actor->spellbook->GetMemorizableSpellsCount((ieSpellType) SpellType, Level, (bool) Bonus));
 }
 
 PyDoc_STRVAR( GemRB_SetMemorizableSpellsCount__doc,
@@ -8203,7 +8203,7 @@ static PyObject* GemRB_SetMemorizableSpellsCount(PyObject* /*self*/, PyObject* a
 	GET_ACTOR_GLOBAL();
 
 	//the bonus increased value (with wisdom too) is handled by the core
-	actor->spellbook.SetMemorizableSpellsCount(Value, (ieSpellType) SpellType, Level, false);
+	actor->spellbook->SetMemorizableSpellsCount(Value, (ieSpellType) SpellType, Level, false);
 
 	Py_RETURN_NONE;
 }
@@ -8236,7 +8236,7 @@ static PyObject* GemRB_CountSpells(PyObject * /*self*/, PyObject* args)
 	GET_GAME();
 	GET_ACTOR_GLOBAL();
 
-	return PyLong_FromLong(actor->spellbook.CountSpells(ResRefFromPy(SpellResRef), SpellType, Flag));
+	return PyLong_FromLong(actor->spellbook->CountSpells(ResRefFromPy(SpellResRef), SpellType, Flag));
 }
 
 PyDoc_STRVAR( GemRB_GetKnownSpellsCount__doc,
@@ -8269,12 +8269,12 @@ static PyObject* GemRB_GetKnownSpellsCount(PyObject * /*self*/, PyObject* args)
 	if (Level<0) {
 		int tmp = 0;
 		for(int i=0;i<9;i++) {
-			tmp += actor->spellbook.GetKnownSpellsCount( SpellType, i );
+			tmp += actor->spellbook->GetKnownSpellsCount( SpellType, i );
 		}
 		return PyLong_FromLong(tmp);
 	}
 
-	return PyLong_FromLong(actor->spellbook.GetKnownSpellsCount(SpellType, Level));
+	return PyLong_FromLong(actor->spellbook->GetKnownSpellsCount(SpellType, Level));
 }
 
 PyDoc_STRVAR( GemRB_GetKnownSpell__doc,
@@ -8304,7 +8304,7 @@ static PyObject* GemRB_GetKnownSpell(PyObject * /*self*/, PyObject* args)
 	GET_GAME();
 	GET_ACTOR_GLOBAL();
 
-	const CREKnownSpell* ks = actor->spellbook.GetKnownSpell(SpellType, Level, Index);
+	const CREKnownSpell* ks = actor->spellbook->GetKnownSpell(SpellType, Level, Index);
 	if (! ks) {
 		return RuntimeError( "Spell not found!" );
 	}
@@ -8343,12 +8343,12 @@ static PyObject* GemRB_GetMemorizedSpellsCount(PyObject * /*self*/, PyObject* ar
 
 	if (Level<0) {
 		if (castable) {
-			return PyLong_FromLong(actor->spellbook.GetSpellInfoSize(SpellType));
+			return PyLong_FromLong(actor->spellbook->GetSpellInfoSize(SpellType));
 		} else {
-			return PyLong_FromLong(actor->spellbook.GetMemorizedSpellsCount(SpellType, false));
+			return PyLong_FromLong(actor->spellbook->GetMemorizedSpellsCount(SpellType, false));
 		}
 	} else {
-		return PyLong_FromLong(actor->spellbook.GetMemorizedSpellsCount(SpellType, Level, castable));
+		return PyLong_FromLong(actor->spellbook->GetMemorizedSpellsCount(SpellType, Level, castable));
 	}
 }
 
@@ -8380,7 +8380,7 @@ static PyObject* GemRB_GetMemorizedSpell(PyObject * /*self*/, PyObject* args)
 	GET_GAME();
 	GET_ACTOR_GLOBAL();
 
-	const CREMemorizedSpell* ms = actor->spellbook.GetMemorizedSpell(SpellType, Level, Index);
+	const CREMemorizedSpell* ms = actor->spellbook->GetMemorizedSpell(SpellType, Level, Index);
 	if (! ms) {
 		return RuntimeError( "Spell not found!" );
 	}
@@ -8519,7 +8519,7 @@ static PyObject* GemRB_GetSpelldataIndex(PyObject * /*self*/, PyObject* args)
 	GET_ACTOR_GLOBAL();
 
 	SpellExtHeader spelldata{};
-	int ret = actor->spellbook.FindSpellInfo(&spelldata, ResRefFromPy(spellResRef), type);
+	int ret = actor->spellbook->FindSpellInfo(&spelldata, ResRefFromPy(spellResRef), type);
 	return PyLong_FromLong(ret - 1);
 }
 
@@ -8548,10 +8548,10 @@ static PyObject* GemRB_GetSpelldata(PyObject * /*self*/, PyObject* args)
 	GET_ACTOR_GLOBAL();
 
 	SpellExtHeader spelldata{};
-	int count = actor->spellbook.GetSpellInfoSize(type);
+	int count = actor->spellbook->GetSpellInfoSize(type);
 	PyObject* spell_list = PyTuple_New(count);
 	for (int i = 0; i < count; i++) {
-		actor->spellbook.GetSpellInfo(&spelldata, type, i, 1);
+		actor->spellbook->GetSpellInfo(&spelldata, type, i, 1);
 		PyTuple_SetItem(spell_list, i, PyString_FromResRef(spelldata.spellName));
 	}
 	return spell_list;
@@ -8696,20 +8696,20 @@ static PyObject* GemRB_RemoveSpell(PyObject * /*self*/, PyObject* args)
 	if (PyArg_ParseTuple( args, "iO", &globalID, &cstr) ) {
 		GET_ACTOR_GLOBAL();
 		ResRef SpellResRef = ResRefFromPy(cstr);
-		int ret = actor->spellbook.KnowSpell(SpellResRef);
-		actor->spellbook.RemoveSpell(SpellResRef);
+		int ret = actor->spellbook->KnowSpell(SpellResRef);
+		actor->spellbook->RemoveSpell(SpellResRef);
 		return PyLong_FromLong(ret);
 	}
 	PyErr_Clear(); //clear the type exception from above
 	PARSE_ARGS( args,  "iiii", &globalID, &SpellType, &Level, &Index );
 
  	GET_ACTOR_GLOBAL();
-	const CREKnownSpell* ks = actor->spellbook.GetKnownSpell(SpellType, Level, Index);
+	const CREKnownSpell* ks = actor->spellbook->GetKnownSpell(SpellType, Level, Index);
 	if (! ks) {
 		return RuntimeError( "Spell not known!" );
 	}
 
-	return PyLong_FromLong(actor->spellbook.RemoveSpell(ks));
+	return PyLong_FromLong(actor->spellbook->RemoveSpell(ks));
 }
 
 PyDoc_STRVAR( GemRB_RemoveItem__doc,
@@ -8780,7 +8780,7 @@ static PyObject* GemRB_MemorizeSpell(PyObject * /*self*/, PyObject* args)
 	GET_GAME();
 	GET_ACTOR_GLOBAL();
 
-	const CREKnownSpell* ks = actor->spellbook.GetKnownSpell(SpellType, Level, Index);
+	const CREKnownSpell* ks = actor->spellbook->GetKnownSpell(SpellType, Level, Index);
 	if (! ks) {
 		return RuntimeError( "Spell not found!" );
 	}
@@ -8792,7 +8792,7 @@ static PyObject* GemRB_MemorizeSpell(PyObject * /*self*/, PyObject* args)
 		if (SpellType == IE_SPELL_TYPE_INNATE) enabled = 1;
 	}
 
-	return PyLong_FromLong(actor->spellbook.MemorizeSpell(ks, enabled));
+	return PyLong_FromLong(actor->spellbook->MemorizeSpell(ks, enabled));
 }
 
 
@@ -8825,14 +8825,14 @@ static PyObject* GemRB_UnmemorizeSpell(PyObject * /*self*/, PyObject* args)
 	GET_GAME();
 	GET_ACTOR_GLOBAL();
 
-	const CREMemorizedSpell* ms = actor->spellbook.GetMemorizedSpell(SpellType, Level, Index);
+	const CREMemorizedSpell* ms = actor->spellbook->GetMemorizedSpell(SpellType, Level, Index);
 	if (! ms) {
 		return RuntimeError( "Spell not found!\n" );
 	}
 	if (onlyDepleted)
-		return PyLong_FromLong(actor->spellbook.UnmemorizeSpell(ms->SpellResRef, false, onlyDepleted));
+		return PyLong_FromLong(actor->spellbook->UnmemorizeSpell(ms->SpellResRef, false, onlyDepleted));
 	else
-		return PyLong_FromLong(actor->spellbook.UnmemorizeSpell(ms));
+		return PyLong_FromLong(actor->spellbook->UnmemorizeSpell(ms));
 }
 
 PyDoc_STRVAR( GemRB_GetSlotItem__doc,
@@ -10873,24 +10873,24 @@ static PyObject* GemRB_Window_SetupControls(PyObject* self, PyObject* args)
 		std::vector<ItemExtHeader> itemdata; // not really used!
 		switch (action) {
 		case ACT_INNATE:
-			if (actor->spellbook.IsIWDSpellBook()) {
+			if (actor->spellbook->IsIWDSpellBook()) {
 				type = (1<<IE_IWD2_SPELL_INNATE) | (1<<IE_IWD2_SPELL_SHAPE);
 			} else {
 				type = 1<<IE_SPELL_TYPE_INNATE;
 			}
-			if (!actor->spellbook.GetSpellInfoSize(type)) {
+			if (!actor->spellbook->GetSpellInfoSize(type)) {
 				state = Button::DISABLED;
 			}
 			break;
 		case ACT_CAST:
 			//luckily the castable spells in IWD2 are all bits below INNATE, so we can do this trick
-			if (actor->spellbook.IsIWDSpellBook()) {
+			if (actor->spellbook->IsIWDSpellBook()) {
 				type = (1<<IE_IWD2_SPELL_INNATE)-1;
 			} else {
 				type = (1<<IE_SPELL_TYPE_INNATE)-1;
 			}
 			//returns true if there are ANY spells to cast
-			if (!actor->spellbook.GetSpellInfoSize(type) || !actor->GetAnyActiveCasterLevel()) {
+			if (!actor->spellbook->GetSpellInfoSize(type) || !actor->GetAnyActiveCasterLevel()) {
 				state = Button::DISABLED;
 			}
 			break;
@@ -10902,7 +10902,7 @@ static PyObject* GemRB_Window_SetupControls(PyObject* self, PyObject* args)
 		case ACT_SORCERER:
 		case ACT_WIZARD:
 		case ACT_DOMAIN:
-			if (actor->spellbook.IsIWDSpellBook()) {
+			if (actor->spellbook->IsIWDSpellBook()) {
 				type = 1<<(action-ACT_BARD);
 			} else {
 				//only cleric or wizard switch exists in the bg engine
@@ -10910,19 +10910,19 @@ static PyObject* GemRB_Window_SetupControls(PyObject* self, PyObject* args)
 				else type = 1<<IE_SPELL_TYPE_PRIEST;
 			}
 			//returns true if there is ANY shape
-			if (!actor->spellbook.GetSpellInfoSize(type)) {
+			if (!actor->spellbook->GetSpellInfoSize(type)) {
 				state = Button::DISABLED;
 			}
 			break;
 		case ACT_WILDSHAPE:
 		case ACT_SHAPE:
-			if (actor->spellbook.IsIWDSpellBook()) {
+			if (actor->spellbook->IsIWDSpellBook()) {
 				type = 1<<IE_IWD2_SPELL_SHAPE;
 			} else {
 				type = 0; //no separate shapes in old spellbook
 			}
 			//returns true if there is ANY shape
-			if (!actor->spellbook.GetSpellInfoSize(type)) {
+			if (!actor->spellbook->GetSpellInfoSize(type)) {
 				state = Button::DISABLED;
 			}
 			break;
@@ -10933,9 +10933,9 @@ static PyObject* GemRB_Window_SetupControls(PyObject* self, PyObject* args)
 			}
 			break;
 		case ACT_BARDSONG:
-			if (actor->spellbook.IsIWDSpellBook()) {
+			if (actor->spellbook->IsIWDSpellBook()) {
 				type = 1<<IE_IWD2_SPELL_SONG;
-				if (!actor->spellbook.GetSpellInfoSize(type)) {
+				if (!actor->spellbook->GetSpellInfoSize(type)) {
 					state = Button::DISABLED;
 				} else if (modalstate == MS_BATTLESONG) {
 					state = Button::SELECTED;
@@ -11068,7 +11068,7 @@ jump_label2:
 			ResRef poi = actor->PCStats->QuickSpells[tmp];
 			if (!poi.IsEmpty()) {
 				SetSpellIcon(btn, poi, 1, 1, i+1);
-				int mem = actor->spellbook.GetMemorizedSpellsCount(poi, -1, true);
+				int mem = actor->spellbook->GetMemorizedSpellsCount(poi, -1, true);
 				if (!mem) {
 					state = Button::FAKEDISABLED;
 				}
@@ -11243,7 +11243,7 @@ static PyObject* GemRB_SetupQuickSpell(PyObject * /*self*/, PyObject* args)
 		Py_RETURN_NONE;
 	}
 
-	actor->spellbook.GetSpellInfo(&spelldata, type, which, 1);
+	actor->spellbook->GetSpellInfo(&spelldata, type, which, 1);
 	if (spelldata.spellName.IsEmpty()) {
 		return RuntimeError( "Invalid parameter! Spell not found!\n" );
 	}
@@ -11495,12 +11495,12 @@ static PyObject* GemRB_PrepareSpontaneousCast(PyObject * /*self*/, PyObject* arg
 	GET_ACTOR_GLOBAL();
 
 	// deplete original memorisation
-	actor->spellbook.UnmemorizeSpell(ResRefFromPy(spell), true, 2);
+	actor->spellbook->UnmemorizeSpell(ResRefFromPy(spell), true, 2);
 	// set spellinfo to all known spells of desired type
 	std::vector<ResRef> data;
-	actor->spellbook.SetCustomSpellInfo(data, ResRef(), 1 << type);
+	actor->spellbook->SetCustomSpellInfo(data, ResRef(), 1 << type);
 	SpellExtHeader spelldata{};
-	int idx = actor->spellbook.FindSpellInfo(&spelldata, replacementSpell, 1<<type);
+	int idx = actor->spellbook->FindSpellInfo(&spelldata, replacementSpell, 1<<type);
 
 	return PyLong_FromLong(idx - 1);
 }
@@ -11542,7 +11542,7 @@ static PyObject* GemRB_SpellCast(PyObject * /*self*/, PyObject* args)
 
 	//don't cast anything, just reinit the spell list
 	if (type==-1) {
-		actor->spellbook.ClearSpellInfo();
+		actor->spellbook->ClearSpellInfo();
 		Py_RETURN_NONE;
 	}
 
@@ -11550,8 +11550,8 @@ static PyObject* GemRB_SpellCast(PyObject * /*self*/, PyObject* args)
 	std::vector<ResRef> data;
 	if (type == -3) {
 		data.push_back(ResRef(resRef));
-		actor->spellbook.SetCustomSpellInfo(data, ResRef(), 0);
-		actor->spellbook.GetSpellInfo(&spelldata, 255, 0, 1);
+		actor->spellbook->SetCustomSpellInfo(data, ResRef(), 0);
+		actor->spellbook->GetSpellInfo(&spelldata, 255, 0, 1);
 	} else if (type == -2) {
 		//resolve quick spell slot
 		if (!actor->PCStats) {
@@ -11559,14 +11559,14 @@ static PyObject* GemRB_SpellCast(PyObject * /*self*/, PyObject* args)
 			//return RuntimeError( "Actor has no quickslots!\n" );
 			Py_RETURN_NONE;
 		}
-		actor->spellbook.FindSpellInfo(&spelldata, actor->PCStats->QuickSpells[spell], actor->PCStats->QuickSpellBookType[spell]);
+		actor->spellbook->FindSpellInfo(&spelldata, actor->PCStats->QuickSpells[spell], actor->PCStats->QuickSpellBookType[spell]);
 	} else {
 		ieDword ActionLevel = core->GetVariable("ActionLevel", 0);
 		if (ActionLevel == 5) {
 			// get the right spell, since the lookup below only checks the memorized list
-			actor->spellbook.SetCustomSpellInfo(data, ResRef(), type);
+			actor->spellbook->SetCustomSpellInfo(data, ResRef(), type);
 		}
-		actor->spellbook.GetSpellInfo(&spelldata, type, spell, 1);
+		actor->spellbook->GetSpellInfo(&spelldata, type, spell, 1);
 	}
 
 	Log(MESSAGE, "GUIScript", "Cast spell: {}", spelldata.spellName);
@@ -11996,7 +11996,7 @@ static PyObject* GemRB_ChargeSpells(PyObject * /*self*/, PyObject* args)
 	GET_GAME();
 	GET_ACTOR_GLOBAL();
 
-	actor->spellbook.ChargeAllSpells();
+	actor->spellbook->ChargeAllSpells();
 
 	Py_RETURN_NONE;
 }
@@ -12091,7 +12091,7 @@ static PyObject* GemRB_HasSpecialSpell(PyObject * /*self*/, PyObject* args)
 	bool found = false;
 	while(i--) {
 		if (specialtype & special_spells[i].flags) {
-			if (actor->spellbook.HaveSpell(special_spells[i].resref, useup)) {
+			if (actor->spellbook->HaveSpell(special_spells[i].resref, useup)) {
 				found = true;
 				break;
 			}

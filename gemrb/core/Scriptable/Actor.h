@@ -387,7 +387,7 @@ public:
 	ieByte UnknownField = 0;
 
 	Inventory inventory;
-	Spellbook spellbook;
+	std::shared_ptr<Spellbook> spellbook;
 	//savefile version (creatures embedded in area)
 	int creVersion = 0;
 	//in game or area actor header
@@ -946,7 +946,7 @@ public:
 	/* Checks if the actor is dualclassed */
 	bool IsDualClassed() const;
 	/* Returns an exact copy of this actor */
-	Actor *CopySelf(bool mislead) const;
+	Actor *CopySelf(int type) const;
 	static ieDword GetClassID(ieDword isClass);
 	const std::string& GetClassName(ieDword classID) const;
 	const std::string& GetKitName(ieDword kitID) const;

@@ -1198,7 +1198,7 @@ int fx_set_charmed_state (Scriptable* Owner, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_MIND) {
 		target->fxqueue.RemoveAllEffects(fx_eye_mind_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_MIND]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_MIND]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_MIND, false);
 		return FX_ABORT;
 	}
@@ -1464,7 +1464,7 @@ int fx_death (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_SPIRIT) {
 		target->fxqueue.RemoveAllEffects(fx_eye_spirit_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_SPIRIT]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_SPIRIT]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_SPIRIT, false);
 		return FX_ABORT;
 	}
@@ -1864,7 +1864,7 @@ int fx_set_panic_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_MIND) {
 		target->fxqueue.RemoveAllEffects(fx_eye_mind_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_MIND]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_MIND]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_MIND, false);
 		return FX_ABORT;
 	}
@@ -1891,7 +1891,7 @@ int fx_set_poisoned_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_VENOM) {
 		target->fxqueue.RemoveAllEffects(fx_eye_venom_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_VENOM]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_VENOM]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_VENOM, false);
 		return FX_ABORT;
 	}
@@ -2156,7 +2156,7 @@ int fx_set_silenced_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_FORT) {
 		target->fxqueue.RemoveAllEffects(fx_eye_fortitude_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_FORT]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_FORT]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_FORT, false);
 		return FX_ABORT;
 	}
@@ -2258,7 +2258,7 @@ int fx_bonus_wizard_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	//if param2 is 0, then double spells up to param1
 	if(!fx->Parameter2) {
 		for (unsigned int j=0;j<fx->Parameter1 && j<MAX_SPELL_LEVEL;j++) {
-			target->spellbook.SetMemorizableSpellsCount(0, IE_SPELL_TYPE_WIZARD, j, true);
+			target->spellbook->SetMemorizableSpellsCount(0, IE_SPELL_TYPE_WIZARD, j, true);
 		}
 		return FX_APPLIED;
 	}
@@ -2267,13 +2267,13 @@ int fx_bonus_wizard_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (fx->Parameter2==0x200) {
 		unsigned int j = fx->Parameter1-1;
 		if (j<MAX_SPELL_LEVEL) {
-			target->spellbook.SetMemorizableSpellsCount(0, IE_SPELL_TYPE_WIZARD, j, true);
+			target->spellbook->SetMemorizableSpellsCount(0, IE_SPELL_TYPE_WIZARD, j, true);
 		}
 	}
 
 	for(unsigned int j=0;j<MAX_SPELL_LEVEL;j++) {
 		if (fx->Parameter2&i) {
-			target->spellbook.SetMemorizableSpellsCount(fx->Parameter1, IE_SPELL_TYPE_WIZARD, j, true);
+			target->spellbook->SetMemorizableSpellsCount(fx->Parameter1, IE_SPELL_TYPE_WIZARD, j, true);
 		}
 		i<<=1;
 	}
@@ -2348,7 +2348,7 @@ int fx_set_stun_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_FORT) {
 		target->fxqueue.RemoveAllEffects(fx_eye_fortitude_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_FORT]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_FORT]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_FORT, false);
 		return FX_ABORT;
 	}
@@ -2690,7 +2690,7 @@ int fx_bonus_priest_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	//if param2 is 0, then double spells up to param1
 	if(!fx->Parameter2) {
 		for (unsigned int j=0;j<fx->Parameter1 && j<MAX_SPELL_LEVEL;j++) {
-			target->spellbook.SetMemorizableSpellsCount(0, IE_SPELL_TYPE_PRIEST, j, true);
+			target->spellbook->SetMemorizableSpellsCount(0, IE_SPELL_TYPE_PRIEST, j, true);
 		}
 		return FX_APPLIED;
 	}
@@ -2699,13 +2699,13 @@ int fx_bonus_priest_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	//if param2 is 0x200, then double spells at param1
 	if (fx->Parameter2==0x200) {
 		unsigned int j = fx->Parameter1-1;
-		target->spellbook.SetMemorizableSpellsCount(fx->Parameter1, IE_SPELL_TYPE_PRIEST, j, true);
+		target->spellbook->SetMemorizableSpellsCount(fx->Parameter1, IE_SPELL_TYPE_PRIEST, j, true);
 		return FX_APPLIED;
 	}
 
 	for(unsigned int j=0;j<MAX_SPELL_LEVEL;j++) {
 		if (fx->Parameter2&i) {
-			target->spellbook.SetMemorizableSpellsCount(fx->Parameter1, IE_SPELL_TYPE_PRIEST, j, true);
+			target->spellbook->SetMemorizableSpellsCount(fx->Parameter1, IE_SPELL_TYPE_PRIEST, j, true);
 		}
 		i<<=1;
 	}
@@ -2985,7 +2985,7 @@ int fx_set_blind_state (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_FORT) {
 		target->fxqueue.RemoveAllEffects(fx_eye_fortitude_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_FORT]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_FORT]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_FORT, false);
 		return FX_ABORT;
 	}
@@ -3197,7 +3197,7 @@ int fx_set_deaf_state (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_FORT) {
 		target->fxqueue.RemoveAllEffects(fx_eye_fortitude_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_FORT]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_FORT]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_FORT, false);
 		return FX_ABORT;
 	}
@@ -4278,7 +4278,7 @@ int fx_set_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_STONE) {
 		target->fxqueue.RemoveAllEffects(fx_eye_stone_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_STONE]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_STONE]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_STONE, false);
 		return FX_ABORT;
 	}
@@ -4604,7 +4604,7 @@ int fx_disable_button (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// iwd2 has a flexible action bar, so there are more possible parameter values
 	// only values 0-5 match the bg2 constants (which map to ACT_*)
 	// FIXME: support disabling all iwd2 buttons
-	if (target->spellbook.IsIWDSpellBook()) {
+	if (target->spellbook->IsIWDSpellBook()) {
 		if (fx->Parameter2 < 6) STAT_BIT_OR( IE_DISABLEDBUTTON, 1<<fx->Parameter2 );
 	} else {
 		STAT_BIT_OR( IE_DISABLEDBUTTON, 1<<fx->Parameter2 );
@@ -4639,7 +4639,7 @@ int fx_disable_spellcasting (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	ieDword tmp = fx->Parameter2+1;
 
 	//IWD2 Style spellbook
-	if (target->spellbook.IsIWDSpellBook()) {
+	if (target->spellbook->IsIWDSpellBook()) {
 		int bookMask = target->GetBookMask();
 		 // is there a potential mage spellbook involved?
 		if (fx->Parameter2 <= 2 && bookMask & mageBooks) {
@@ -4649,7 +4649,7 @@ int fx_disable_spellcasting (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 			STAT_BIT_OR(IE_CASTING, dsc_bits_iwd2[tmp] );
 		}
 	} else { // bg2
-		if (fx->Parameter2 == 0 && target->spellbook.GetKnownSpellsCount(IE_SPELL_TYPE_WIZARD, 0)) {
+		if (fx->Parameter2 == 0 && target->spellbook->GetKnownSpellsCount(IE_SPELL_TYPE_WIZARD, 0)) {
 			displayWarning = true;
 		}
 		//-1->  1 (item)
@@ -5185,14 +5185,14 @@ int fx_remove_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	default:
 		// in yet another poor IE design decision ...
 		onlyknown = fx->Resource.length() == 8;
-		target->spellbook.RemoveSpell(fx->Resource, onlyknown);
+		target->spellbook->RemoveSpell(fx->Resource, onlyknown);
 		break;
 	case 1: //forget all spells of Resource
-		do {} while(target->spellbook.HaveSpell( fx->Resource, HS_DEPLETE ));
+		do {} while(target->spellbook->HaveSpell( fx->Resource, HS_DEPLETE ));
 		break;
 	case 2: //forget x spells of resource
 		while( fx->Parameter1--) {
-			target->spellbook.HaveSpell( fx->Resource, HS_DEPLETE );
+			target->spellbook->HaveSpell( fx->Resource, HS_DEPLETE );
 		}
 		break;
 	}
@@ -5843,7 +5843,7 @@ int fx_power_word_kill (Scriptable* Owner, Actor* target, Effect* fx)
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_SPIRIT) {
 		target->fxqueue.RemoveAllEffects(fx_eye_spirit_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_SPIRIT]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_SPIRIT]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_SPIRIT, false);
 		return FX_ABORT;
 	}
@@ -5952,10 +5952,9 @@ int fx_select_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 {
 	auto& vars = core->GetDictionary();
 	// print("fx_select_spell(%2d) %d", fx->Opcode, fx->Parameter2);
-	Spellbook *sb = &target->spellbook;
 
 	// force unmemorization of source spell, this seems required
-	sb->HaveSpell( fx->SourceRef, HS_DEPLETE );
+	target->spellbook->HaveSpell( fx->SourceRef, HS_DEPLETE );
 
 	if(fx->Parameter2) {
 		//all known spells, no need to memorize
@@ -5966,7 +5965,7 @@ int fx_select_spell (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 		// (ees) differentiate between 1 and 2 with some minor extra filtering, but we do that elsewhere
 		std::vector<ResRef> data;
 		gamedata->ReadResRefTable(fx->Resource, data);
-		sb->SetCustomSpellInfo(data, fx->SourceRef, 0);
+		target->spellbook->SetCustomSpellInfo(data, fx->SourceRef, 0);
 
 		vars["ActionLevel"] = 11;
 	}
@@ -6333,16 +6332,16 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 	if (fx->FirstApply && fx->Parameter3) {
 		// TODO: display strings
 		if (gamedata->Exists(fx->Resource, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource, HS_DEPLETE);
 		}
 		if (gamedata->Exists(fx->Resource2, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource2, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource2, HS_DEPLETE);
 		}
 		if (gamedata->Exists(fx->Resource3, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource3, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource3, HS_DEPLETE);
 		}
 		if (gamedata->Exists(fx->Resource4, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource4, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource4, HS_DEPLETE);
 		}
 	}
 
@@ -6594,7 +6593,7 @@ int fx_create_contingency (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (core->InCutSceneMode()) return FX_NOT_APPLIED;
 
 	// force unmemorization of source spell, this seems required
-	target->spellbook.HaveSpell( fx->SourceRef, HS_DEPLETE );
+	target->spellbook->HaveSpell( fx->SourceRef, HS_DEPLETE );
 
 	if (target->fxqueue.HasEffectWithSource(fx_contingency_ref, fx->SourceRef)) {
 		displaymsg->DisplayConstantStringName(HCStrings::ContingencyDupe, GUIColors::WHITE, target);
@@ -6689,7 +6688,7 @@ int fx_puppet_master (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print("fx_puppet_master(%2d): Value: %d, Stat: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	//copyself doesn't copy scripts, so the script clearing code is not needed
-	Actor *copy = target->CopySelf(fx->Parameter2 == 1);
+	Actor *copy = target->CopySelf(fx->Parameter2);
 
 	Effect *newfx = EffectQueue::CreateUnsummonEffect(fx);
 	if (newfx) {
@@ -6873,7 +6872,7 @@ int fx_drain_spells (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	ieDword i=fx->Parameter1;
 	int type = fx->Parameter2 ? IE_SPELL_TYPE_PRIEST : IE_SPELL_TYPE_WIZARD;
 	while(i--) {
-		if (!target->spellbook.DepleteSpell(type)) {
+		if (!target->spellbook->DepleteSpell(type)) {
 			break;
 		}
 	}
@@ -6927,7 +6926,7 @@ int fx_change_bardsong (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	unsigned int songType = IE_SPL_SONG;
 	if (core->HasFeature(GFFlags::RULES_3ED)) songType = IE_IWD2_SPELL_SONG;
 	unsigned int count = target->fxqueue.CountEffects(fx_change_bardsong_ref, -1, -1);
-	unsigned int songCount = target->spellbook.GetSpellInfoSize(1 << songType);
+	unsigned int songCount = target->spellbook->GetSpellInfoSize(1 << songType);
 	if (count > 0 && songCount > 0) {
 		for (unsigned int i=0; i<songCount; i++) {
 			if (i == fx->Parameter2) continue;
@@ -7038,16 +7037,16 @@ int fx_store_spell_sequencer(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	target->AddPortraitIcon(PI_SEQUENCER);
 	if (fx->FirstApply && fx->Parameter3) {
 		if (gamedata->Exists(fx->Resource, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource, HS_DEPLETE);
 		}
 		if (gamedata->Exists(fx->Resource2, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource2, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource2, HS_DEPLETE);
 		}
 		if (gamedata->Exists(fx->Resource3, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource3, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource3, HS_DEPLETE);
 		}
 		if (gamedata->Exists(fx->Resource4, IE_SPL_CLASS_ID)) {
-			target->spellbook.HaveSpell(fx->Resource4, HS_DEPLETE);
+			target->spellbook->HaveSpell(fx->Resource4, HS_DEPLETE);
 		}
 	}
 	return FX_APPLIED;
@@ -7082,12 +7081,28 @@ int fx_activate_spell_sequencer(Scriptable* Owner, Actor* target, Effect* fx)
 	if (!actor) {
 		return FX_NOT_APPLIED;
 	}
+	// if a project image puppet, remove the master's sequencer if it exists
+	if (actor->GetSafeStat(IE_PUPPETMASTERTYPE) == 2) {
+		ieDword masterId = actor->GetSafeStat(IE_PUPPETMASTERID);
+		Actor* master;
+		if (masterId > 1000) {
+			master = core->GetGame()->GetActorByGlobalID(actor->GetSafeStat(masterId));
+		} else {
+			master = core->GetGame()->FindPC(actor->GetSafeStat(masterId));
+		}
+		if (master) {
+			Effect* masterSequencer = master->fxqueue.HasEffectWithSource(fx_spell_sequencer_active_ref, fx->Resource);
+			if (masterSequencer) {
+				masterSequencer->TimingMode = FX_DURATION_JUST_EXPIRED;
+			}
+		}
+	}
 	// there is some weird logic here - the sequencers generally call remove spell after to
 	// get rid of it, but because they are 8 characters long they don't get removed from the memorized
 	// book, so they still stick around and come back after rest
 	// so forcing it here, which is probably wrong
 	// FIXME: research what actually happens in IE with this 8 character thing
-	actor->spellbook.UnmemorizeSpell(fx->SourceRef, false, 0);
+	actor->spellbook->UnmemorizeSpell(fx->SourceRef, false, 0);
 
 	Effect *sequencer = actor->fxqueue.HasEffectWithSource(fx_spell_sequencer_active_ref, fx->Resource);
 	if (!sequencer) {

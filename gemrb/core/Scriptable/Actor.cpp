@@ -362,6 +362,7 @@ Actor::Actor()
 
 	AC.SetOwner(this);
 	ToHit.SetOwner(this);
+	spellbook.reset(new Spellbook());
 }
 
 Actor::~Actor(void)
@@ -617,7 +618,7 @@ static void ApplyClab_internal(Actor* actor, const ResRef& clab, int level, bool
 				}
 			} else if (res.BeginsWith("GA_")) {
 				if (remove) {
-					actor->spellbook.RemoveSpell(clabRef);
+					actor->spellbook->RemoveSpell(clabRef);
 				} else {
 					actor->LearnSpell(clabRef, LS_MEMO);
 				}
@@ -628,7 +629,7 @@ static void ApplyClab_internal(Actor* actor, const ResRef& clab, int level, bool
 					actor->fxqueue.RemoveAllEffects(clabRef);
 				} else {
 					actor->LearnSpell(clabRef, LS_MEMO | LS_LEARN, IE_IWD2_SPELL_INNATE);
-					actor->spellbook.RemoveSpell(clabRef);
+					actor->spellbook->RemoveSpell(clabRef);
 					core->ApplySpell(clabRef, actor, actor, 0);
 				}
 			} else if (res.BeginsWith("FS_")) {//iwd2 only: song name strref (used by unused kits)
@@ -637,13 +638,13 @@ static void ApplyClab_internal(Actor* actor, const ResRef& clab, int level, bool
 					actor->fxqueue.RemoveAllEffects(clabRef);
 				} else {
 					actor->LearnSpell(clabRef, LS_LEARN, IE_IWD2_SPELL_SONG);
-					actor->spellbook.RemoveSpell(clabRef);
+					actor->spellbook->RemoveSpell(clabRef);
 					core->ApplySpell(clabRef, actor, actor, 0);
 				}
 			} else if (res.BeginsWith("RA_")) {//iwd2 only
 				//remove ability
 				int x = atoi(res.c_str() + 3);
-				actor->spellbook.RemoveSpell(x);
+				actor->spellbook->RemoveSpell(x);
 			}
 		}
 	}
@@ -1086,7 +1087,7 @@ void Actor::ChangeSorcererType (ieDword classIdx)
 		default: break;
 		}
 	}
-	spellbook.SetBookType(sorcerer);
+	spellbook->SetBookType(sorcerer);
 }
 
 static void pcf_animid(Actor *actor, ieDword /*oldValue*/, ieDword newValue)
@@ -2625,6 +2626,10 @@ void Actor::CheckPuppet(Actor *puppet, ieDword type)
 				puppet->DestroySelf();
 				return;
 			}
+			// make sure the spellbook is shared
+			if (puppet->spellbook != spellbook) {
+				puppet->spellbook = spellbook;
+			}
 			Modified[IE_HELD]=1;
 			AddPortraitIcon(PI_PROJIMAGE);
 			Modified[IE_STATE_ID]|=STATE_HELPLESS;
@@ -2640,7 +2645,7 @@ Actor::stats_t Actor::ResetStats(bool init)
 	if (anims) {
 		anims->CheckColorMod();
 	}
-	spellbook.ClearBonus();
+	spellbook->ClearBonus();
 	BardSong.Reset();
 	projectileImmunity.clear();
 
@@ -2705,7 +2710,7 @@ void Actor::AddEffects(EffectQueue* fx)
 	}
 	//also clear the spell bonuses just given, they will be
 	//recalculated below again
-	spellbook.ClearBonus();
+	spellbook->ClearBonus();
 	//AC.ResetAll(); // TODO: check if this is needed
 	//ToHit.ResetAll();
 	
@@ -2837,7 +2842,7 @@ void Actor::RefreshEffects(bool first, const stats_t& previous)
 		pcf_sanctuary(this, BaseStats[IE_SANCTUARY], Modified[IE_SANCTUARY]);
 	}
 	//add wisdom/casting_ability bonus spells
-	if (spellbook.IsIWDSpellBook()) {
+	if (spellbook->IsIWDSpellBook()) {
 		// check each class separately for the casting stat and booktype (luckily there is no bonus for domain spells)
 		for (int i = 0; i < ISCLASSES; ++i) {
 			int level = GetClassLevel(i);
@@ -2846,11 +2851,11 @@ void Actor::RefreshEffects(bool first, const stats_t& previous)
 				continue;
 			}
 			level = Modified[castingStat[classesiwd2[i]]];
-			spellbook.BonusSpells(booktype, level);
+			spellbook->BonusSpells(booktype, level);
 		}
 	} else {
 		int level = Modified[IE_WIS];
-		spellbook.BonusSpells(IE_SPELL_TYPE_PRIEST, level);
+		spellbook->BonusSpells(IE_SPELL_TYPE_PRIEST, level);
 	}
 
 	// iwd2 barbarian speed increase isn't handled like for monks (normal clab)!?
@@ -4082,7 +4087,7 @@ bool Actor::CheckSpellDisruption(int damage) const
 
 bool Actor::HandleCastingStance(const ResRef& spellResRef, bool deplete, bool instant)
 {
-	if (deplete && !spellbook.HaveSpell(spellResRef, HS_DEPLETE)) {
+	if (deplete && !spellbook->HaveSpell(spellResRef, HS_DEPLETE)) {
 		SetStance(IE_ANI_READY);
 		return true;
 	}
@@ -4177,7 +4182,7 @@ int Actor::Damage(int damage, int damagetype, Scriptable* hitter, int modtype, i
 	if (GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_MAGE) {
 		if (damagetype & (DAMAGE_FIRE|DAMAGE_COLD|DAMAGE_ACID|DAMAGE_ELECTRICITY)) {
 			fxqueue.RemoveAllEffects(fx_eye_mage_ref);
-			spellbook.RemoveSpell(SevenEyes[EYE_MAGE]);
+			spellbook->RemoveSpell(SevenEyes[EYE_MAGE]);
 			SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_MAGE, false);
 			damage = 0;
 		}
@@ -4674,7 +4679,7 @@ std::string Actor::dump() const
 	AppendFormat(buffer, "LastSpellTarget: {} {}\n", LastSpellTarget, GetActorNameByID(LastSpellTarget));
 	AppendFormat(buffer, "LastTalked: {} {}\n", LastTalker, GetActorNameByID(LastTalker));
 	buffer.append(inventory.dump(false));
-	buffer.append(spellbook.dump(false));
+	buffer.append(spellbook->dump(false));
 	buffer.append(fxqueue.dump(false));
 	Log(DEBUG, "Actor", "{}", buffer);
 	return buffer;
@@ -5945,7 +5950,7 @@ int Actor::LearnSpell(const ResRef& spellname, ieDword flags, int bookmask, int 
 {
 	//don't fail if the spell is also memorized (for innates)
 	if (! (flags&LS_MEMO)) {
-		if (spellbook.HaveSpell(spellname, 0) ) {
+		if (spellbook->HaveSpell(spellname, 0) ) {
 			return LSR_KNOWN;
 		}
 	}
@@ -5983,7 +5988,7 @@ int Actor::LearnSpell(const ResRef& spellname, ieDword flags, int bookmask, int 
 	if (bookmask == -1) {
 		bookmask = GetBookMask();
 	}
-	int explev = spellbook.LearnSpell(spell, flags&LS_MEMO, bookmask, kit, level);
+	int explev = spellbook->LearnSpell(spell, flags&LS_MEMO, bookmask, kit, level);
 	HCStrings message = HCStrings::count;
 	if (flags&LS_LEARN) {
 		core->GetTokenDictionary()["SPECIALABILITYNAME"] = core->GetString(spell->SpellName);
@@ -7110,7 +7115,7 @@ void Actor::FinishAttack() {
 
 	if (target->GetStat(IE_EXTSTATE_ID) & EXTSTATE_EYE_SWORD) {
 		target->fxqueue.RemoveAllEffects(fx_eye_sword_ref);
-		target->spellbook.RemoveSpell(SevenEyes[EYE_SWORD]);
+		target->spellbook->RemoveSpell(SevenEyes[EYE_SWORD]);
 		target->SetBaseBit(IE_EXTSTATE_ID, EXTSTATE_EYE_SWORD, false);
 		success = false;
 		roll = 2; // avoid chance critical misses
@@ -8813,9 +8818,9 @@ int Actor::RestoreSpellLevel(ieDword maxlevel, ieDword type)
 			typemask = 0;
 	}
 	for (int i=maxlevel;i>0;i--) {
-		CREMemorizedSpell *cms = spellbook.FindUnchargedSpell(typemask, maxlevel);
+		CREMemorizedSpell *cms = spellbook->FindUnchargedSpell(typemask, maxlevel);
 		if (cms) {
-			spellbook.ChargeSpell(cms);
+			spellbook->ChargeSpell(cms);
 			return i;
 		}
 	}
@@ -8851,7 +8856,7 @@ void Actor::Rest(int hours)
 		SetBase (IE_FATIGUE, 0);
 		SetBase (IE_INTOXICATION, 0);
 		inventory.ChargeAllItems (0);
-		spellbook.ChargeAllSpells ();
+		spellbook->ChargeAllSpells ();
 	}
 	ResetCommentTime();
 }
@@ -10121,7 +10126,7 @@ bool Actor::IsDualClassed() const
 	return CountBits(Modified[IE_MC_FLAGS] & MC_WAS_ANY) == 1;
 }
 
-Actor *Actor::CopySelf(bool mislead) const
+Actor *Actor::CopySelf(int type) const
 {
 	Actor *newActor = new Actor();
 
@@ -10150,7 +10155,7 @@ Actor *Actor::CopySelf(bool mislead) const
 	newActor->Modified = newActor->BaseStats;
 
 	//copy the inventory, but only if it is not the Mislead illusion
-	if (mislead) {
+	if (type == 1) {
 		//these need to be called too to have a valid inventory
 		newActor->inventory.SetSlotCount(inventory.GetSlotCount());
 	} else {
@@ -10162,8 +10167,11 @@ Actor *Actor::CopySelf(bool mislead) const
 	}
 
 	//copy the spellbook, if any
-	if (!mislead) {
-		newActor->spellbook.CopyFrom(this);
+	if (type ==2) {
+		// copy assignment
+		newActor->spellbook = spellbook;
+	} else if (type != 1) {
+		newActor->spellbook->CopyFrom(this);
 	}
 
 	newActor->CreateDerivedStats();
@@ -10177,7 +10185,11 @@ Actor *Actor::CopySelf(bool mislead) const
 	newActor->SetStance( IE_ANI_READY );
 
 	//copy the running effects and apply them
-	newActor->AddEffects(EffectQueue(fxqueue));
+	EffectQueue newFx = fxqueue;
+	newFx.SetOwner(newActor);
+	//remove the non-permanents
+	newFx.RemoveAllNonPermanentEffects();
+	newActor->AddEffects(std::move(newFx));
 	return newActor;
 }
 

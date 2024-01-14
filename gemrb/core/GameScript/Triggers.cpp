@@ -1234,9 +1234,9 @@ int GameScript::HasInnateAbility(Scriptable *Sender, const Trigger *parameters)
 	}
 
 	if (!parameters->resref0Parameter.IsEmpty()) {
-		return actor->spellbook.HaveSpell(parameters->resref0Parameter, 0);
+		return actor->spellbook->HaveSpell(parameters->resref0Parameter, 0);
 	}
-	return actor->spellbook.HaveSpell(parameters->int0Parameter, 0);
+	return actor->spellbook->HaveSpell(parameters->int0Parameter, 0);
 }
 
 int GameScript::HaveSpell(Scriptable *Sender, const Trigger *parameters)
@@ -1251,11 +1251,11 @@ int GameScript::HaveSpell(Scriptable *Sender, const Trigger *parameters)
 	}
 
 	if (!parameters->resref0Parameter.IsEmpty()) {
-		return actor->spellbook.HaveSpell(parameters->resref0Parameter, 0);
+		return actor->spellbook->HaveSpell(parameters->resref0Parameter, 0);
 	}
 	int spellNum = parameters->int0Parameter;
 	if (!spellNum) spellNum = Sender->LastMarkedSpell;
-	return actor->spellbook.HaveSpell(spellNum, 0);
+	return actor->spellbook->HaveSpell(spellNum, 0);
 }
 
 int GameScript::HaveAnySpells(Scriptable *Sender, const Trigger */*parameters*/)
@@ -1265,7 +1265,7 @@ int GameScript::HaveAnySpells(Scriptable *Sender, const Trigger */*parameters*/)
 		return 0;
 	}
 
-	return actor->spellbook.HaveSpell("", 0);
+	return actor->spellbook->HaveSpell("", 0);
 }
 
 int GameScript::HaveSpellParty(Scriptable */*Sender*/, const Trigger *parameters)
@@ -1277,14 +1277,14 @@ int GameScript::HaveSpellParty(Scriptable */*Sender*/, const Trigger *parameters
 	if (!parameters->resref0Parameter.IsEmpty()) {
 		while(i--) {
 			Actor *actor = game->GetPC(i, true);
-			if (actor->spellbook.HaveSpell(parameters->resref0Parameter, 0) ) {
+			if (actor->spellbook->HaveSpell(parameters->resref0Parameter, 0) ) {
 				return 1;
 			}
 		}
 	} else {
 		while(i--) {
 			Actor *actor = game->GetPC(i, true);
-			if (actor->spellbook.HaveSpell(parameters->int0Parameter, 0) ) {
+			if (actor->spellbook->HaveSpell(parameters->int0Parameter, 0) ) {
 				return 1;
 			}
 		}
@@ -1300,9 +1300,9 @@ int GameScript::KnowSpell(Scriptable *Sender, const Trigger *parameters)
 	}
 
 	if (!parameters->resref0Parameter.IsEmpty()) {
-		return actor->spellbook.KnowSpell(parameters->resref0Parameter);
+		return actor->spellbook->KnowSpell(parameters->resref0Parameter);
 	}
-	return actor->spellbook.KnowSpell(parameters->int0Parameter);
+	return actor->spellbook->KnowSpell(parameters->int0Parameter);
 }
 
 int GameScript::True(Scriptable */* Sender*/, const Trigger */*parameters*/)
@@ -2228,7 +2228,7 @@ int GameScript::IsSpellTargetValid(Scriptable *Sender, const Trigger *parameters
 		return 0;
 	}
 	int splnum = parameters->int0Parameter;
-	if (!(flags & MSO_IGNORE_HAVE) && !scr->spellbook.HaveSpell(splnum, 0) ) {
+	if (!(flags & MSO_IGNORE_HAVE) && !scr->spellbook->HaveSpell(splnum, 0) ) {
 		return 0;
 	}
 	int range;

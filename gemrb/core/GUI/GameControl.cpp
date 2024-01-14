@@ -1745,7 +1745,7 @@ void GameControl::TryToCast(Actor *source, const Point &tgt)
 		} else {
 			const CREMemorizedSpell *si;
 			//spell casting at target
-			si = source->spellbook.GetMemorizedSpell(spellOrItem, spellSlot, spellIndex);
+			si = source->spellbook->GetMemorizedSpell(spellOrItem, spellSlot, spellIndex);
 			if (!si) {
 				ResetTargetMode();
 				delete action;
@@ -1812,7 +1812,7 @@ void GameControl::TryToCast(Actor *source, const Actor *tgt)
 		} else {
 			const CREMemorizedSpell *si;
 			//spell casting at target
-			si = source->spellbook.GetMemorizedSpell(spellOrItem, spellSlot, spellIndex);
+			si = source->spellbook->GetMemorizedSpell(spellOrItem, spellSlot, spellIndex);
 			if (!si) {
 				ResetTargetMode();
 				delete action;

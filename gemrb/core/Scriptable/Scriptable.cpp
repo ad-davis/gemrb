@@ -1426,7 +1426,7 @@ int Scriptable::CheckWildSurge()
 bool Scriptable::HandleHardcodedSurge(const ResRef& surgeSpell, const Spell *spl, Actor *caster)
 {
 	// format: ID or ID.param1 or +SPELLREF
-	int types = caster->spellbook.GetTypes();
+	int types = caster->spellbook->GetTypes();
 	int lvl = spl->SpellLevel-1;
 	int count, i, tmp;
 	Scriptable *target = NULL;
@@ -1501,10 +1501,10 @@ bool Scriptable::HandleHardcodedSurge(const ResRef& surgeSpell, const Spell *spl
 		case '7': // random spell of the same level
 			// change this if we ever want the surges to respect the original type
 			for (i=0; i<types; i++) {
-				unsigned int spellCount = caster->spellbook.GetKnownSpellsCount(i, lvl);
+				unsigned int spellCount = caster->spellbook->GetKnownSpellsCount(i, lvl);
 				if (!spellCount) continue;
 				int id = core->Roll(1, spellCount, -1);
-				const CREKnownSpell *ck = caster->spellbook.GetKnownSpell(i, lvl, id);
+				const CREKnownSpell *ck = caster->spellbook->GetKnownSpell(i, lvl, id);
 				if (ck) {
 					SpellResRef = ck->SpellResRef;
 					break;

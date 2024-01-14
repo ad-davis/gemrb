@@ -762,7 +762,7 @@ CRESpellMemorization* CREImporter::GetSpellMemorization(Actor *act)
 	str->ReadDword(MemorizedIndex);
 	str->ReadDword(MemorizedCount);
 
-	CRESpellMemorization* spl = act->spellbook.GetSpellMemorization(Type, Level);
+	CRESpellMemorization* spl = act->spellbook->GetSpellMemorization(Type, Level);
 	assert(spl && spl->SlotCount == 0 && spl->SlotCountWithBonus == 0); // unused
 	spl->SlotCount = Number;
 	spl->SlotCountWithBonus = Number; // Number2? Doesn't look like it's different in the data
@@ -1391,7 +1391,7 @@ void CREImporter::GetIWD2Spellpage(Actor *act, ieIWD2SpellType type, int level, 
 	ieDword memocount;
 
 	int i = count;
-	CRESpellMemorization* sm = act->spellbook.GetSpellMemorization(type, level);
+	CRESpellMemorization* sm = act->spellbook->GetSpellMemorization(type, level);
 	assert(sm && sm->SlotCount == 0 && sm->SlotCountWithBonus == 0); // unused
 	while(i--) {
 		str->ReadDword(spellindex);
@@ -1847,16 +1847,16 @@ int CREImporter::GetStoredFileSize(const Actor *actor)
 		}
 	} else {//others
 		//adding known spells
-		KnownSpellsCount = actor->spellbook.GetTotalKnownSpellsCount();
+		KnownSpellsCount = actor->spellbook->GetTotalKnownSpellsCount();
 		headersize += KnownSpellsCount * 12;
 		SpellMemorizationOffset = headersize;
 
 		//adding spell pages
-		SpellMemorizationCount = actor->spellbook.GetTotalPageCount();
+		SpellMemorizationCount = actor->spellbook->GetTotalPageCount();
 		headersize += SpellMemorizationCount * 16;
 		MemorizedSpellsOffset = headersize;
 
-		MemorizedSpellsCount = actor->spellbook.GetTotalMemorizedSpellsCount();
+		MemorizedSpellsCount = actor->spellbook->GetTotalMemorizedSpellsCount();
 		headersize += MemorizedSpellsCount * 12;
 	}
 	ItemSlotsOffset = headersize;
@@ -2305,13 +2305,13 @@ int CREImporter::PutActorIWD2(DataStream *stream, const Actor *actor) const
 
 int CREImporter::PutKnownSpells(DataStream *stream, const Actor *actor) const
 {
-	int type=actor->spellbook.GetTypes();
+	int type=actor->spellbook->GetTypes();
 	for (int i=0;i<type;i++) {
-		unsigned int level = actor->spellbook.GetSpellLevelCount(i);
+		unsigned int level = actor->spellbook->GetSpellLevelCount(i);
 		for (unsigned int j=0;j<level;j++) {
-			unsigned int count = actor->spellbook.GetKnownSpellsCount(i, j);
+			unsigned int count = actor->spellbook->GetKnownSpellsCount(i, j);
 			for (int k=count-1;k>=0;k--) {
-				const CREKnownSpell *ck = actor->spellbook.GetKnownSpell(i, j, k);
+				const CREKnownSpell *ck = actor->spellbook->GetKnownSpell(i, j, k);
 				assert(ck);
 				stream->WriteResRef(ck->SpellResRef);
 				stream->WriteWord(ck->Level);
@@ -2326,18 +2326,18 @@ int CREImporter::PutSpellPages(DataStream *stream, const Actor *actor) const
 {
 	ieDword SpellIndex = 0;
 
-	int type=actor->spellbook.GetTypes();
+	int type=actor->spellbook->GetTypes();
 	for (int i=0;i<type;i++) {
-		unsigned int level = actor->spellbook.GetSpellLevelCount(i);
+		unsigned int level = actor->spellbook->GetSpellLevelCount(i);
 		for (ieWord j = 0; j < level; ++j) {
 			stream->WriteScalar(j);
-			int tmp = actor->spellbook.GetMemorizableSpellsCount(i, j, false);
+			int tmp = actor->spellbook->GetMemorizableSpellsCount(i, j, false);
 			stream->WriteScalar<int, ieWord>(tmp);
-			tmp = actor->spellbook.GetMemorizableSpellsCount(i, j, true);
+			tmp = actor->spellbook->GetMemorizableSpellsCount(i, j, true);
 			stream->WriteScalar<int, ieWord>(tmp);
 			stream->WriteScalar<int, ieWord>(i);
 			stream->WriteDword(SpellIndex);
-			ieDword tmpDword = actor->spellbook.GetMemorizedSpellsCount(i,j, false);
+			ieDword tmpDword = actor->spellbook->GetMemorizedSpellsCount(i,j, false);
 			stream->WriteDword(tmpDword);
 			SpellIndex += tmpDword;
 		}
@@ -2347,13 +2347,13 @@ int CREImporter::PutSpellPages(DataStream *stream, const Actor *actor) const
 
 int CREImporter::PutMemorizedSpells(DataStream *stream, const Actor *actor) const
 {
-	int type=actor->spellbook.GetTypes();
+	int type=actor->spellbook->GetTypes();
 	for (int i=0;i<type;i++) {
-		unsigned int level = actor->spellbook.GetSpellLevelCount(i);
+		unsigned int level = actor->spellbook->GetSpellLevelCount(i);
 		for (unsigned int j=0;j<level;j++) {
-			unsigned int count = actor->spellbook.GetMemorizedSpellsCount(i,j, false);
+			unsigned int count = actor->spellbook->GetMemorizedSpellsCount(i,j, false);
 			for (unsigned int k=0;k<count;k++) {
-				const CREMemorizedSpell *cm = actor->spellbook.GetMemorizedSpell(i, j, k);
+				const CREMemorizedSpell *cm = actor->spellbook->GetMemorizedSpell(i, j, k);
 				assert(cm);
 				stream->WriteResRef( cm->SpellResRef);
 				stream->WriteDword(cm->Flags);
@@ -2430,20 +2430,20 @@ int CREImporter::PutVariables(DataStream *stream, const Actor *actor) const
 //Don't forget to add 8 for the totals/bonus fields
 ieDword CREImporter::GetIWD2SpellpageSize(const Actor *actor, ieIWD2SpellType type, int level) const
 {
-	return actor->spellbook.GetKnownSpellsCount(type, level);
+	return actor->spellbook->GetKnownSpellsCount(type, level);
 }
 
 int CREImporter::PutIWD2Spellpage(DataStream *stream, const Actor *actor, ieIWD2SpellType type, int level) const
 {
 	ieDword max, known;
 
-	int knownCount = actor->spellbook.GetKnownSpellsCount(type, level);
+	int knownCount = actor->spellbook->GetKnownSpellsCount(type, level);
 	for (int i = 0; i < knownCount; i++) {
-		const CREKnownSpell* knownSpell = actor->spellbook.GetKnownSpell(type, level, i);
+		const CREKnownSpell* knownSpell = actor->spellbook->GetKnownSpell(type, level, i);
 		ieDword ID = ResolveSpellName(knownSpell->SpellResRef, level, type);
 		stream->WriteDword(ID);
-		max = actor->spellbook.CountSpells(knownSpell->SpellResRef, type, 1);
-		known = actor->spellbook.CountSpells(knownSpell->SpellResRef, type, 0);
+		max = actor->spellbook->CountSpells(knownSpell->SpellResRef, type, 1);
+		known = actor->spellbook->CountSpells(knownSpell->SpellResRef, type, 0);
 		stream->WriteDword(max);
 		stream->WriteDword(known);
 		//unknown field (always 0)
@@ -2451,8 +2451,8 @@ int CREImporter::PutIWD2Spellpage(DataStream *stream, const Actor *actor, ieIWD2
 		stream->WriteDword(known);
 	}
 
-	max = actor->spellbook.GetMemorizableSpellsCount(type, level, false);
-	known = actor->spellbook.GetMemorizableSpellsCount(type, level, true);
+	max = actor->spellbook->GetMemorizableSpellsCount(type, level, false);
+	known = actor->spellbook->GetMemorizableSpellsCount(type, level, true);
 	stream->WriteDword(max);
 	stream->WriteDword(known);
 	return 0;

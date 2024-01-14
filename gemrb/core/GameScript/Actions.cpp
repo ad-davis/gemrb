@@ -5363,12 +5363,12 @@ void GameScript::RemoveSpell( Scriptable* Sender, Action* parameters)
 	}
 	if (type==2) {
 	//remove spell from both book and memorization
-		actor->spellbook.RemoveSpell(spellRes);
+		actor->spellbook->RemoveSpell(spellRes);
 		return;
 	}
 	//type == 1 remove spell only from memorization
 	//type == 0 original behaviour: deplete only
-	actor->spellbook.UnmemorizeSpell(spellRes, !type, 2);
+	actor->spellbook->UnmemorizeSpell(spellRes, !type, 2);
 }
 
 void GameScript::SetScriptName( Scriptable* Sender, Action* parameters)
@@ -5425,7 +5425,7 @@ void GameScript::Rest(Scriptable* Sender, Action* /*parameters*/)
 	if (!actor) {
 		return;
 	}
-	actor->spellbook.ChargeAllSpells();
+	actor->spellbook->ChargeAllSpells();
 	actor->fxqueue.RemoveAllEffects(fx_fatigue_ref);
 	actor->SetBase(IE_FATIGUE,0);
 }
@@ -5530,7 +5530,7 @@ void GameScript::MarkSpellAndObject(Scriptable* Sender, Action* parameters)
 		spl[4] = '\0';
 		int splnum = atoi(spl.c_str());
 
-		if (!(flags & MSO_IGNORE_HAVE) && !me->spellbook.HaveSpell(splnum, 0) ) {
+		if (!(flags & MSO_IGNORE_HAVE) && !me->spellbook->HaveSpell(splnum, 0) ) {
 			goto end_mso_loop;
 		}
 		int range;
@@ -5573,7 +5573,7 @@ void GameScript::SetMarkedSpell(Scriptable* Sender, Action* parameters)
 		if (actor->LastMarkedSpell) {
 			return;
 		}
-		if (!actor->spellbook.HaveSpell(parameters->int0Parameter, 0) ) {
+		if (!actor->spellbook->HaveSpell(parameters->int0Parameter, 0) ) {
 			return;
 		}
 	}
