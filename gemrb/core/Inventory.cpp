@@ -37,6 +37,7 @@
 #include "Scriptable/Actor.h"
 
 #include <cstdio>
+#include <array>
 
 namespace GemRB {
 
@@ -56,6 +57,9 @@ static int SLOT_ARMOR = -1;
 
 //IWD2 style slots
 static bool IWD2 = false;
+
+// map item flags to weaponinfo flags
+static const std::array<std::array<int, 2>, 2> STR_FLAGS_MAPPING = {IE_ITEM_USESTRENGTH, WEAPON_USESTRENGTH, IE_ITEM_USESTRENGTH_DMG, WEAPON_USESTRENGTH_DMG};
 
 [[noreturn]]
 static void InvalidSlot(int slot)
@@ -1433,7 +1437,11 @@ void Inventory::CacheWeaponInfo(bool leftOrRight) const
 			// both launchers and ammo can be keen (00arow87)
 			wi.critrange--;
 		}
-
+		for (const auto flags : STR_FLAGS_MAPPING) {
+			if (launcherHeader->RechargeFlags & flags[0]) {
+				wi.wflags |= flags[1];
+			}
+		}
 		gamedata->FreeItem(launcherItem, launcher->ItemResRef, false);
 	} else {
 		wi.wflags = WEAPON_MELEE;
