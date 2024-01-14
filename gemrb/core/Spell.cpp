@@ -273,7 +273,12 @@ EffectQueue Spell::GetEffectBlock(Scriptable *self, const Point &pos, int block_
 		}
 	}
 	if (self && selfqueue) {
-		core->ApplyEffectQueue(std::move(selfqueue), caster, self);
+		if (caster) {
+			core->ApplyEffectQueue(std::move(selfqueue), caster, self);
+		} else {
+			selfqueue.SetOwner(self);
+			selfqueue.AddAllEffects(nullptr);
+		}
 	}
 	return fxqueue;
 }
