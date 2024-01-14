@@ -7177,17 +7177,26 @@ void Actor::ModifyDamage(Scriptable *hitter, int &damage, int &resisted, int dam
 		}
 	}
 
-	// only check stone skins if damage type is physical
+	// only check stone skins if damage type is physical (or magical for cloak of warding)
 	// DAMAGE_CRUSHING is 0, so we can't AND with it to check for its presence
-	if (!(damagetype & ~(DAMAGE_PIERCING | DAMAGE_SLASHING | DAMAGE_MISSILE))) {
-		int stoneskins = Modified[IE_STONESKINS];
+	int stoneskins = Modified[IE_STONESKINS];
+	if (!(damagetype & ~(DAMAGE_PIERCING|DAMAGE_SLASHING|DAMAGE_MISSILE|DAMAGE_MAGIC))) {
 		if (stoneskins) {
 			//pst style damage soaking from cloak of warding
 			damage = fxqueue.DecreaseParam3OfEffect(fx_cloak_ref, damage, 0);
 			if (!damage) {
 				return;
 			}
+		}
+	}
 
+	// FIXME: 3rd edition stoneskin applies damage reduction similar to the cloak of warding,
+	//        only for physical attacks (includes aegis). It's not covered here, but aegis is
+	//        3rd edition ironskin only gives damage resistance, but for number of attacks
+	//        seems here it probably won't even get decreased
+
+	if (!(damagetype & ~(DAMAGE_PIERCING|DAMAGE_SLASHING|DAMAGE_MISSILE))) {
+		if (stoneskins) {
 			fxqueue.DecreaseParam1OfEffect(fx_stoneskin_ref, 1);
 			fxqueue.DecreaseParam1OfEffect(fx_aegis_ref, 1);
 
