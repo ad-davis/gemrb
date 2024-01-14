@@ -7455,18 +7455,19 @@ void Actor::UpdateModalState(ieDword gameTime)
 void Actor::ApplyModal(const ResRef& modalSpell)
 {
 	unsigned int aoe = ModalStates[Modal.State].aoe_spell;
+	int level = Modal.State == MS_BATTLESONG ? GetBardLevel() : 0;
 	if (aoe == 1) {
-		core->ApplySpellPoint(modalSpell, GetCurrentArea(), Pos, this, 0);
+		core->ApplySpellPoint(modalSpell, GetCurrentArea(), Pos, this, level);
 	} else if (aoe == 2) {
 		// target actors around us manually
 		// used for iwd2 songs, as the spells don't use an aoe projectile
 		if (!area) return;
 		std::vector<Actor *> neighbours = area->GetAllActorsInRadius(Pos, GA_NO_LOS|GA_NO_DEAD|GA_NO_UNSCHEDULED, GetSafeStat(IE_VISUALRANGE)/2);
 		for (const auto& neighbour : neighbours) {
-			core->ApplySpell(modalSpell, neighbour, this, 0);
+			core->ApplySpell(modalSpell, neighbour, this, level);
 		}
 	} else {
-		core->ApplySpell(modalSpell, this, this, 0);
+		core->ApplySpell(modalSpell, this, this, level);
 	}
 }
 
