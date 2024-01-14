@@ -1778,21 +1778,34 @@ void Inventory::EquipBestWeapon(int flags)
 // returns true if there are more item usages not fitting in given vector
 bool Inventory::GetEquipmentInfo(std::vector<ItemExtHeader>& headerList, int startindex, int count) const
 {
+	bool useUnequipped = core->GetVariable("Use Unequipped Items", 0);
 	int pos = 0;
 	int actual = 0;
+	std::list<unsigned int> orderedSlots;
 	for(unsigned int idx=0;idx<Slots.size();idx++) {
-		if (!core->QuerySlotEffects(idx)) {
-			continue;
+		if (core->QuerySlotEffects(idx)) {
+			// place equipped items at the front
+			orderedSlots.push_front(idx);
+		} else if (useUnequipped) {
+			orderedSlots.push_back(idx);
 		}
+	}
+	for (unsigned int idx : orderedSlots) {
 		CREItem *slot;
 
 		const Item *itm = GetItemPointer(idx, slot);
-		if (!itm) {
-			continue;
-		}
+		if (!itm) continue;
+		if (Owner->Unusable(itm) == HCStrings::CantUseItem) continue;
+
 		for(size_t ehc = 0; ehc < itm->ext_headers.size(); ++ehc) {
 			const ITMExtHeader *ext_header = &itm->ext_headers[ehc];
 			if (ext_header->Location!=ITEM_LOC_EQUIPMENT) {
+				continue;
+			}
+			// don't show scribe scroll features, they don't work properly from
+			// the action bar
+			auto effects = ext_header->features;
+			if (effects.size() == 1 && effects[0]->Opcode == 147) {
 				continue;
 			}
 			//skipping if we cannot use the item
