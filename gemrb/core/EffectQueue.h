@@ -326,7 +326,7 @@ public:
 	void AddWeaponEffects(EffectQueue* fxqueue, EffectRef& fx_ref, ieDword param2 = 1) const;
 
 	// returns -1 if bounced, 0 if resisted, 1 if accepted spell
-	int CheckImmunity(Actor *target) const;
+	int CheckImmunity(Actor *target, bool bounce=true, bool decrementSpellLevel=true) const;
 	// apply this effectqueue on all actors matching ids targeting
 	// from pos, in range (no cone size yet)
 	void AffectAllInRange(const Map *map, const Point &pos, int idstype, int idsvalue, unsigned int range, const Actor *except);

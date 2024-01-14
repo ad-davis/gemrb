@@ -791,17 +791,17 @@ static inline bool check_probability(const Effect* fx)
 }
 
 //this is for whole spell immunity/bounce
-static bool DecreaseEffect(Effect* fx)
+static bool CheckDecrementalEffect(Effect* fx, bool decrease)
 {
 	if (fx->Parameter1) {
-		fx->Parameter1--;
+		if (decrease) fx->Parameter1--;
 		return true;
 	}
 	return false;
 }
 
 //lower decreasing immunities/bounces
-static int check_type(Actor *actor, const Effect& fx)
+static int check_type(Actor* actor, const Effect& fx, bool doBounce, bool decrementSpellLevel)
 {
 	//the protective effect (if any)
 	Effect *efx;
@@ -811,6 +811,8 @@ static int check_type(Actor *actor, const Effect& fx)
 	bool self = (caster == actor);
 	// MagicAttack: these spells pierce most generic magical defences (because they need to be able to dispel them).
 	bool pierce = (fx.SecondaryType == 4);
+
+	ieDword bounce = actor->GetStat(IE_BOUNCE);
 
 	//spell level immunity
 	if (fx.Power && actor->fxqueue.HasEffectWithParamPair(fx_level_immunity_ref, fx.Power, 0) && !self) {
@@ -856,18 +858,24 @@ static int check_type(Actor *actor, const Effect& fx)
 
 	//decrementing immunity checks
 	//decrementing level immunity
-	if (fx.Power && fx.Resistance != FX_NO_RESIST_BYPASS_BOUNCE && !self && !pierce
-	    && actor->fxqueue.HasEffectWithParam(fx_level_immunity_dec_ref, fx.Power)) {
-		if (actor->fxqueue.DecreaseParam1OfEffect(fx_level_immunity_dec_ref, fx.Power)) {
-			Log(DEBUG, "EffectQueue", "Resisted by level immunity (decrementing)");
-			return 0;
+	if (fx.Power && doBounce && fx.Resistance != FX_NO_RESIST_BYPASS_BOUNCE && !self && !pierce) {
+		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithParam(fx_level_immunity_dec_ref, fx.Power));
+		if (efx) {
+			if (decrementSpellLevel) {
+				if (actor->fxqueue.DecreaseParam1OfEffect(fx_level_immunity_dec_ref, fx.Power)) {
+					Log(DEBUG, "EffectQueue", "Resisted by level immunity (decrementing)");
+					return 0;
+				}
+			} else if (efx->Parameter1 > 0) {
+				Log(DEBUG, "EffectQueue", "Resisted by level immunity (decrementing)");
+				return 0;
+			}
 		}
 	}
-
 	//decrementing spell immunity
 	if (!fx.SourceRef.IsEmpty()) {
 		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithResource(fx_spell_immunity_dec_ref, fx.SourceRef));
-		if (efx && DecreaseEffect(efx)) {
+		if (efx && CheckDecrementalEffect(efx, decrementSpellLevel)) {
 			Log(DEBUG, "EffectQueue", "Resisted by spell immunity (decrementing)");
 			return 0;
 		}
@@ -875,21 +883,19 @@ static int check_type(Actor *actor, const Effect& fx)
 	//decrementing primary type immunity (school)
 	if (fx.PrimaryType && !self && !pierce) {
 		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithParam(fx_school_immunity_dec_ref, fx.PrimaryType));
-		if (efx && DecreaseEffect(efx)) {
+		if (efx && CheckDecrementalEffect(efx, decrementSpellLevel)) {
 			Log(DEBUG, "EffectQueue", "Resisted by school immunity (decrementing)");
 			return 0;
 		}
 	}
-
 	//decrementing secondary type immunity (usage)
 	if (fx.SecondaryType && !self) {
 		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithParam(fx_secondary_type_immunity_dec_ref, fx.SecondaryType));
-		if (efx && DecreaseEffect(efx)) {
+		if (efx && CheckDecrementalEffect(efx, decrementSpellLevel)) {
 			Log(DEBUG, "EffectQueue", "Resisted by usage/sectype immunity (decrementing)");
 			return 0;
 		}
 	}
-
 	//spelltrap (absorb)
 	if (fx.Power && fx.Resistance != FX_NO_RESIST_BYPASS_BOUNCE && !self && !pierce) {
 		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithParamPair(fx_spelltrap, 0, fx.Power));
@@ -899,19 +905,22 @@ static int check_type(Actor *actor, const Effect& fx)
 			
 			//instead of a single effect, they had to create an effect for each level
 			//HOW DAMN LAME
-			if (actor->fxqueue.DecreaseParam1OfEffect(fx_spelltrap, fx.Power)) {
+			if (decrementSpellLevel) {
+				if (actor->fxqueue.DecreaseParam1OfEffect(fx_spelltrap, fx.Power)) {
+					Log(DEBUG, "EffectQueue", "Absorbed by spelltrap");
+					return 0;
+				}
+			} else if (efx->Parameter1 > 0) {
 				Log(DEBUG, "EffectQueue", "Absorbed by spelltrap");
 				return 0;
 			}
 		}
 	}
-
 	// bounce checks; skip all if this is set, or if casting on oneself (obviously)
-	if (fx.Resistance == FX_NO_RESIST_BYPASS_BOUNCE || self) {
+	if (!doBounce || fx.Resistance == FX_NO_RESIST_BYPASS_BOUNCE || self) {
 		return 1;
 	}
 
-	ieDword bounce = actor->GetStat(IE_BOUNCE);
 	if (fx.Power) {
 		if ((bounce & BNC_LEVEL) && actor->fxqueue.HasEffectWithParamPair(fx_level_bounce_ref, 0, fx.Power)) {
 			Log(DEBUG, "EffectQueue", "Bounced by level");
@@ -932,7 +941,6 @@ static int check_type(Actor *actor, const Effect& fx)
 	if (fx.PrimaryType && (bounce & BNC_SCHOOL) && !pierce) {
 		if (actor->fxqueue.HasEffectWithParam(fx_school_bounce_ref, fx.PrimaryType)) {
 			Log(DEBUG, "EffectQueue", "Bounced by school");
-			return -1;
 		}
 	}
 
@@ -942,11 +950,16 @@ static int check_type(Actor *actor, const Effect& fx)
 			return -1;
 		}
 	}
-	//decrementing bounce checks
 
 	//level decrementing bounce check
-	if (fx.Power && (bounce & BNC_LEVEL_DEC) && !pierce && actor->fxqueue.HasEffectWithParamPair(fx_level_bounce_dec_ref, 0, fx.Power)) {
-		if (actor->fxqueue.DecreaseParam1OfEffect(fx_level_bounce_dec_ref, fx.Power)) {
+	if (fx.Power && (bounce & BNC_LEVEL_DEC) && !pierce) {
+		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithParamPair(fx_level_bounce_dec_ref, 0, fx.Power));
+		if (decrementSpellLevel) {
+			if (actor->fxqueue.DecreaseParam1OfEffect(fx_level_bounce_dec_ref, fx.Power)) {
+				Log(DEBUG, "EffectQueue", "Bounced by level (decrementing)");
+				return -1;
+			}
+		} else if (efx->Parameter1 > 0) {
 			Log(DEBUG, "EffectQueue", "Bounced by level (decrementing)");
 			return -1;
 		}
@@ -954,15 +967,14 @@ static int check_type(Actor *actor, const Effect& fx)
 
 	if (!fx.SourceRef.IsEmpty() && (bounce & BNC_RESOURCE_DEC)) {
 		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithResource(fx_spell_bounce_dec_ref, fx.Resource));
-		if (efx && DecreaseEffect(efx)) {
+		if (efx && CheckDecrementalEffect(efx, decrementSpellLevel)) {
 			Log(DEBUG, "EffectQueue", "Bounced by resource (decrementing)");
 			return -1;
 		}
 	}
-
 	if (fx.PrimaryType && (bounce & BNC_SCHOOL_DEC) && !pierce) {
 		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithParam(fx_school_bounce_dec_ref, fx.PrimaryType));
-		if (efx && DecreaseEffect(efx)) {
+		if (efx && CheckDecrementalEffect(efx, decrementSpellLevel)) {
 			Log(DEBUG, "EffectQueue", "Bounced by school (decrementing)");
 			return -1;
 		}
@@ -970,7 +982,7 @@ static int check_type(Actor *actor, const Effect& fx)
 
 	if (fx.SecondaryType && (bounce & BNC_SECTYPE_DEC)) {
 		efx = const_cast<Effect*>(actor->fxqueue.HasEffectWithParam(fx_secondary_type_bounce_dec_ref, fx.SecondaryType));
-		if (efx && DecreaseEffect(efx)) {
+		if (efx && CheckDecrementalEffect(efx, decrementSpellLevel)) {
 			Log(DEBUG, "EffectQueue", "Bounced by usage (decrementing)");
 			return -1;
 		}
@@ -2275,7 +2287,7 @@ int EffectQueue::ResolveEffect(EffectRef &effect_reference)
 //returns 1 if effect block applicable
 //returns 0 if effect block disabled
 //returns -1 if effect block bounced
-int EffectQueue::CheckImmunity(Actor *target) const
+int EffectQueue::CheckImmunity(Actor *target, bool bounce, bool decrementSpellLevel) const
 {
 	//don't resist if target is non living
 	if (!target) {
@@ -2298,7 +2310,7 @@ int EffectQueue::CheckImmunity(Actor *target) const
 	// check level resistances
 	// check specific spell immunity
 	// check school/sectype immunity
-	int ret = check_type(target, fx);
+	int ret = check_type(target, fx, bounce, decrementSpellLevel);
 	if (ret < 0 && target->Modified[IE_SANCTUARY] & (1 << OV_BOUNCE)) {
 		target->Modified[IE_SANCTUARY] |= 1 << OV_BOUNCE2;
 	}

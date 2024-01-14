@@ -2633,10 +2633,11 @@ void Map::AddProjectile(Projectile* pro)
 	projectiles.insert(iter, pro);
 }
 
-void Map::AddProjectile(Projectile *pro, const Point &source, ieDword actorID, bool fake)
+void Map::AddProjectile(Projectile* pro, const Point &source, ieDword actorID, bool fake, ieWord originalTarget)
 {
-	pro->MoveTo(this, source);
-	pro->SetTarget(actorID, fake);
+	pro->MoveTo(this,source);
+	if (!originalTarget) originalTarget = actorID;
+	pro->SetTarget(actorID, originalTarget, fake);
 	AddProjectile(pro);
 }
 

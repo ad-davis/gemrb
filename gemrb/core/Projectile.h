@@ -54,6 +54,11 @@ enum ProHeights {
 
 #define BACK_DEPTH 50
 
+//target immunity
+#define P_TARGET_NO_APPLY 0
+#define P_TARGET_NORMAL   1
+#define P_TARGET_REFLECT  2
+
 //projectile phases
 #define P_UNINITED  -1
 #define P_TRAVEL     0   //projectile moves to target
@@ -271,6 +276,8 @@ private:
 	int Level = 0;         // the caster's level
 	ieDword Target = 0;    // the globalID of target actor
 	ieDword FakeTarget = 0; // a globalID for target that isn't followed
+	ieDword OriginalTarget = 0; // the original target, needed for spell turning
+	bool decrementSpellLevel = true; // don't decrement level absorbtion iterated projectiles multiple times
 	int phase = P_UNINITED;
 	//saved in area
 	ResRef projectileName; // used also for namesake externalized spells
@@ -342,7 +349,7 @@ public:
 	void SetCaster(ieDword t, int level);
 	ieDword GetCaster() const;
 	bool FailedIDS(const Actor *target) const;
-	void SetTarget(ieDword t, bool fake);
+	void SetTarget(ieDword target, ieDword originalTarget, bool fake);
 	void SetTarget(const Point &p);
 	bool PointInRadius(const Point &p) const;
 	int GetPhase() const;
@@ -463,6 +470,7 @@ private:
 	//logic to resolve the explosion count (may be based on caster level)
 	int CalculateExplosionCount() const;
 
+	ieDword ResolveTargetImmunity();
 	Actor *GetTarget();
 	void NextTarget(const Point &p);
 	void SetupPalette(const AnimArray&, PaletteHolder &pal, const ieByte *gradients) const;

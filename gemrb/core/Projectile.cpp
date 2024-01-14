@@ -192,15 +192,16 @@ void Projectile::CreateIteration()
 	Projectile *pro = server->GetProjectileByIndex(type-1);
 	pro->SetEffectsCopy(effects, Pos);
 	pro->SetCaster(Caster, Level);
+	pro->decrementSpellLevel = false;
 	if (ExtFlags&PEF_CURVE) {
 		pro->bend=bend+1;
 		pro->Speed = Speed; // fix the different speed of MAGICMIS.pro compared to SPMAGMIS.pro
 	}
 
 	if (FakeTarget) {
-		area->AddProjectile(pro, Pos, FakeTarget, true);
+		area->AddProjectile(pro, Pos, FakeTarget, true, OriginalTarget);
 	} else {
-		area->AddProjectile(pro, Pos, Target, false);
+		area->AddProjectile(pro, Pos, Target, false, OriginalTarget);
 	}
 
 	// added by fuzzie, to make magic missiles instant, maybe wrong place
@@ -350,46 +351,56 @@ void Projectile::Setup()
 	}
 }
 
-Actor *Projectile::GetTarget()
+ieDword Projectile::ResolveTargetImmunity()
 {
 	Actor *target;
-
 	if (Target) {
 		target = area->GetActorByGlobalID(Target);
-		if (!target) return NULL;
-		Actor *original = area->GetActorByGlobalID(Caster);
-		if (!effects) {
-			return target;
-		}
-		if (original == target && !effects.HasHostileEffects()) {
+		if (!target)  return P_TARGET_NO_APPLY;
+		if (!effects) return P_TARGET_NORMAL;
+
+		// only check for bounce if it isn't an aoe
+		int res = effects.CheckImmunity ( target, OriginalTarget==Target, decrementSpellLevel );
+
+		if (Caster == OriginalTarget) {
 			effects.SetOwner(target);
-			return target;
+			return P_TARGET_NORMAL;
 		}
 
-		int res = effects.CheckImmunity ( target );
 		//resisted
 		if (!res) {
-			return NULL;
+			return P_TARGET_NO_APPLY;
 		}
 		if (res==-1) {
-			if (original) {
-				Target = original->GetGlobalID();
-				target = original;
+			if (Caster) {
+				// flip everything, this can bounce forever with 2 bouncers
+				// FIXME: possibly need to set an incrementer and kill off the spell after a while
+				//        of bouncing back and forth
+				ieDword caster = Caster;
+				Caster = Target;
+				SetTarget(caster, caster, false);
+				effects.SetOwner(target);
+				return P_TARGET_REFLECT;
 			} else {
-				Log(DEBUG, "Projectile", "GetTarget: caster not found, bailing out!");
-				return NULL;
+				Log(DEBUG, "Projectile", "ResolveTargetImmunity: caster not found, bailing out!");
+				return P_TARGET_NO_APPLY;
 			}
 		}
-		effects.SetOwner(original);
-		return target;
+	}
+	if (effects) {
+		effects.SetOwner(area->GetActorByGlobalID(Caster));
+	}
+	return P_TARGET_NORMAL;
+}
+
+Actor *Projectile::GetTarget()
+{
+	if (Target) {
+		return area->GetActorByGlobalID(Target);
 	} else {
 		Log(DEBUG, "Projectile", "GetTarget: Target not set or dummy, using caster!");
+		return area->GetActorByGlobalID(Caster);
 	}
-	target = area->GetActorByGlobalID(Caster);
-	if (target) {
-		effects.SetOwner(target);
-	}
-	return target;
 }
 
 void Projectile::SetDelay(int delay)
@@ -544,7 +555,6 @@ void Projectile::Payload()
 			projQueue.AddAllEffects(target, Destination);
 		}
 	}
-
 	effects = EffectQueue();
 }
 
@@ -624,6 +634,17 @@ void Projectile::ChangePhase()
 		 return;
 	}
 
+	ieDword target_type = ResolveTargetImmunity();
+	// path changed, get out of here
+	if (target_type == P_TARGET_REFLECT) return;
+	if (target_type == P_TARGET_NO_APPLY) {
+		phase = P_EXPIRED;
+		if (effects) {
+			effects = EffectQueue();
+		}
+		return;
+	}
+
 	//reached target, and explodes now
 	if (Extension) {
 		EndTravel();
@@ -631,7 +652,6 @@ void Projectile::ChangePhase()
 	}
 
 	// there are no-effect projectiles, like missed arrows
-	// Payload can redirect the projectile in case of projectile reflection
 	if (phase == P_TRAVEL) {
 		if (ExtFlags & PEF_DEFSPELL) {
 			ApplyDefault();
@@ -897,17 +917,19 @@ void Projectile::SetTarget(const Point &p)
 	NextTarget(p);
 }
 
-void Projectile::SetTarget(ieDword tar, bool fake)
+void Projectile::SetTarget(ieDword tar, ieDword originalTarget, bool fake)
 {
 	const Actor *target = nullptr;
 
 	if (fake) {
 		Target = 0;
 		FakeTarget = tar;
+		OriginalTarget = originalTarget;
 		return;
 	} else {
 		Target = tar;
 		target = area->GetActorByGlobalID(tar);
+		OriginalTarget = originalTarget;
 	}
 	 
 	if (!target) {
@@ -1099,7 +1121,7 @@ void Projectile::LineTarget(Path::const_iterator beg, Path::const_iterator end) 
 				continue;
 			}
 
-			if (effects.CheckImmunity(target) > 0) {
+			if (effects.CheckImmunity(target, false) > 0) {
 				EffectQueue eff = effects;
 				eff.SetOwner(original);
 				if (ExtFlags & PEF_RGB) {
@@ -1212,7 +1234,7 @@ void Projectile::SecondaryTarget()
 		pro->SetTarget(Pos);
 		//TODO:actually some of the splash projectiles are a good example of faketarget
 		//projectiles (that don't follow the target, but still hit)
-		area->AddProjectile(pro, Pos, targetID, false);
+		area->AddProjectile(pro, Pos, targetID, false, -1);
 		fail=false;
 
 		//we already got one target affected in the AOE, this flag says
@@ -1261,7 +1283,7 @@ int Projectile::Update()
 
 	//recreate path if target has moved
 	if(Target) {
-		SetTarget(Target, false);
+		SetTarget(Target, OriginalTarget, false);
 	}
 
 	if (phase == P_TRAVEL || phase == P_TRAVEL2) {
@@ -1368,7 +1390,7 @@ void Projectile::DrawExplosion(const Region& vp)
 	//Line targets are actors between source and destination point
 	if(ExtFlags&PEF_LINE) {
 		if (Target) {
-			SetTarget(Target, false);
+			SetTarget(Target, OriginalTarget, false);
 		}
 		LineTarget();
 	}
