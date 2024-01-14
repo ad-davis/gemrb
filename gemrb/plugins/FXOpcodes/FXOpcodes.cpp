@@ -4796,7 +4796,7 @@ int fx_find_traps (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	switch(fx->Parameter2) {
 		case 1:
 			//find traps
-			skill = target->GetStat(IE_TRAPS);
+			skill = target->GetSafeStat(IE_TRAPS);
 			break;
 		case 3:
 			//detect secret doors
