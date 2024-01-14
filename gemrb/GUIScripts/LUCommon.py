@@ -440,7 +440,8 @@ def SetupHP (pc, Level=None, LevelDiff=None):
 			# and/or if it is bg1 chargen (I guess too many testers got annoyed)
 			# BUT when we do roll, constitution gives a kind of a luck bonus to the roll
 			if rolls:
-				if GemRB.GetVar ("Difficulty Level") >= 3 and not GemRB.GetVar ("Maximum HP") \
+				# difficulty level is stored 0 indexed, so 2 is core rules
+				if GemRB.GetVar ("Difficulty Level") >= 2 and not GemRB.GetVar ("Maximum HP") \
 				and not (GameCheck.IsBG1() and LowLevel == 0) and MinRoll < sides:
 					if MinRoll > 1:
 						roll = GemRB.Roll (rolls, sides, bonus)
