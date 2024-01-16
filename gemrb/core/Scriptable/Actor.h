@@ -582,6 +582,8 @@ public:
 	void SetPosition(const Point &nmptTarget, int jump, int radiusx = 0, int radiusy = 0, int size = -1);
 	/** you better use SetStat, this stuff is only for special cases*/
 	void SetAnimationID(unsigned int AnimID);
+	/** called on armour level change */
+	void SetArmourLevelAnimation(ieDword level);
 	/** returns the animations */
 	CharAnimations* GetAnims() const;
 	/** returns the gender of actor for cg sound - illusions are tricky */

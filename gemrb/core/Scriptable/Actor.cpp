@@ -539,6 +539,15 @@ CharAnimations* Actor::GetAnims() const
 	return anims;
 }
 
+void Actor::SetArmourLevelAnimation(ieDword armourLevel) {
+	bool refresh = !currentStance.anim.empty() || !currentStance.shadow.empty();
+	CharAnimations *anims = GetAnims();
+	if (anims) {
+		anims->SetArmourLevel(armourLevel);
+	}
+	if (refresh) AdvanceAnimations();
+}
+
 /** Returns a Stat value (Base Value + Mod) */
 Actor::stat_t Actor::GetStat(unsigned int StatIndex) const
 {
@@ -1469,10 +1478,7 @@ static void pcf_color(Actor *actor, ieDword /*oldValue*/, ieDword /*newValue*/)
 
 static void pcf_armorlevel(Actor *actor, ieDword /*oldValue*/, ieDword newValue)
 {
-	CharAnimations *anims = actor->GetAnims();
-	if (anims) {
-		anims->SetArmourLevel(newValue);
-	}
+	actor->SetArmourLevelAnimation(newValue);
 }
 
 static Actor::stats_t maximum_values = {
