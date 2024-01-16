@@ -165,7 +165,7 @@ def GameExpansion():
 			GemRB.AddNewArea("xnewarea")
 		return
 
-	if not GemRB.GameSetExpansion(5):
+	if not GemRB.GetVar("tobupgradetriggered") and not GemRB.GameSetExpansion(5):
 		return
 
 	#upgrade to ToB only
@@ -201,4 +201,5 @@ def GameExpansion():
 			FixProtagonist(idx)
 			GemRB.GameSelectPC (idx, True, SELECT_REPLACE)
 		idx=idx-1
+	GemRB.SetVar("tobupgradetriggered", 0)
 	return
