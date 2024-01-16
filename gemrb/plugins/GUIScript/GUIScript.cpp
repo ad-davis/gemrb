@@ -9119,6 +9119,7 @@ PyDoc_STRVAR( GemRB_GetItem__doc,
   * 'AnimationType'      - the item animation ID\n\
   * 'Exclusion'          - the exclusion bit (used by eg. magic armor and rings of protection).\n\
   * 'LoreToID'           - the required lore to identify the item\n\
+  * 'Flags'              - item flags\n\
   * 'MaxCharge'          - the maximum amount of charges\n\
   * 'Tooltips'           - the item tooltips\n\
   * 'Locations'          - the item extended header's ability locations\n\
@@ -9167,6 +9168,7 @@ static PyObject* GemRB_GetItem(PyObject * /*self*/, PyObject* args)
 	PyDict_SetItemString(dict, "Exclusion", DecRef(PyLong_FromLong, item->ItemExcl));
 	PyDict_SetItemString(dict, "LoreToID", DecRef(PyLong_FromLong, item->LoreToID));
 	PyDict_SetItemString(dict, "Enchantment", PyLong_FromLong(item->Enchantment));
+	PyDict_SetItemString(dict, "Flags", PyLong_FromLong(item->Flags));
 	PyDict_SetItemString(dict, "MaxCharge", PyLong_FromLong(0));
 
 	size_t ehc = item->ext_headers.size();
