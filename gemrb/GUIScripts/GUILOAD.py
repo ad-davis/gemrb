@@ -78,7 +78,11 @@ def OnLoad ():
 	i = 0
 	end = len(Games)
 	while i < (end):
-		if Games[i].GetSaveID() in (0,1):
+		# 0 is autosave
+		# 1 is quicksave
+		# 2 is finalsave
+		# 4 is quicksave tob
+		if Games[i].GetSaveID() in (0,1,2,4):
 			Games.append(Games.pop(i))
 			end -= 1
 		else:
