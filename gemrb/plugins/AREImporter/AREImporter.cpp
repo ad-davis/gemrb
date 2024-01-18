@@ -1096,7 +1096,7 @@ bool AREImporter::GetActor(DataStream* str, PluginHolder<ActorMgr> actorMgr, Map
 
 	// actually, Flags&1 signs that the creature
 	// is not loaded yet, so !(Flags&1) means it is embedded
-	if (creOffset != 0 && !(flags & 1)) {
+	if (creOffset != 0 && creSize != 0 && !(flags & 1)) {
 		creFile = SliceStream(str, creOffset, creSize, true);
 	} else {
 		creFile = gamedata->GetResourceStream(creResRef, IE_CRE_CLASS_ID);
