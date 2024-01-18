@@ -1243,11 +1243,6 @@ int Scriptable::CastSpell(Scriptable* target, bool deplete, bool instant, bool n
 {
 	LastSpellTarget = 0;
 	LastTargetPos.Invalidate();
-	Actor* targetActor = Scriptable::As<Actor>(target);
-	// checks for invisibility. actually aborting might break scripts, so just log a warning here for now
-	if (targetActor && targetActor->Untargetable(this, SpellResRef)) {
-		Log(WARNING, "Scriptable", "{} casting spell against target he should not be able to", scriptName);
-	}
 	Actor* actor = Scriptable::As<Actor>(this);
 	if (actor && actor->HandleCastingStance(SpellResRef, deplete, instant)) {
 		Log(ERROR, "Scriptable", "Spell {} not known or memorized, aborting cast!", SpellResRef);
