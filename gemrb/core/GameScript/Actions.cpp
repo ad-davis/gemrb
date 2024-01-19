@@ -4253,18 +4253,18 @@ void GameScript::TakeItemReplace(Scriptable *Sender, Action* parameters)
 		return;
 	}
 
-	CREItem *item;
-	int slot = scr->inventory.RemoveItem(parameters->string1Parameter, IE_INV_ITEM_UNDROPPABLE, &item);
-	if (!item) {
-		item = new CREItem();
-	}
-	if (!CreateItemCore(item, parameters->resref0Parameter, -1, 0, 0)) {
-		delete item;
+	CREItem* oldItem = nullptr;
+	int slot = scr->inventory.RemoveItem(parameters->string1Parameter, IE_INV_ITEM_UNDROPPABLE, &oldItem);
+	if (oldItem) delete oldItem;
+
+    CREItem* newItem = new CREItem();
+	if (!CreateItemCore(newItem, parameters->resref0Parameter, -1, 0, 0)) {
+		delete newItem;
 		return;
 	}
-	if (ASI_SUCCESS != scr->inventory.AddSlotItem(item,slot)) {
+	if (ASI_SUCCESS != scr->inventory.AddSlotItem(newItem, slot)) {
 		Map *map = scr->GetCurrentArea();
-		map->AddItemToLocation(Sender->Pos, item);
+		map->AddItemToLocation(Sender->Pos, newItem);
 	}
 }
 
