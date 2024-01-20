@@ -257,6 +257,7 @@ public:
 	//these are public but not in the .pro file
 	Holder<ProjectileExtension> Extension;
 	PaletteHolder palette = nullptr;
+	unsigned int LastUpdateTime = 0;
 	//internals
 private:
 	ResRef smokebam;

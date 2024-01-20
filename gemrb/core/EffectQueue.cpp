@@ -1679,10 +1679,19 @@ void EffectQueue::RemoveLevelEffects(ieDword level, ieDword Flags, ieDword match
 {
 	ResRef removed;
 	for (auto& fx : effects) {
+		// pending removal
+		if (fx.TimingMode == FX_DURATION_JUST_EXPIRED) {
+			continue;
+		}
+		// this is a duration that is essentially permanent, but doesn't modify
+		// any persisted stats so has to stay on the effect queue
+		// we never want to dispel it
+		if (fx.TimingMode == FX_DURATION_INSTANT_PERMANENT_AFTER_BONUSES) {
+			continue;
+		}
 		if (fx.Power > level) {
 			continue;
 		}
-
 		if (removed && removed != fx.SourceRef) {
 			continue;
 		}
@@ -2187,7 +2196,7 @@ std::string EffectQueue::dump(bool print) const
 			return buffer;
 		}
 		const auto& opcodeName = Opcodes[fx.Opcode].Name ? Opcodes[fx.Opcode].Name : "unknown opcode";
-		AppendFormat(buffer, " {:2d}: 0x{:02x}: {} ({}, {}) Source:{}, School:{}, SecondaryType:{}, TimingMode:{}\n", i++, fx.Opcode, opcodeName, fx.Parameter1, fx.Parameter2, fx.SourceRef, fx.PrimaryType, fx.SecondaryType, fx.TimingMode);
+		AppendFormat(buffer, " {:2d}: 0x{:02x}: {} ({}, {}) Source:{}, School:{}, SecondaryType:{}, TimingMode:{}, Resource:{}\n", i++, fx.Opcode, opcodeName, fx.Parameter1, fx.Parameter2, fx.SourceRef, fx.PrimaryType, fx.SecondaryType, fx.TimingMode, fx.Resource);
 	}
 	if (print) Log(DEBUG, "EffectQueue", "{}", buffer);
 	return buffer;

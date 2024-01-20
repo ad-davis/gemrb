@@ -1267,6 +1267,7 @@ void Projectile::SecondaryTarget()
 
 int Projectile::Update()
 {
+	LastUpdateTime = core->GetGame()->GameTime;
 	//if reached target explode
 	//if target doesn't exist expire
 	if (phase == P_EXPIRED) {

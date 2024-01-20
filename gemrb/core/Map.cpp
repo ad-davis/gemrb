@@ -2635,10 +2635,22 @@ void Map::SortQueues()
 // adding projectile in order, based on its height parameter
 void Map::AddProjectile(Projectile* pro)
 {
+	unsigned int gameTime = core->GetGame()->GameTime;
 	int height = pro->GetHeight();
+	int speed = pro->Speed;
 	proIterator iter;
 	for (iter = projectiles.begin(); iter != projectiles.end(); iter++) {
-		if ((*iter)->GetHeight() >= height) break;
+		Projectile* p = (*iter);
+		if (speed == 0) {
+			// hack to make sure that any subsequent projectiles added in same update come after this one
+			pro->LastUpdateTime = gameTime;
+			 // need to apply now (in this tick, so after any that have already gone)
+			if (p->LastUpdateTime < gameTime) {
+				break;
+			}
+		} else if (p->GetHeight() > height) {
+			break;
+		}
 	}
 	projectiles.insert(iter, pro);
 }
