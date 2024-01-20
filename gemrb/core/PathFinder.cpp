@@ -364,6 +364,7 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 	bool foundPath = false;
 	unsigned int squaredMinDist = minDistance * minDistance;
 	unsigned int closestDist = std::numeric_limits<unsigned int>::max();
+	unsigned int closestDistFromStart = 0;
 	NavmapPoint nmptClosest;
 
 	while (!open.empty()) {
@@ -390,6 +391,7 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 				}
 			} else if (sqrDist < closestDist) {
 				closestDist = sqrDist;
+				closestDistFromStart = SquaredDistance(nmptSource, nmptCurrent);
 				nmptClosest = nmptCurrent;
 			}
 		}
@@ -413,7 +415,6 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 			// Weighted heuristic. Finds sub-optimal paths but should be quite a bit faster
 			const float HEURISTIC_WEIGHT = 1.5;
 			SearchmapPoint smptCurrent2 = Map::ConvertCoordToTile(nmptCurrent);
-			NavmapPoint nmptParent = parents[smptCurrent2.y * mapSize.w + smptCurrent2.x];
 			unsigned short oldDist = distFromStart[smptChild.y * mapSize.w + smptChild.x];
 
 			// if the new distance will be shorter, check if it is reachable and if so do the update
@@ -446,7 +447,7 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 	NavmapPoint nmptCurrent;
 	if (foundPath) {
 		nmptCurrent = nmptDest;
-	} else if (!nmptClosest.IsZero()) {
+	} else if (!nmptClosest.IsZero() && closestDistFromStart > 1600) {
 		nmptCurrent = nmptClosest;
 	} else {
 		if (core->InDebugMode(ID_PATHFINDER)) {
