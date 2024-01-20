@@ -345,11 +345,6 @@ PathList Map::FindPath(const Point &s, const Point &d, unsigned int size, unsign
 	SearchmapPoint smptSource = Map::ConvertCoordToTile(nmptSource);
 	SearchmapPoint smptDest = Map::ConvertCoordToTile(nmptDest);
 	
-	if (minDistance < size && !(GetBlockedInRadiusTile(smptDest, size) & (PathMapFlags::PASSABLE | PathMapFlags::ACTOR))) {
-		Log(DEBUG, "FindPath", "{} can't fit in destination", caller ? MBStringFromString(caller->GetShortName()) : "nullptr");
-		return result;
-	}
-
 	const Size& mapSize = PropsSize();
 	if (!mapSize.PointInside(smptSource)) return result;
 
