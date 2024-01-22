@@ -3669,20 +3669,22 @@ int fx_turn_undead (Scriptable* Owner, Actor* target, Effect* fx)
 	return FX_APPLIED;
 }
 
-static int MaybeTransformTo(EffectRef& ref, Effect* fx)
+static Effect* MaybeTransformTo(EffectRef& ref, Effect* fx)
 {
 	if ((fx->TimingMode & 0xff) == FX_DURATION_INSTANT_LIMITED) {
+		Effect* newFx = new Effect(*fx);
 		// if this effect has expiration, then it will remain as a remove_item or remove_inventory_item
 		// on the effect queue, inheriting all the parameters
-		fx->Opcode = EffectQueue::ResolveEffect(ref);
-		fx->TimingMode = FX_DURATION_DELAY_PERMANENT;
-		return FX_APPLIED;
+		newFx->Opcode = EffectQueue::ResolveEffect(ref);
+		// duration already prepared, this is an absolute timing mode
+		newFx->TimingMode = FX_DURATION_DELAY_LIMITED_PENDING;
+		return newFx;
 	}
-	return FX_NOT_APPLIED;
+	return nullptr;
 }
 
 // 0x6f Item:CreateMagic
-int fx_create_magic_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_create_magic_item (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	//charge count is the same for all slots by default
 	if (!fx->Parameter3) fx->Parameter3 = fx->Parameter1;
@@ -3708,7 +3710,9 @@ int fx_create_magic_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	if (!itm) return FX_NOT_APPLIED;
 	target->inventory.SetEquippedSlot(slot - Inventory::GetWeaponSlot(), 0, itm->EquippingFeatureCount == 0);
 	gamedata->FreeItem(itm, fx->Resource);
-	return MaybeTransformTo(fx_remove_item_ref, fx);
+	Effect* newFx = MaybeTransformTo(fx_remove_item_ref, fx);
+	if (newFx) core->ApplyEffect(newFx, target, Owner);
+	return FX_NOT_APPLIED;
 }
 
 // 0x70 Item:Remove
@@ -3965,7 +3969,7 @@ int fx_visual_animation_effect (Scriptable* /*Owner*/, Actor* /*target*/, Effect
 }
 
 // 0x7a Item:CreateInventory
-int fx_create_inventory_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_create_inventory_item (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	// print("fx_create_inventory_item(%2d)", fx->Opcode);
 	// EEs added randomness that can't hurt elsewhere
@@ -3977,9 +3981,12 @@ int fx_create_inventory_item (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 
 	target->inventory.AddSlotItemRes(*refs[choice], SLOT_ONLYINVENTORY, fx->Parameter1, fx->Parameter3, fx->Parameter4);
 
-	int ret = MaybeTransformTo(fx_remove_inventory_item_ref, fx);
-	if (ret == FX_APPLIED) fx->Resource = *refs[choice];
-	return ret;
+	Effect* newFx = MaybeTransformTo(fx_remove_inventory_item_ref, fx);
+	if (newFx) {
+		newFx->Resource = *refs[choice];
+		core->ApplyEffect(newFx, target, Owner);
+	}
+	return FX_NOT_APPLIED;
 }
 
 // 0x7b Item:RemoveInventory
@@ -4590,12 +4597,14 @@ int fx_display_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 }
 
 //0x8f Item:CreateInSlot
-int fx_create_item_in_slot (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_create_item_in_slot (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	// print("fx_create_item_in_slot(%2d): Button: %d", fx->Opcode, fx->Parameter2);
 	//create item and set it in target's slot
 	target->inventory.SetSlotItemRes( fx->Resource, core->QuerySlot(fx->Parameter2), fx->Parameter1, fx->Parameter3, fx->Parameter4 );
-	return MaybeTransformTo(fx_remove_item_ref, fx);
+	Effect* newFx = MaybeTransformTo(fx_remove_item_ref, fx);
+	if (newFx) core->ApplyEffect(newFx, target, Owner);
+	return FX_NOT_APPLIED;
 }
 
 // 0x90 DisableButton
@@ -7035,17 +7044,18 @@ int fx_remove_map_note (Scriptable* Owner, Actor* target, Effect* fx)
 }
 
 // 0xff Item:CreateDays
-int fx_create_item_days (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_create_item_days (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	// print("fx_create_item_days(%2d)", fx->Opcode);
 	target->inventory.AddSlotItemRes( fx->Resource, SLOT_ONLYINVENTORY, fx->Parameter1, fx->Parameter3, fx->Parameter4 );
 
-	int ret = MaybeTransformTo(fx_remove_inventory_item_ref, fx);
-	if (ret == FX_APPLIED) {
+	Effect* newFx = MaybeTransformTo(fx_remove_inventory_item_ref, fx);
+	if (newFx) {
 		// duration needs recalculating for days, it was originally prepared for seconds
-		fx->Duration = ((fx->Duration - core->GetGame()->GameTime) * core->Time.day_size) + core->GetGame()->GameTime;
+		newFx->Duration = ((newFx->Duration - core->GetGame()->GameTime) * core->Time.day_size) + core->GetGame()->GameTime;
+		core->ApplyEffect(newFx, target, Owner);
 	}
-	return ret;
+	return FX_NOT_APPLIED;
 }
 
 // 0x100 Sequencer:Store
