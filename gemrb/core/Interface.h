@@ -359,6 +359,8 @@ struct CFGConfigData {
 	std::string AudioDriverName = "openal";
 
 	int modDetection = 0;
+
+	bool IsBG2() { return GameType == "bg2" || GameType == "bg2ee"; }
 };
 
 /**

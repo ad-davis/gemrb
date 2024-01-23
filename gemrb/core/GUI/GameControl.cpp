@@ -1650,7 +1650,8 @@ Region GameControl::Viewport() const
 //generate action code for source actor to try to attack a target
 void GameControl::TryToAttack(Actor *source, const Actor *tgt) const
 {
-	if (source->GetStat(IE_SEX) == SEX_ILLUSION) return;
+	// wizard eye shouldn't attack
+	if (core->config.IsBG2() && source->GetStat(IE_CLASS) == 0xd2) return;
 	source->CommandActor(GenerateActionDirect( "NIDSpecial3()", tgt));
 }
 
