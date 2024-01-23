@@ -175,7 +175,7 @@ static ieByte featmax[MAX_FEATS]={0
 static std::vector<ActionButtonRow> GUIBTDefaults; // qslots per-class rows
 static std::vector<ActionButtonRow2> OtherGUIButtons;
 ActionButtonRow DefaultButtons = {ACT_TALK, ACT_WEAPON1, ACT_WEAPON2,
-	ACT_QSPELL1, ACT_QSPELL2, ACT_QSPELL3, ACT_CAST, ACT_USE, ACT_QSLOT1, ACT_QSLOT2,
+	ACT_WEAPON3, ACT_WEAPON4, ACT_QSPELL1, ACT_CAST, ACT_USE, ACT_QSLOT1, ACT_QSLOT2,
 	ACT_QSLOT3, ACT_INNATE};
 static int QslotTranslation = false;
 static int DeathOnZeroStat = true;
@@ -5385,14 +5385,7 @@ void Actor::SetPersistent(int partyslot)
 	//if an actor is coming from a game, it should have these too
 	CreateStats();
 	// ensure QSlots are set up to be what the class needs
-	InitButtons(GetActiveClass(), false);
-
-	if (PCStats->QuickWeaponSlots[0] != 0xffff) return;
-	// ReinitQuickSlots does not take care of weapon slots, so do it manually
-	for (int i = 0; i < 4; i++) {
-		SetupQuickSlot(i + ACT_WEAPON1, Inventory::GetWeaponSlot(i), 0);
-	}
-	// call ReinitQuickSlots here if something needs it
+	InitButtons(GetActiveClass(), true);
 }
 
 void Actor::DestroySelf()
@@ -9555,6 +9548,12 @@ void Actor::InitButtons(ieDword cls, bool forced) const
 		myrow = GUIBTDefaults[cls];
 	}
 	SetActionButtonRow(myrow);
+
+	// ReinitQuickSlots does not take care of weapon slots, so do it manually
+	for (int i = 0; i < 4; i++) {
+		SetupQuickSlot(i + ACT_WEAPON1, Inventory::GetWeaponSlot(i), 0);
+	}
+	ReinitQuickSlots();
 }
 
 void Actor::SetFeat(unsigned int feat, BitOp mode)
