@@ -1396,6 +1396,11 @@ void MoveBetweenAreasCore(Actor* actor, const ResRef &area, const Point &positio
 	}
 	// should this perhaps be a 'selected' check or similar instead?
 	if (actor->InParty) {
+		if (actor->InParty == 1) { // familiars are apparently hardcoded to player 1
+			for (Actor* fam : game->GetFamiliars()) {
+				MoveBetweenAreasCore(fam, area, position, face, adjust);
+			}
+		}
 		GameControl *gc=core->GetGameControl();
 		gc->SetScreenFlags(SF_CENTERONACTOR, BitOp::OR);
 		if (newSong) {

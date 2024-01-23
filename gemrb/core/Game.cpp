@@ -2298,13 +2298,16 @@ void Game::MovePCs(const ResRef& targetArea, const Point& targetPoint, int orien
 	}
 }
 
-void Game::MoveFamiliars(const ResRef& targetArea, const Point& targetPoint, int orientation) const
+std::vector<Actor*> Game::GetFamiliars() const
 {
+	std::vector<Actor*> familiars;
 	for (const auto& npc : NPCs) {
-		if (npc->GetBase(IE_EA) == EA_FAMILIAR) {
-			MoveBetweenAreasCore(npc, targetArea, targetPoint, orientation, true);
+		// familiar in pack has no set area
+		if (npc->GetBase(IE_EA) == EA_FAMILIAR && npc->GetCurrentArea() != nullptr) {
+			familiars.push_back(npc);
 		}
 	}
+	return familiars;
 }
 
 void Game::DumpKaputz() const {

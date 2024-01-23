@@ -626,7 +626,6 @@ void GameScript::TeleportParty(Scriptable* /*Sender*/, Action* parameters)
 {
 	const Game *game = core->GetGame();
 	game->MovePCs(parameters->resref0Parameter, parameters->pointParameter, parameters->int0Parameter);
-	game->MoveFamiliars(parameters->resref0Parameter, parameters->pointParameter, parameters->int0Parameter);
 }
 
 //5 is the ToB value, but it might be useful to have multiple expansions
@@ -667,9 +666,6 @@ void GameScript::ExitPocketPlane(Scriptable* /*Sender*/, Action* /*parameters*/)
 		}
 	}
 	
-	// move familiars
-	game->MoveFamiliars(area, pos, -1);
-
 	// don't clear locations!
 }
 
@@ -4806,7 +4802,6 @@ void GameScript::ExpansionEndCredits(Scriptable *Sender, Action *parameters)
 		Point dest(275, 235);
 		const Game* game = core->GetGame();
 		game->MovePCs(area, dest, -1);
-		game->MoveFamiliars(area, dest, -1);
 	}
 }
 

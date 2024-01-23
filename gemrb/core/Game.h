@@ -488,7 +488,7 @@ public:
 	void ReversePCs() const;
 	bool OnlyNPCsSelected() const;
 	void MovePCs(const ResRef& targetArea, const Point& targetPoint, int orientation) const;
-	void MoveFamiliars(const ResRef& targetArea, const Point& targetPoint, int orientation) const;
+	std::vector<Actor*> GetFamiliars() const;
 	void DumpKaputz() const;
 
 private:
