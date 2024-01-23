@@ -390,6 +390,8 @@ bool DialogHandler::DialogChoose(unsigned int choose)
 		//follow external linkage, if required
 		if (!tr->Dialog.IsEmpty() && tr->Dialog != dlg->resRef) {
 			//target should be recalculated!
+			target->ImmediateEvent();
+			target->ProcessActions(); //run the action queue now, as we are leaving
 			target->LeftDialog();
 			tgt = nullptr;
 			tgta = nullptr;
