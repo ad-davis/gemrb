@@ -761,7 +761,7 @@ void Scriptable::ModifyProjectile(Projectile* &pro, Spell* spl, ieDword tgt, int
 	}
 }
 
-void Scriptable::CreateProjectile(const ResRef& spellResRef, ieDword tgt, int level, bool fake)
+void Scriptable::CreateProjectile(const ResRef& spellResRef, ieDword tgt, int level, bool fake, int speedOverride)
 {
 	Spell* spl = gamedata->GetSpell(spellResRef);
 	Actor* caster = Scriptable::As<Actor>(this);
@@ -798,6 +798,9 @@ void Scriptable::CreateProjectile(const ResRef& spellResRef, ieDword tgt, int le
 				return;
 			}
 			pro->SetCaster(GetGlobalID(), level);
+			if (speedOverride >= 0) {
+				pro->Speed = speedOverride;
+			}
 		}
 
 		Point origin = Pos;
@@ -966,7 +969,7 @@ void Scriptable::CastSpellPointEnd(int level, bool keepStance)
 	ResetCastingState(caster);
 }
 
-void Scriptable::CastSpellEnd(int level, bool keepStance)
+void Scriptable::CastSpellEnd(int level, bool keepStance, int projectileSpeed)
 {
 	const Spell* spl = gamedata->GetSpell(SpellResRef); // this was checked before we got here
 	if (!spl) {
@@ -1014,7 +1017,7 @@ void Scriptable::CastSpellEnd(int level, bool keepStance)
 	}
 
 	//if the projectile doesn't need to follow the target, then use the target position
-	CreateProjectile(SpellResRef, LastSpellTarget, level, GetSpellDistance(SpellResRef, this)==0xffffffff);
+	CreateProjectile(SpellResRef, LastSpellTarget, level, GetSpellDistance(SpellResRef, this)==0xffffffff, projectileSpeed);
 
 	// the original engine saves lasttrigger only in case of SpellCast, so we have to differentiate
 	// NOTE: unused in iwd2, so the fact that it has no stored spelltype is of no consequence
@@ -1181,7 +1184,7 @@ void Scriptable::DirectlyCastSpellPoint(const Point& target, const ResRef& spell
 
 // shortcut for internal use
 // if any user needs casting time support, they should use Spell* actions directly
-void Scriptable::DirectlyCastSpell(Scriptable* target, const ResRef& spellRef, int level, bool keepStance, bool deplete)
+void Scriptable::DirectlyCastSpell(Scriptable* target, const ResRef& spellRef, int level, bool keepStance, bool deplete, int projectileSpeed)
 {
 	if (!gamedata->Exists(spellRef, IE_SPL_CLASS_ID)) {
 		return;
@@ -1194,7 +1197,7 @@ void Scriptable::DirectlyCastSpell(Scriptable* target, const ResRef& spellRef, i
 
 	SetSpellResRef(spellRef);
 	CastSpell(target, deplete, true, true, level);
-	CastSpellEnd(level, keepStance);
+	CastSpellEnd(level, keepStance, projectileSpeed);
 
 	LastTargetPos = TmpPos;
 	LastSpellTarget = TmpTarget;

@@ -869,6 +869,9 @@ namespace Setting {
 		const Setting TabNpcs = {"Tabbed head info on npcs", 0};
 		const Setting Flags = {"Head info flags", 2};
 	};
+	namespace Effects {
+		const Setting ConsistentSequencerProjectileSpeed = {"Consistent sequencer projectile speed", 0};
+	}
 };
 
 }

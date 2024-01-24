@@ -7138,11 +7138,12 @@ int fx_activate_spell_sequencer(Scriptable* Owner, Actor* target, Effect* fx)
 		return FX_NOT_APPLIED;
 	}
 
+	int speedOverride = Setting::Effects::ConsistentSequencerProjectileSpeed() ? 30 : -1;
 	//cast 1-4 spells stored in the spell sequencer
-	Owner->DirectlyCastSpell(target, sequencer->Resource, fx->CasterLevel, false, false);
-	Owner->DirectlyCastSpell(target, sequencer->Resource2, fx->CasterLevel, false, false);
-	Owner->DirectlyCastSpell(target, sequencer->Resource3, fx->CasterLevel, false, false);
-	Owner->DirectlyCastSpell(target, sequencer->Resource4, fx->CasterLevel, false, false);
+	Owner->DirectlyCastSpell(target, sequencer->Resource, fx->CasterLevel, false, false, speedOverride);
+	Owner->DirectlyCastSpell(target, sequencer->Resource2, fx->CasterLevel, false, false, speedOverride);
+	Owner->DirectlyCastSpell(target, sequencer->Resource3, fx->CasterLevel, false, false, speedOverride);
+	Owner->DirectlyCastSpell(target, sequencer->Resource4, fx->CasterLevel, false, false, speedOverride);
 
 	//remove the spell sequencer store effect
 	sequencer->TimingMode = FX_DURATION_JUST_EXPIRED;

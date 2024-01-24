@@ -390,13 +390,13 @@ public:
 	void SpellcraftCheck(const Actor *caster, const ResRef& spellRef);
 	/* internal spellcasting shortcuts */
 	void DirectlyCastSpellPoint(const Point& target, const ResRef& spellRef, int level, bool keepStance, bool deplete);
-	void DirectlyCastSpell(Scriptable* target, const ResRef& spellRef, int level, bool keepStance, bool deplete);
+	void DirectlyCastSpell(Scriptable* target, const ResRef& spellRef, int level, bool keepStance, bool deplete, int projectileSpeed = -1);
 	/* actor/scriptable casts spell */
 	int CastSpellPoint(const Point& target, bool deplete, bool instant = false, bool noInterrupt = false, int level = 0);
 	int CastSpell(Scriptable* target, bool deplete, bool instant = false, bool noInterrupt = false, int level = 0);
 	/* spellcasting finished */
 	void CastSpellPointEnd(int level, bool keepStance);
-	void CastSpellEnd(int level, bool keepStance);
+	void CastSpellEnd(int level, bool keepStance, int projectileSpeed = -1);
 	ieDword GetGlobalID() const { return globalID; }
 	/** timer functions (numeric ID, not saved) */
 	bool TimerActive(ieDword ID);
@@ -410,7 +410,7 @@ private:
 	/* used internally to handle start of spellcasting */
 	int SpellCast(bool instant, Scriptable* target = nullptr, int level = 0);
 	/* also part of the spellcasting process, creating the projectile */
-	void CreateProjectile(const ResRef& spellResRef, ieDword tgt, int level, bool fake);
+	void CreateProjectile(const ResRef& spellResRef, ieDword tgt, int level, bool fake, int speedOverride = -1);
 	/* do some magic for the weird/awesome wild surges */
 	bool HandleHardcodedSurge(const ResRef& surgeSpell, const Spell *spl, Actor *caster);
 	void ModifyProjectile(Projectile* &pro, Spell* spl, ieDword tgt, int level);
