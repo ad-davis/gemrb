@@ -11133,9 +11133,10 @@ void Actor::DisplayHeadInfo()
 	if (!ShouldDrawCircle()) return;
 	std::vector<String> spells;
 	int flags = Setting::HeadInfo::Flags();
-	bool displayName = flags&HEAD_INFO_NAME;
+	bool displayName = flags&HEAD_INFO_NAME || flags&HEAD_INFO_DEBUG;
 	bool displayHp = flags&HEAD_INFO_HP && HasVisibleHP() && GetStat(IE_EA) != EA_NEUTRAL;
 	bool displaySpells = false;
+	bool displayDebugInfo = flags&HEAD_INFO_DEBUG;
 	if (flags&HEAD_INFO_SPELLS) {
 		spells = fxqueue.SpellNames();
 		displaySpells = spells.size();
@@ -11145,6 +11146,7 @@ void Actor::DisplayHeadInfo()
 	String text;
 	if (displayName) {
 		text += GetName();
+		if (displayDebugInfo) text += fmt::format(L" ({})", GetGlobalID());
 	}
 	if (displayHp) {
 		if (InParty) {

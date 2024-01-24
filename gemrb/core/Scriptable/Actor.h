@@ -265,7 +265,8 @@ enum AttackType {
 #define HEAD_INFO_NAME   1
 #define HEAD_INFO_HP     2
 #define HEAD_INFO_SPELLS 4
-#define HEAD_INFO_ALL (HEAD_INFO_NAME|HEAD_INFO_HP|HEAD_INFO_SPELLS)
+#define HEAD_INFO_DEBUG  8
+#define HEAD_INFO_ALL (HEAD_INFO_NAME|HEAD_INFO_HP|HEAD_INFO_SPELLS|HEAD_INFO_DEBUG)
 
 using ActionButtonRow = std::array<ieByte, GUIBT_COUNT>;
 struct ActionButtonRow2 {
