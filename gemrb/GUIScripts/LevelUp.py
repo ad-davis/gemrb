@@ -613,6 +613,9 @@ def ReactivateBaseClass ():
 		for i in range (7):
 			# update if we can cast more spells at this level
 			NumSpells = SpellTable.GetValue (str(Level[1]), str(i+1), GTV_INT)
+			if GemRB.GetRangerClericSpellBehaviour() == 2:
+				if not NumSpells:
+					NumSpells = SpellTable.GetValue (str(Level[0]), str(i+1), GTV_INT)
 			if not NumSpells:
 				continue
 			if NumSpells > GemRB.GetMemorizableSpellsCount (pc, IE_SPELL_TYPE_PRIEST, i, 1):
@@ -712,6 +715,8 @@ def SaveNewSpells():
 	if DeltaDSpells <= 0: # druids and clerics count
 		return
 
+	SpellTables = [CommonTables.ClassSkills.GetValue (ClassName, "DRUIDSPELL", GTV_STR), CommonTables.ClassSkills.GetValue (ClassName, "CLERICSPELL", GTV_STR), CommonTables.ClassSkills.GetValue (ClassName, "MAGESPELL", GTV_STR)]
+
 	for i in range (len(NewDSpells)):
 		# get each update
 		if NewDSpells[i] > 0:
@@ -723,15 +728,23 @@ def SaveNewSpells():
 			continue
 
 		# learn all the spells we're given, but don't have, up to our given casting level
-		for j in range(NumClasses):
-			TmpClassName = GUICommon.GetClassRowName (Classes[j], "class")
+		for j, c in enumerate(Classes):
+			TmpClassName = GUICommon.GetClassRowName (c, "class")
 			IsDruid = CommonTables.ClassSkills.GetValue (TmpClassName, "DRUIDSPELL", GTV_STR)
 			IsCleric = CommonTables.ClassSkills.GetValue (TmpClassName, "CLERICSPELL", GTV_STR)
 			if IsCleric == "*" and IsDruid == "*": # no divine spells (so mage/cleric multis don't screw up)
 				continue
 			elif IsCleric == "*": # druid spells
+				SpellTable = GemRB.LoadTable(CommonTables.ClassSkills.GetValue(TmpClassName, "DRUIDSPELL", GTV_STR))
 				ClassFlag = 0x8000
 			else: # cleric spells
+				SpellTable = GemRB.LoadTable(CommonTables.ClassSkills.GetValue(TmpClassName, "CLERICSPELL", GTV_STR))
 				ClassFlag = 0x4000
+
+			# update if we can cast more spells at this level
+			if GemRB.GetRangerClericSpellBehaviour() == 0:
+				NumSpells = SpellTable.GetValue (str(Level[j]), str(i+1), GTV_INT)
+				if not NumSpells:
+					continue
 
 			Spellbook.LearnPriestSpells (pc, i + 1, ClassFlag)

@@ -872,6 +872,9 @@ namespace Setting {
 	namespace Effects {
 		const Setting ConsistentSequencerProjectileSpeed = {"Consistent sequencer projectile speed", 0};
 	}
+	namespace Rules {
+		const Setting RangerClericSpells = {"Ranger cleric spell setting", 1};
+	}
 };
 
 }

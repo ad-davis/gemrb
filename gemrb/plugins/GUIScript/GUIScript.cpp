@@ -13118,6 +13118,23 @@ static PyObject* GemRB_GetMultiClassPenalty(PyObject* /*self*/, PyObject* args)
 	return PyLong_FromLong(actor->GetFavoredPenalties());
 }
 
+PyDoc_STRVAR( GemRB_GetRangerClericSpellBehaviour__doc,
+"===== GetRangerClericSpellBehaviour =====\n\
+\n\
+**Prototype:** GemRB.GetRangerClericSpellBehaviour ()\n\
+\n\
+**Description:** Returns 0 if all restrictions on, 1 if only for dual, 2 if none.\n\
+\n\
+**Parameters:** N/A\n\
+\n\
+**Return value:** integer"
+);
+
+static PyObject* GemRB_GetRangerClericSpellBehaviour(PyObject* /*self*/, PyObject* args)
+{
+	return PyLong_FromLong(Setting::Rules::RangerClericSpells());
+}
+
 static PyMethodDef GemRBMethods[] = {
 	METHOD(ActOnPC, METH_VARARGS),
 	METHOD(AddGameTypeHint, METH_VARARGS),
@@ -13226,6 +13243,7 @@ static PyMethodDef GemRBMethods[] = {
 	METHOD(GetPlayerScript, METH_VARARGS),
 	METHOD(GetPlayerSound, METH_VARARGS),
 	METHOD(GetPlayerString, METH_VARARGS),
+	METHOD(GetRangerClericSpellBehaviour, METH_VARARGS),
 	METHOD(GetRumour, METH_VARARGS),
 	METHOD(GetSaveGames, METH_VARARGS),
 	METHOD(GetSelectedSize, METH_NOARGS),
