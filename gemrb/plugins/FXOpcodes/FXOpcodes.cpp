@@ -3710,6 +3710,8 @@ int fx_create_magic_item (Scriptable* Owner, Actor* target, Effect* fx)
 	if (!itm) return FX_NOT_APPLIED;
 	target->inventory.SetEquippedSlot(slot - Inventory::GetWeaponSlot(), 0, itm->EquippingFeatureCount == 0);
 	gamedata->FreeItem(itm, fx->Resource);
+	// as this is a straight overwrite, we want to make sure a previous remove doesn't remove our new item
+	target->fxqueue.RemoveAllEffectsWithResource(fx_remove_item_ref, fx->Resource);
 	Effect* newFx = MaybeTransformTo(fx_remove_item_ref, fx);
 	if (newFx) core->ApplyEffect(newFx, target, Owner);
 	return FX_NOT_APPLIED;
