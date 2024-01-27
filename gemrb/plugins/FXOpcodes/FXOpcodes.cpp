@@ -5385,41 +5385,15 @@ int fx_move_to_area (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print( "fx_move_to_area (%2d) %s", fx->Opcode, fx->Resource );
 
 	Game *game = core->GetGame();
-	//remove actor from current map, and set destination map
-	if (fx->FirstApply) {
-		//if current area is different from target area
-		if (game->CurrentArea != fx->Resource) {
-			//make global
-			game->AddNPC( target );
-			//remove from current area
-			Map *map = target->GetCurrentArea();
-			if (map) {
-				map->RemoveActor( target );
-			}
-			//set the destination area
-			target->Area = fx->Resource;
-			return FX_APPLIED;
-		}
-	}
-
-	if (game->CurrentArea == fx->Resource) {
-		//UnMakeGlobal only if it was not in the party
-		int slot = core->GetGame()->InStore( target );
-		if (slot >= 0) {
-			game->DelNPC( slot );
-			if (!target->InParty) {
-				target->SetPersistent(-1);
-			}
-		}
+	//if current area is different from target area
+	if (game->CurrentArea != fx->Resource) {
 		//move to area
 		Point& targetPos = fx->Pos;
 		if (targetPos.IsZero() || targetPos.IsInvalid()) targetPos = fx->Source;
 		MoveBetweenAreasCore(target, fx->Resource, targetPos, fx->Parameter2, true);
-		//remove the effect now
-		return FX_NOT_APPLIED;
 	}
-	//stick around, waiting for the time
-	return FX_APPLIED;
+
+	return FX_NOT_APPLIED;
 }
 
 // 0xbb Variable:StoreLocalVariable
