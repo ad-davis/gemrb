@@ -875,6 +875,9 @@ namespace Setting {
 	namespace Rules {
 		const Setting RangerClericSpells = {"Ranger cleric spell setting", 1};
 	}
+	namespace Gameplay {
+		const Setting MoveSummons = {"Move summons between areas", 0};
+	}
 };
 
 }

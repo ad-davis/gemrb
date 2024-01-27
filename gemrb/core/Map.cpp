@@ -552,42 +552,30 @@ void Map::MoveToNewArea(const ResRef &area, const ieVariable& entrance, unsigned
 	//LeaveArea is the same in ALL engine versions
 	std::string command = fmt::format("LeaveArea(\"{}\",[{}.{}],{})", area, X, Y, face);
 
+	bool ms = Setting::Gameplay::MoveSummons();
+
+	// MovementCommand processes immediately and can invalidate the actor iterator
+	std::vector<Actor*> toMove;
 	if (EveryOne&CT_GO_CLOSER) {
-		int i=game->GetPartySize(false);
-		while (i--) {
-			Actor *pc = game->GetPC(i,false);
-			if (pc->GetCurrentArea()==this) {
-			  pc->MovementCommand(command);
-			}
-		}
-		i = game->GetNPCCount();
-		while(i--) {
-			Actor *npc = game->GetNPC(i);
-			if ((npc->GetCurrentArea()==this) && (npc->GetStat(IE_EA)<EA_GOODCUTOFF) ) {
-				npc->MovementCommand(command);
+		for (Actor* a : actors) {
+			// CheckTravel blocks travel with uncontrolled party members, the good cutoff
+			// check is so that we don't move persistent villains
+			if ((a->Persistent() && a->GetSafeStat(IE_EA)<EA_GOODCUTOFF) || (ms && a->IsSelected())) {
+				toMove.push_back(a);
 			}
 		}
 	} else if (EveryOne&CT_SELECTED) {
-		int i=game->GetPartySize(false);
-		while (i--) {
-			Actor *pc = game->GetPC(i,false);
-
-			if (!pc->IsSelected()) {
-				continue;
-			}
-			if (pc->GetCurrentArea()==this) {
-				pc->MovementCommand(command);
-			}
-		}
-		i = game->GetNPCCount();
-		while(i--) {
-			Actor *npc = game->GetNPC(i);
-			if (npc->IsSelected() && (npc->GetCurrentArea()==this)) {
-				npc->MovementCommand(command);
+		for (Actor* a : actors) {
+			if (a->IsSelected() && (ms || a->Persistent())) {
+				toMove.push_back(a);
 			}
 		}
 	} else {
 		actor->MovementCommand(std::move(command));
+		return;
+	}
+	for (Actor* a : toMove) {
+		a->MovementCommand(command);
 	}
 }
 
