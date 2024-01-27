@@ -4599,9 +4599,9 @@ int fx_display_portrait_icon (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 //0x8f Item:CreateInSlot
 int fx_create_item_in_slot (Scriptable* Owner, Actor* target, Effect* fx)
 {
-	// print("fx_create_item_in_slot(%2d): Button: %d", fx->Opcode, fx->Parameter2);
+	// print("fx_create_item_in_slot(%2d): Button: %d", fx->Opcode, fx->Parameter1);
 	//create item and set it in target's slot
-	target->inventory.SetSlotItemRes( fx->Resource, core->QuerySlot(fx->Parameter2), fx->Parameter1, fx->Parameter3, fx->Parameter4 );
+	target->inventory.SetSlotItemRes( fx->Resource, core->QuerySlot(fx->Parameter1), fx->Parameter2, fx->Parameter3, fx->Parameter4 );
 	Effect* newFx = MaybeTransformTo(fx_remove_item_ref, fx);
 	if (newFx) core->ApplyEffect(newFx, target, Owner);
 	return FX_NOT_APPLIED;
