@@ -3817,7 +3817,7 @@ void GameScript::DestroyAllEquipment(Scriptable* Sender, Action* /*parameters*/)
 		default:;
 	}
 	if (inv) {
-		inv->DestroyItem("",0,(ieDword) ~0); //destroy any and all
+		inv->DestroyItem("",0, 0); //destroy any and all
 	}
 }
 
@@ -3872,22 +3872,6 @@ void GameScript::DestroyPartyItem(Scriptable* /*Sender*/, Action* parameters)
 	}
 }
 
-/* this is a gemrb extension */
-void GameScript::DestroyPartyItemNum(Scriptable* /*Sender*/, Action* parameters)
-{
-	const Game *game = core->GetGame();
-	int i = game->GetPartySize(false);
-	ieDword count;
-	count = parameters->int0Parameter;
-	while (i--) {
-		Inventory *inv = &(game->GetPC( i,false )->inventory);
-		count -= inv->DestroyItem(parameters->resref0Parameter,0,count);
-		if (!count ) {
-			break;
-		}
-	}
-}
-
 void GameScript::DestroyAllDestructableEquipment(Scriptable* Sender, Action* /*parameters*/)
 {
 	Inventory *inv=NULL;
@@ -3902,7 +3886,7 @@ void GameScript::DestroyAllDestructableEquipment(Scriptable* Sender, Action* /*p
 		default:;
 	}
 	if (inv) {
-		inv->DestroyItem("", IE_INV_ITEM_DESTRUCTIBLE, (ieDword) ~0);
+		inv->DestroyItem("", IE_INV_ITEM_DESTRUCTIBLE, 0);
 	}
 }
 
@@ -7537,7 +7521,7 @@ void GameScript::DestroyAllFragileEquipment(Scriptable* Sender, Action* paramete
 
 	// TODO: ensure it's using the inventory/CREItem flags, not Item — IE_ITEM_ADAMANTINE won't work as an input otherwise
 	// merge with DestroyAllDestructableEquipment
-	actor->inventory.DestroyItem("", parameters->int0Parameter, ~0);
+	actor->inventory.DestroyItem("", parameters->int0Parameter, 0);
 }
 
 void GameScript::SetOriginalClass(Scriptable* Sender, Action* parameters)
@@ -7661,7 +7645,7 @@ void GameScript::DestroyGroundPiles(Scriptable* Sender, Action* /*parameters*/)
 		Container* pile = tm->GetContainer(containerCount);
 		if (pile->containerType != IE_CONTAINER_PILE) continue;
 
-		pile->inventory.DestroyItem("", 0,(ieDword) ~0); //destroy any and all
+		pile->inventory.DestroyItem("", 0, 0); //destroy any and all
 		pile->RemoveItem(0, 0); // force ground icon refresh
 		tm->CleanupContainer(pile);
 	}

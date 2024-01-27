@@ -515,28 +515,12 @@ unsigned int Inventory::DestroyItem(const ResRef& resref, ieDword flags, ieDword
 		if (!resref.IsEmpty() && item->ItemResRef != resref) {
 			continue;
 		}
-		//we need to acknowledge that the item was destroyed
-		//use unequip stuff etc,
-		//until that, we simply erase it
-		ieDword removed;
-
-		if (item->Flags&IE_INV_ITEM_STACKED) {
-			removed=item->Usages[0];
-			if (count && (removed + destructed > count) ) {
-				removed = count - destructed;
-				item = RemoveItem( (unsigned int) slot, removed );
-			}
-			else {
-				KillSlot( (unsigned int) slot);
-			}
-		} else {
-			removed=1;
-			KillSlot( (unsigned int) slot);
-		}
+		KillSlot( (unsigned int) slot);
 		delete item;
-		destructed+=removed;
-		if (count && (destructed>=count) )
+		destructed++;
+		if (count && (destructed>=count)) {
 			break;
+		}
 	}
 	if (destructed && Owner && Owner->InParty) {
 		displaymsg->DisplayMsgCentered(HCStrings::LostItem, FT_ANY, GUIColors::XPCHANGE);

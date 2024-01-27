@@ -1071,7 +1071,6 @@ public: //Script Functions
 	static void DestroyItem(Scriptable* Sender, Action* parameters);
 	static void DestroyPartyGold(Scriptable* Sender, Action* parameters);
 	static void DestroyPartyItem(Scriptable* Sender, Action* parameters);
-	static void DestroyPartyItemNum(Scriptable* Sender, Action* parameters);
 	static void DestroySelf(Scriptable* Sender, Action* parameters);
 	static void DetectSecretDoor(Scriptable* Sender, Action* parameters);
 	static void Dialogue(Scriptable* Sender, Action* parameters);
