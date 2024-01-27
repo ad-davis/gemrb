@@ -1344,8 +1344,6 @@ void EffectQueue::RemoveAllEffects(ieDword opcode)
 {
 	for (auto& fx : effects) {
 		MATCH_OPCODE()
-		// Even remove delayed
-		// MATCH_LIVE_FX()
 
 		fx.TimingMode = FX_DURATION_JUST_EXPIRED;
 	}
@@ -1445,7 +1443,6 @@ void EffectQueue::RemoveAllEffectsWithProjectile(ieDword projectile)
 void EffectQueue::RemoveAllEffects(const ResRef &removed)
 {
 	for (auto& fx : effects) {
-		MATCH_LIVE_FX()
 		if (removed != fx.SourceRef) {
 			continue;
 		}
@@ -1522,7 +1519,6 @@ void EffectQueue::RemoveAllEffectsWithResource(ieDword opcode, const ResRef &res
 {
 	for (auto& fx : effects) {
 		MATCH_OPCODE()
-		MATCH_LIVE_FX()
 		if (fx.Resource != resource) { continue; }
 
 		fx.TimingMode = FX_DURATION_JUST_EXPIRED;
@@ -1572,7 +1568,6 @@ void EffectQueue::RemoveAllDetrimentalEffects(ieDword opcode, ieDword current)
 {
 	for (auto& fx : effects) {
 		MATCH_OPCODE()
-		MATCH_LIVE_FX()
 
 		switch (fx.Parameter2) {
 		case 0:case 3:
@@ -1606,7 +1601,6 @@ void EffectQueue::RemoveAllEffectsWithParam(ieDword opcode, ieDword param2)
 {
 	for (auto& fx : effects) {
 		MATCH_OPCODE()
-		MATCH_LIVE_FX()
 		MATCH_PARAM2()
 
 		fx.TimingMode = FX_DURATION_JUST_EXPIRED;
@@ -1625,7 +1619,6 @@ void EffectQueue::RemoveAllEffectsWithParamAndResource(ieDword opcode, ieDword p
 {
 	for (auto& fx : effects) {
 		MATCH_OPCODE()
-		MATCH_LIVE_FX()
 		MATCH_PARAM2()
 		
 		if (!resource.IsEmpty() && fx.Resource != resource) continue;
