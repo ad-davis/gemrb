@@ -415,9 +415,7 @@ void Scriptable::ClearActions(int skipFlags)
 	if (pst_flags && CurrentAction && CurrentAction->actionID == ClearActionsID) {
 		ReleaseCurrentAction();
 	} else {
-		if (skipFlags == 1 && CurrentAction && CurrentAction->flags & ACF_OVERRIDE) {
-			savedCurrentAction = true;
-		} else if (skipFlags == 2 && CurrentAction && actionflags[CurrentAction->actionID] & AF_IWD2_OVERRIDE) {
+		if (skipFlags == 2 && CurrentAction && actionflags[CurrentAction->actionID] & AF_IWD2_OVERRIDE) {
 			savedCurrentAction = true;
 		} else if (skipFlags == 3 && (CurrentActionInterruptable == false || InternalFlags & IF_NOINT)) {
 			savedCurrentAction = true;
