@@ -473,6 +473,7 @@ static EffectDesc effectnames[] = {
 	EffectDesc("ApplyEffectItemType", fx_apply_effect_item_type, 0, -1 ),
 	EffectDesc("ApplyEffectsList", fx_add_effects_list, 0, -1),
 	EffectDesc("ApplyEffectRepeat", fx_apply_effect_repeat, 0, -1 ),
+	EffectDesc("ApplySpellOnMove", fx_generic_effect, 0, -1 ),
 	EffectDesc("CutScene2", fx_cutscene2, EFFECT_NO_ACTOR, -1 ),
 	EffectDesc("AttackSpeedModifier", fx_attackspeed_modifier, 0, -1 ),
 	EffectDesc("AttacksPerRoundModifier", fx_attacks_per_round_modifier, 0, -1 ),
@@ -579,6 +580,7 @@ static EffectDesc effectnames[] = {
 	EffectDesc("DispelSchoolOne", fx_dispel_school_one, 0, -1 ),
 	EffectDesc("DispelSecondaryType", fx_dispel_secondary_type, 0, -1 ),
 	EffectDesc("DispelSecondaryTypeOne", fx_dispel_secondary_type_one, 0, -1 ),
+	EffectDesc("DisplayEyesOverlay", fx_generic_effect, 0, -1 ),
 	EffectDesc("DisplayString", fx_display_string, 0, -1 ),
 	EffectDesc("Dither", fx_dither, 0, -1 ),
 	EffectDesc("DontJumpModifier", fx_dontjump_modifier, 0, -1 ),
@@ -640,6 +642,7 @@ static EffectDesc effectnames[] = {
 	EffectDesc("MagicalRest", fx_magical_rest, 0, -1 ),
 	EffectDesc("MagicDamageResistanceModifier", fx_magic_damage_resistance_modifier, 0, -1 ),
 	EffectDesc("MagicResistanceModifier", fx_magic_resistance_modifier, 0, -1 ),
+	EffectDesc("MakeUnselectable", fx_generic_effect, 0, -1 ),
 	EffectDesc("MassRaiseDead", fx_mass_raise_dead, EFFECT_NO_ACTOR, -1 ),
 	EffectDesc("MaximumHPModifier", fx_maximum_hp_modifier, EFFECT_DICED|EFFECT_SPECIAL_UNDO, -1 ),
 	EffectDesc("Maze", fx_maze, 0, -1 ),
@@ -653,6 +656,7 @@ static EffectDesc effectnames[] = {
 	EffectDesc("MissilesResistanceModifier", fx_missiles_resistance_modifier, EFFECT_SPECIAL_UNDO, -1 ),
 	EffectDesc("MirrorImage", fx_mirror_image, 0, -1 ),
 	EffectDesc("MirrorImageModifier", fx_mirror_image_modifier, 0, -1 ),
+	EffectDesc("ModalStateCheck", fx_generic_effect, 0, -1 ),
 	EffectDesc("ModifyGlobalVariable", fx_modify_global_variable, EFFECT_NO_ACTOR, -1 ),
 	EffectDesc("ModifyLocalVariable", fx_modify_local_variable, 0, -1 ),
 	EffectDesc("MonsterSummoning", fx_monster_summoning, EFFECT_NO_ACTOR, -1 ),
@@ -8442,6 +8446,7 @@ int fx_seven_eyes(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x150 (336) Graphics: Display Eyes Overlay
 // TODO: ee, check if we even really need it, since seven eyes are implemented in Actor
 // https://gibberlings3.github.io/iesdp/opcodes/bgee.htm#op66
+// for now just a generic effect
 
 // 0x114 (276) RemoveEffect
 // 0x151 (337) Remove: Opcode
@@ -8548,10 +8553,10 @@ int fx_swap_hp(Scriptable* /*Owner*/, Actor* target, Effect* fx)
 // 0x169 (361) Cast spell on critical miss (identical to 0x155), implemented as a generic effect
 // 0x16a (362) Critical miss bonus, implemented as a generic effect
 
-// 0x16b (363) TODO: ee, Modal state check — for shaman dance (granted by clabsh01, set up like their bard song - uses spsh004)
+// 0x16b (363) TODO: ee, Modal state check — for shaman dance (granted by clabsh01, set up like their bard song - uses spsh004) (generic effect until done)
 // 0x16c (364) unused
-// 0x16d (365) TODO: ee, Make unselectable; reuse the action?
-// 0x16e (366) TODO: ee, Spell: Apply Spell On Move
+// 0x16d (365) TODO: ee, Make unselectable; reuse the action? (generic effect until done)
+// 0x16e (366) TODO: ee, Spell: Apply Spell On Move (generic effect until done)
 
 // 0x16f (367) MinimumBaseStats (EE-only) is implemented as a generic effect
 
