@@ -663,6 +663,9 @@ bool GameControl::OnKeyPress(const KeyboardEvent& Key, unsigned short mod)
 {
 	unsigned int i, pc;
 	Game* game = core->GetGame();
+	if (!window || window->IsDisabled() || (Flags()&IgnoreEvents)) {
+		return false;
+	}
 
 	KeyboardKey keycode = Key.keycode;
 	if (mod) {
