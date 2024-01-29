@@ -2559,22 +2559,29 @@ void SetupWishCore(Scriptable *Sender, TableMgr::index_t column, int picks)
 		}
 	}
 
-	if (count<picks) {
+	int realcount = count;
+	std::vector<bool> skip(count, false);
+	for (int i = 0; i < count; i++) {
+		std::string cell = tm->QueryField(i, column - 1);
+		if (cell == "*") {
+			skip[i] = true;
+			realcount--;
+		}
+	}
+
+	if (realcount<picks) {
 		for (int i = 0; i < count; i++) {
-			selects[i]=i;
+			if (!skip[i]) selects[i]=i;
 		}
 	} else {
 		for (int i = 0; i < picks; i++) {
-			selects[i]=RAND(0, count-1);
-
-			int j = 0;
-			while (j < i) {
-				if (selects[i] == selects[j]) {
-					selects[i]++;
-					j = 0; // retry from the start
-					continue;
+			while (true) {
+				int choice = RAND(0, count-1);
+				if (!skip[choice]) {
+					selects[i] = choice;
+					skip[choice] = true;
+					break;
 				}
-				j++;
 			}
 		}
 	}
