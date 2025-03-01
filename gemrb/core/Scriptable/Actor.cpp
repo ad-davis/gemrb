@@ -3048,7 +3048,10 @@ void Actor::RefreshPCStats() {
 	//get the wspattack bonuses for proficiencies
 	const ITMExtHeader* header = GetWeapon(false);
 	ieDword stars;
-	int dualwielding = IsDualWielding();
+	int slot;
+	// iwd rangers get an extra attack if wielding a single handed weapon with no shield to simulate dual-wielding
+	int dualwielding = IsDualWielding() || ((core->config.GameType == "how" || core->config.GameType == "iwd") && GetRangerLevel() && !inventory.GetUsedWeapon(true, slot));
+
 	stars = GetProficiency(weaponInfo[0].prof) & PROFS_MASK;
 
 	// tenser's transformation ensures the actor is at least proficient with any weapon
@@ -6798,7 +6801,7 @@ int Actor::GetDefense(int DamageType, ieDword wflags, const Actor *attacker) con
 		if (header && (header->AttackType == ITEM_AT_MELEE)) {
 			int slot;
 			ieDword stars;
-			if (inventory.GetUsedWeapon(true, slot) == NULL) {
+			if (inventory.GetUsedWeapon(true, slot) == NULL && !inventory.TwoHandedEquipped()) {
 				//single-weapon style applies to all ac
 				stars = GetStars(IE_PROFICIENCYSINGLEWEAPON);
 				defense += gamedata->GetWeaponStyleBonus(3, stars, 0);

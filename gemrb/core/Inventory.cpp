@@ -1950,7 +1950,7 @@ inline bool Inventory::TwoHandedInSlot(int slot) const
 	return false;
 }
 
-inline bool Inventory::TwoHandedEquipped() const
+bool Inventory::TwoHandedEquipped() const
 {
 	int slot = GetEquippedSlot();
 	if((core->QuerySlotEffects(slot) & SLOT_EFFECT_MISSILE) == SLOT_EFFECT_MISSILE) {
