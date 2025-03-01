@@ -3049,8 +3049,11 @@ void Actor::RefreshPCStats() {
 	const ITMExtHeader* header = GetWeapon(false);
 	ieDword stars;
 	int slot;
+	int dualwielding = IsDualWielding();
 	// iwd rangers get an extra attack if wielding a single handed weapon with no shield to simulate dual-wielding
-	int dualwielding = IsDualWielding() || ((core->config.GameType == "how" || core->config.GameType == "iwd") && GetRangerLevel() && !inventory.GetUsedWeapon(true, slot));
+	if ((core->config.GameType == "how" || core->config.GameType == "iwd") && GetRangerLevel()) {
+		dualwielding = dualwielding || (inventory.GetUsedWeapon(true, slot) == NULL && !inventory.TwoHandedEquipped() && !inventory.RangedEquipped());
+	}
 
 	stars = GetProficiency(weaponInfo[0].prof) & PROFS_MASK;
 

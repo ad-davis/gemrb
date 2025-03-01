@@ -1940,6 +1940,17 @@ bool Inventory::IsSlotBlocked(int slot) const
 	return !IsSlotEmpty(otherslot);
 }
 
+inline bool Inventory::RangedInSlot(int slot) const
+{
+	return (core->QuerySlotEffects(slot) & SLOT_EFFECT_MISSILE) == SLOT_EFFECT_MISSILE;
+}
+
+bool Inventory::RangedEquipped() const
+{
+	int slot = GetEquippedSlot();
+	return RangedInSlot(slot);
+}
+
 inline bool Inventory::TwoHandedInSlot(int slot) const
 {
 	const CREItem *item = GetSlotItem(slot);
@@ -1953,7 +1964,7 @@ inline bool Inventory::TwoHandedInSlot(int slot) const
 bool Inventory::TwoHandedEquipped() const
 {
 	int slot = GetEquippedSlot();
-	if((core->QuerySlotEffects(slot) & SLOT_EFFECT_MISSILE) == SLOT_EFFECT_MISSILE) {
+	if (RangedInSlot(slot)) {
 		slot = FindRangedWeapon();
 	}
 	return TwoHandedInSlot(slot);

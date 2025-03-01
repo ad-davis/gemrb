@@ -339,6 +339,10 @@ public:
 	ieDword GetEquipExclusion(int index) const;
 	/** returns if a slot is temporarily blocked */
 	bool IsSlotBlocked(int slot) const;
+	/** returns true if a ranged weapon is in slot */
+	bool RangedInSlot(int slot) const;
+	/** returns true if a ranged weapon is equipped */
+	bool RangedEquipped() const;
 	/** returns true if a two handed weapon is in slot */
 	bool TwoHandedInSlot(int slot) const;
 	/** returns true if a two handed weapon is equipped */
