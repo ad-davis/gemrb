@@ -9349,7 +9349,7 @@ int Actor::GetBackstabDamage(const Actor *target, WeaponInfo &wi, int multiplier
 		return backstabDamage;
 	}
 
-	if ((!core->HasFeature(GFFlags::PROPER_BACKSTAB) || !IsBehind(target)) && !(always & 0x5)) {
+	if ((core->HasFeature(GFFlags::PROPER_BACKSTAB) && !IsBehind(target)) && !(always & 0x5)) {
 		return backstabDamage;
 	}
 
