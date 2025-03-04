@@ -19,6 +19,7 @@
  */
 
 #include "ie_feats.h" //cannot avoid declaring these
+#include "ie_stats.h"
 #include "opcode_params.h"
 #include "overlays.h"
 #include "strrefs.h"
@@ -855,6 +856,7 @@ static EffectRef fx_diseased_state_ref = { "State:Diseased", -1 }; //0x4e
 static EffectRef fx_deaf_state_ref = { "State:Deafness", -1 }; //0x50
 static EffectRef fx_fatigue_ref = { "FatigueModifier", -1 }; //0x5d
 static EffectRef fx_intoxication_ref = { "IntoxicationModifier", -1 }; //0x5e
+static EffectRef fx_strength_bonus_modifier_ref = { "StrengthBonusModifier", -1 }; //0x61
 static EffectRef fx_hold_creature_no_icon_ref = { "State:HoldNoIcon", -1 }; //0x6d
 static EffectRef fx_remove_item_ref = { "Item:Remove", -1 }; //0x70
 static EffectRef fx_remove_inventory_item_ref = { "Item:RemoveInventory", -1 }; //0x7b
@@ -1573,8 +1575,12 @@ int fx_dexterity_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
 	// print("fx_dexterity_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
 	////how cat's grace: value is based on class
+	////hardcoding limit of 20 dex
 	if (fx->Parameter2==3) {
-		fx->Parameter1 = core->Roll(1, gamedata->GetSpellAbilityDie(target, 0), 0);
+		int currDex = target->GetStat(IE_DEX);
+		int roll = core->Roll(1, gamedata->GetSpellAbilityDie(target, 0), 0);
+		int newDex = std::min(currDex + roll, 20);
+		fx->Parameter1 = newDex - currDex;
 		fx->Parameter2 = 0;
 	}
 
@@ -2313,17 +2319,28 @@ int fx_cure_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*
 }
 
 // 0x2C StrengthModifier
-int fx_strength_modifier (Scriptable* /*Owner*/, Actor* target, Effect* fx)
+int fx_strength_modifier (Scriptable* Owner, Actor* target, Effect* fx)
 {
 	// print("fx_strength_modifier(%2d): Mod: %d, Type: %d", fx->Opcode, fx->Parameter1, fx->Parameter2);
 
+
 	////how strength: value is based on class
 	////pst power of one also depends on this!
+	////FIXME: how has a limit of 18, pst 22. but pst also has a strength spell which behaves similarly with a limit of 19
 	if (fx->Parameter2==3) {
-		fx->Parameter1 = core->Roll(1, gamedata->GetSpellAbilityDie(target, 1), 0);
 		fx->Parameter2 = 0;
+		int roll = core->Roll(1, gamedata->GetSpellAbilityDie(target, 1), 0);
+		int currStr = target->GetStat(IE_STR);
+		int newStrRaw = currStr + roll;
+		int newStr = std::min(newStrRaw, 18);
+		int remaining = newStrRaw - newStr;
+		if (remaining > 0) {
+			int currStrExtra = target->GetStat(IE_STREXTRA);
+			int newStrExtra = std::min((int)(target->GetStat(IE_STREXTRA) + remaining * 10), 100);
+			target->ApplyEffectCopy(fx, fx_strength_bonus_modifier_ref, Owner, newStrExtra - currStrExtra, 0);
+		}
+		fx->Parameter1 = newStr - currStr;
 	}
-
 	HandleMainStatBonus(target, IE_STR, fx);
 
 	if (fx->TimingMode==FX_DURATION_INSTANT_PERMANENT) {
