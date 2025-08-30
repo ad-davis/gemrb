@@ -9457,10 +9457,8 @@ bool Actor::UseItem(ieDword slot, ieDword header, const Scriptable* target, ieDw
 		AttackEffect->Projectile = projectileAnim;
 		AttackEffect->Target = FX_TARGET_PRESET;
 		AttackEffect->Parameter3 = 1;
-		if (pstflags) {
+		if (pstflags && (flags & UI_CRITICAL)) {
 			AttackEffect->IsVariable = GetCriticalType();
-		} else {
-			AttackEffect->IsVariable = flags & UI_CRITICAL;
 		}
 		pro->GetEffects().AddEffect(AttackEffect, true);
 		if (ranged) {

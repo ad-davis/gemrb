@@ -378,7 +378,7 @@ int fx_transfer_hp (Scriptable* Owner, Actor* target, Effect* fx)
 		damage=(signed) fx->Parameter1;
 	}
 	if (damage) {
-		DamageResult actual = donor->Damage(damage, fx->Parameter2, owner, MOD_ADDITIVE, fx->SavingThrowType);
+		DamageResult actual = donor->Damage(damage, fx->Parameter2, owner, MOD_ADDITIVE, fx->IsVariable, fx->SavingThrowType);
 		receiver->NewBase( IE_HITPOINTS, actual.damage, MOD_ADDITIVE );
 	}
 	return FX_NOT_APPLIED;
