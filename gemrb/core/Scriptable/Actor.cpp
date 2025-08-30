@@ -6528,7 +6528,7 @@ int Actor::GetProficiencyBonus(int& style, bool leftOrRight, int& damageBonus, i
 		stars = GetStars(IE_PROFICIENCY2HANDED);
 		style = 1000 * stars + IE_PROFICIENCY2HANDED;
 		styleIdx = 1;
-	} else if (wi.wflags & WEAPON_MELEE) {
+	} else if (!(wi.itemflags & IE_INV_ITEM_TWOHANDED)) {
 		int slot;
 		const CREItem* weapon = inventory.GetUsedWeapon(true, slot);
 		if (weapon == nullptr) {
