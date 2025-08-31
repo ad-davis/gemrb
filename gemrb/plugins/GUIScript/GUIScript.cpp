@@ -8757,11 +8757,12 @@ PyDoc_STRVAR( GemRB_MemorizeSpell__doc,
 spell will be ready for use.\n\
 \n\
 **Parameters:**\n\
-  * PartyID   - the PC's position in the party\n\
-  * SpellType - 0 - priest, 1 - wizard, 2 - innate\n\
-  * Level     - the known spell's level\n\
-  * Index     - the known spell's index\n\
-  * Enabled   - defaults to 0, which means the spell is depleted\n\
+  * PartyID       - the PC's position in the party\n\
+  * SpellType     - 0 - priest, 1 - wizard, 2 - innate\n\
+  * Level         - the known spell's level\n\
+  * Index         - the known spell's index\n\
+  * Enabled       - defaults to 0, which means the spell is depleted\n\
+  * MemorizeLevel - the spell level slot to take up, if not the same as level\n\
 \n\
 **Return value:** boolean, 1 on success.\n\
 \n\
@@ -8770,8 +8771,8 @@ spell will be ready for use.\n\
 
 static PyObject* GemRB_MemorizeSpell(PyObject * /*self*/, PyObject* args)
 {
-	int globalID, SpellType, Level, Index, enabled=0;
-	PARSE_ARGS( args,  "iiii|i", &globalID, &SpellType, &Level, &Index, &enabled );
+	int globalID, SpellType, Level, Index, enabled=0, memorizeLevel=0;
+	PARSE_ARGS( args,  "iiii|ii", &globalID, &SpellType, &Level, &Index, &enabled, &memorizeLevel );
 	GET_GAME();
 	GET_ACTOR_GLOBAL();
 
@@ -8787,7 +8788,7 @@ static PyObject* GemRB_MemorizeSpell(PyObject * /*self*/, PyObject* args)
 		if (SpellType == IE_SPELL_TYPE_INNATE) enabled = 1;
 	}
 
-	return PyLong_FromLong(actor->spellbook->MemorizeSpell(ks, enabled));
+	return PyLong_FromLong(actor->spellbook->MemorizeSpell(ks, enabled, memorizeLevel));
 }
 
 

@@ -745,10 +745,13 @@ int Spellbook::GetMemorizableSpellsCount(int type, unsigned int level, bool bonu
 	return sm->SlotCount;
 }
 
-bool Spellbook::MemorizeSpell(const CREKnownSpell* spell, bool usable)
+bool Spellbook::MemorizeSpell(const CREKnownSpell* spell, bool usable, ieWord memorizeLevel)
 {
 	ieWord spellType = spell->Type;
-	CRESpellMemorization* sm = spells[spellType][spell->Level];
+	if (memorizeLevel == 0) {
+		memorizeLevel = spell->Level;
+	}
+	CRESpellMemorization* sm = spells[spellType][memorizeLevel];
 	if (sm->SlotCountWithBonus <= sm->memorized_spells.size() && !(innate & (1<<spellType))) {
 		//it is possible to have sorcerer type spellbooks for any spellbook type
 		if (! (sorcerer & (1<<spellType) ) )

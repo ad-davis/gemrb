@@ -212,7 +212,7 @@ public:
 	void SetMemorizableSpellsCount(int Value, int type, unsigned int level, bool bonus);
 
 	/** Adds spell from known to memorized */
-	bool MemorizeSpell(const CREKnownSpell* spl, bool usable);
+	bool MemorizeSpell(const CREKnownSpell* spl, bool usable, ieWord memorizeLevel=0);
 
 	/** Removes memorized spell */
 	bool UnmemorizeSpell(const CREMemorizedSpell* spl);
