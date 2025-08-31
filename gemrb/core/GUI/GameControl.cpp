@@ -1341,7 +1341,7 @@ void GameControl::UpdateCursor()
 	} else if (target_mode == TARGET_MODE_CAST) {
 		nextCursor = IE_CURSOR_CAST;
 		//point is always valid
-		if (!(target_types & GA_POINT) && !lastActor) {
+		if (!(target_types & GA_POINT) && !lastActor && !overDoor && !overContainer) {
 			nextCursor |= IE_CURSOR_GRAY;
 		}
 	} else if (target_mode == TARGET_MODE_DEFEND) {
@@ -1704,7 +1704,7 @@ void GameControl::TryToDisarm(Actor *source, const InfoPoint *tgt) const
 //generate action code for source actor to use item/cast spell on a point
 void GameControl::TryToCast(Actor *source, const Point &tgt)
 {
-	if ((target_types&GA_POINT) == false) {
+	if (!(target_types & GA_POINT) && !overDoor && !overContainer) {
 		return; // not allowed to target point
 	}
 
@@ -2205,13 +2205,13 @@ void GameControl::PerformSelectedAction(const Point& p)
 	}
 
 	//add a check if you don't want some random monster handle doors and such
-	if (target_mode == TARGET_MODE_CAST) {
-		//the player is using an item or spell on the ground
-		TryToCast(selectedActor, p);
-	} else if (overDoor) {
+	if (overDoor) {
 		HandleDoor(overDoor, selectedActor);
 	} else if (overContainer) {
 		HandleContainer(overContainer, selectedActor);
+	} else if (target_mode == TARGET_MODE_CAST) {
+		//the player is using an item or spell on the ground
+		TryToCast(selectedActor, p);
 	} else if (overInfoPoint) {
 		if (overInfoPoint->Type==ST_TRAVEL && target_mode == TARGET_MODE_NONE) {
 			ieDword exitID = overInfoPoint->GetGlobalID();
