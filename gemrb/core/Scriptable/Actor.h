@@ -35,6 +35,7 @@
 #include "EffectQueue.h"
 #include "Game.h"
 #include "Inventory.h"
+#include "Item.h"
 #include "Palette.h"
 #include "Polygon.h"
 #include "Spellbook.h"
@@ -795,7 +796,7 @@ public:
 	int GetToHit(ieDword Flags, const Actor *target);
 	void GetTHAbilityBonus(ieDword Flags);
 	/* gets the defense against an attack */
-	int GetDefense(int DamageType, ieDword wflags, const Actor *attacker) const;
+	int GetDefense(const ITMExtHeader *wheader, ieDword wflags, const Actor *attacker) const;
 	/* returns the number of allocated proficiency points (stars) */
 	int GetStars(stat_t proficiency) const;
 	static bool IsCriticalEffectEligible(const WeaponInfo& wi, const Effect* fx);

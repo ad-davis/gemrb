@@ -25,14 +25,14 @@ namespace GemRB {
 
 //damage types
 #define DAMAGE_CRUSHING 0
-#define DAMAGE_ACID     1
-#define DAMAGE_COLD     2
-#define DAMAGE_ELECTRICITY 4
-#define DAMAGE_FIRE     8
-#define DAMAGE_PIERCING 0x10
-#define DAMAGE_POISON 0x20
-#define DAMAGE_MAGIC 0x40
-#define DAMAGE_MISSILE 0x80
+#define DAMAGE_ACID     1 << 16
+#define DAMAGE_COLD     2 << 16
+#define DAMAGE_ELECTRICITY 4 << 16
+#define DAMAGE_FIRE     8 << 16
+#define DAMAGE_PIERCING 0x10 << 16
+#define DAMAGE_POISON 0x20 << 16
+#define DAMAGE_MAGIC 0x40 << 16
+#define DAMAGE_MISSILE 0x80 << 16
 #define DAMAGE_SLASHING 0x100
 #define DAMAGE_MAGICFIRE 0x200
 #define DAMAGE_PIERCINGMISSILE 0x200 //iwd2
@@ -53,6 +53,16 @@ namespace GemRB {
 #define DL_COLD   10
 #define DL_ACID   13
 #define DL_DISINTEGRATE 16
+
+#define WDAMAGE_NONE              0
+#define WDAMAGE_PIERCING          1
+#define WDAMAGE_CRUSHING          2
+#define WDAMAGE_SLASHING          3
+#define WDAMAGE_MISSILE           4
+#define WDAMAGE_FIST              5
+#define WDAMAGE_PIERCING_CRUSHING 6
+#define WDAMAGE_PIERCING_SLASHING 7
+#define WDAMAGE_CRUSHING_SLASHING 8
 
 }
 

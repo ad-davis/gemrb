@@ -25,6 +25,7 @@
 #include "Scriptable/Actor.h"
 
 #include "ie_feats.h"
+#include "ie_stats.h"
 #include "overlays.h"
 #include "strrefs.h"
 #include "opcode_params.h"
@@ -321,9 +322,6 @@ static EffectRef fx_set_diseased_state_ref = { "State:Diseased", -1 };
 static const ResRef CripplingStrikeRef = "cripstr";
 static const ResRef DirtyFightingRef = "dirty";
 static const ResRef ArterialStrikeRef = "artstr";
-
-static const int weapon_damagetype[] = {DAMAGE_CRUSHING, DAMAGE_PIERCING,
-	DAMAGE_CRUSHING, DAMAGE_SLASHING, DAMAGE_MISSILE, DAMAGE_STUNNING};
 
 static int avBase, avStance;
 struct avType {
@@ -6772,30 +6770,56 @@ void Actor::GetTHAbilityBonus(ieDword Flags)
 	}
 }
 
-int Actor::GetDefense(int DamageType, ieDword wflags, const Actor *attacker) const
+struct weaponDamageinfo {
+	int type;
+	Actor::stat_t ac;
+};
+
+static weaponDamageinfo weapon_damageinfo(const ITMExtHeader *header, const Actor *target) {
+	ieWord DamageType = header->DamageType;
+	if (DamageType > 8)
+		DamageType = 0;
+	switch (DamageType) {
+	case WDAMAGE_CRUSHING:
+	case WDAMAGE_FIST:
+		return {DAMAGE_CRUSHING, target->GetStat(IE_ACCRUSHINGMOD)};
+	case WDAMAGE_PIERCING:
+		return {DAMAGE_PIERCING, target->GetStat(IE_ACPIERCINGMOD)};
+	case WDAMAGE_SLASHING:
+		return {DAMAGE_SLASHING, target->GetStat(IE_ACSLASHINGMOD)};
+	case WDAMAGE_MISSILE:
+		return {DAMAGE_MISSILE, target->GetStat(IE_ACMISSILEMOD)};
+	case WDAMAGE_PIERCING_CRUSHING:
+		if (target->GetStat(IE_RESISTCRUSHING) < target->GetStat(IE_RESISTPIERCING)) {
+			return {DAMAGE_CRUSHING, target->GetStat(IE_ACCRUSHINGMOD)};
+		} else {
+			return {DAMAGE_PIERCING, target->GetStat(IE_ACPIERCINGMOD)};
+		}
+	case WDAMAGE_PIERCING_SLASHING:
+		if (target->GetStat(IE_RESISTSLASHING) < target->GetStat(IE_RESISTPIERCING)) {
+			return {DAMAGE_SLASHING, target->GetStat(IE_ACSLASHINGMOD)};
+		} else {
+			return {DAMAGE_PIERCING, target->GetStat(IE_ACPIERCINGMOD)};
+		}
+	case WDAMAGE_CRUSHING_SLASHING:
+		if (target->GetStat(IE_RESISTCRUSHING) > target->GetStat(IE_RESISTSLASHING)) {
+			return {DAMAGE_CRUSHING, target->GetStat(IE_ACCRUSHINGMOD)};
+		} else {
+			return {DAMAGE_SLASHING, target->GetStat(IE_ACSLASHINGMOD)};
+		}
+	case WDAMAGE_NONE:
+	default :
+		// TODO: this is supposed to do something different based on no of dice, but the damage types we have don't support it
+		// If #dice = 0: Deals damage as normal, just no dice amount.
+                // If #dice > 0: Sets target’s HP to Damage Dealt, ignores crushing resistance.
+		return {DAMAGE_CRUSHING, 0};
+	}
+}
+
+int Actor::GetDefense(const ITMExtHeader *wheader, ieDword wflags, const Actor *attacker) const
 {
 	//specific damage type bonus.
-	int defense = 0;
-	if(DamageType > 5)
-		DamageType = 0;
-	switch (weapon_damagetype[DamageType]) {
-	case DAMAGE_CRUSHING:
-		defense += GetStat(IE_ACCRUSHINGMOD);
-		break;
-	case DAMAGE_PIERCING:
-		defense += GetStat(IE_ACPIERCINGMOD);
-		break;
-	case DAMAGE_SLASHING:
-		defense += GetStat(IE_ACSLASHINGMOD);
-		break;
-	case DAMAGE_MISSILE:
-		defense += GetStat(IE_ACMISSILEMOD);
-		break;
-	//What about stunning ?
-	default :
-		break;
-	}
-
+	int defense = weapon_damageinfo(wheader, this).ac;
 
 	//check for s/s and single weapon ac bonuses
 	if (!IsDualWielding()) {
@@ -6808,7 +6832,7 @@ int Actor::GetDefense(int DamageType, ieDword wflags, const Actor *attacker) con
 				//single-weapon style applies to all ac
 				stars = GetStars(IE_PROFICIENCYSINGLEWEAPON);
 				defense += gamedata->GetWeaponStyleBonus(3, stars, 0);
-			} else if (weapon_damagetype[DamageType] == DAMAGE_MISSILE) {
+			} else if (wheader->DamageType == WDAMAGE_MISSILE) {
 				//sword-shield style applies only to missile ac
 				stars = GetStars(IE_PROFICIENCYSWORDANDSHIELD);
 				defense += gamedata->GetWeaponStyleBonus(2, stars, 6);
@@ -7149,7 +7173,6 @@ void Actor::FinishAttack() {
 
 	//damage type is?
 	//modify defense with damage type
-	ieDword damagetype = hittingheader->DamageType;
 	int damage = 0;
 
 	// another bizarre 2E feature that's unused, but working
@@ -7164,7 +7187,7 @@ void Actor::FinishAttack() {
 
 	bool critical = criticalroll >= attackRollDiceSides;
 	bool success = critical;
-	int defense = target->GetDefense(damagetype, wi.wflags, this);
+	int defense = target->GetDefense(wi.extHeader, wi.wflags, this);
 	int rollMod = ReverseToHit ? defense : tohit;
 	if (!critical) {
 		// autohit immobile enemies (true for atleast stun, sleep, timestop)
@@ -9430,14 +9453,11 @@ bool Actor::UseItem(ieDword slot, ieDword header, const Scriptable* target, ieDw
 	Projectile *pro = itm->GetProjectile(this, header, target->Pos, slot, flags&UI_MISS);
 
 	// ChargeItem can break the item, now invalidating everything, so look things up in advance
-	int weaponTypeIdx = 0;
 	bool ranged = header == (ieDword) -2;
-	ieDword projectileAnim = 0;
+	const ITMExtHeader* wheader;
 	if (((int) header < 0) && !(flags & UI_MISS)) { // using a weapon
-		const ITMExtHeader* which = itm->GetWeaponHeader(ranged);
-		if (!which) return false; // eg. misc8u equipped by saemon havarian (ppsaem3), part of the silver sword and actually has a header, just untyped
-		weaponTypeIdx = which->DamageType;
-		projectileAnim = which->ProjectileAnimation;
+		wheader = itm->GetWeaponHeader(ranged);
+		if (!wheader) return false; // eg. misc8u equipped by saemon havarian (ppsaem3), part of the silver sword and actually has a header, just untyped
 	}
 	ChargeItem(slot, header, item, itm, flags&UI_SILENT, !(flags&UI_NOCHARGE));
 
@@ -9453,8 +9473,8 @@ bool Actor::UseItem(ieDword slot, ieDword header, const Scriptable* target, ieDw
 	if (flags & UI_FAKE) {
 		delete pro;
 	} else if (((int) header < 0) && !(flags & UI_MISS)) { // using a weapon
-		Effect* AttackEffect = EffectQueue::CreateEffect(fx_damage_ref, damage, weapon_damagetype[weaponTypeIdx] << 16, FX_DURATION_INSTANT_LIMITED);
-		AttackEffect->Projectile = projectileAnim;
+		Effect* AttackEffect = EffectQueue::CreateEffect(fx_damage_ref, damage, weapon_damageinfo(wheader, tar).type << 16, FX_DURATION_INSTANT_LIMITED);
+		AttackEffect->Projectile = wheader->ProjectileAnimation;
 		AttackEffect->Target = FX_TARGET_PRESET;
 		AttackEffect->Parameter3 = 1;
 		if (pstflags && (flags & UI_CRITICAL)) {
