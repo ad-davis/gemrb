@@ -5949,6 +5949,7 @@ void Actor::GetPrevAnimation()
 
 int Actor::IsDualWielding() const
 {
+	if (inventory.RangedEquipped()) return 0;
 	// // if this function ever becomes redundant when populating WeaponInfo, it can then be simplified
 	// if (inventory.MagicSlotEquipped() || inventory.FistsEquipped()) return 0; // probably not needed, but playing it safe
 	// return (weaponInfo[0].extHeader && weaponInfo[1].extHeader) ? 1 : 0;
