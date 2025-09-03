@@ -832,8 +832,6 @@ int GameData::GetMonkBonus(int bonusType, int level)
 // AC  CRITICALHITBONUS   DAMAGEBONUS   THAC0BONUSRIGHT   THAC0BONUSLEFT   PHYSICALSPEED   ACVSMISSLE
 int GameData::GetWeaponStyleBonus(int style, int stars, int bonusType)
 {
-	if (stars == 0) return 0;
-
 	static std::array<ResRef, 4> weaponStyles = { "wstwowpn", "wstwohnd", "wsshield", "wssingle" };
 	static std::array<short, 4> ignore = { 0 };
 	if (ignore[style] == 1) {
