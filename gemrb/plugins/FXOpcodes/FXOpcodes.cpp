@@ -4333,16 +4333,16 @@ int fx_set_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/
 		return FX_ABORT;
 	}
 
+	const Game *game = core->GetGame();
+	int partySize = game->GetPartySize(true);
 	BASE_STATE_SET( STATE_PETRIFIED );
-	if (target->InParty) {
+	if (partySize > 1 && target->InParty) {
 		GameScript::SetLeavePartyDialogFile(target, NULL);
 		core->GetGame()->LeaveParty(target);
 	}
 	target->SendDiedTrigger();
 
 	// end the game if everyone in the party gets petrified
-	const Game *game = core->GetGame();
-	int partySize = game->GetPartySize(true);
 	int stoned = 0;
 	for (int j=0; j<partySize; j++) {
 		const Actor *pc = game->GetPC(j, true);
