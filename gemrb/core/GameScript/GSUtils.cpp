@@ -1107,7 +1107,7 @@ void BeginDialog(Scriptable* Sender, const Action* parameters, int Flags)
 
 	ScriptDebugLog(ID_VARIABLES, "BeginDialog core");
 
-	tar = GetStoredActorFromObject(Sender, parameters->objects[1], GA_NO_DEAD);
+	tar = GetStoredActorFromObject(Sender, parameters->objects[1], GA_NO_DEAD|GA_DETECT);
 	if (Flags & BD_OWN) {
 		scr = tar;
 	} else {
