@@ -2037,6 +2037,26 @@ void Inventory::ChargeAllItems(int hours) const
 			item->Usages[h] = std::min<ieWord>(add + item->Usages[h], header->Charges);
 
 		}
+		// check for bag
+		if (core->CheckItemType(itm, SLOT_BAG)) {
+			const Store* store = gamedata->GetStore(item->ItemResRef);
+			if (!store) continue;
+			for (int i=0;i<store->GetRealStockSize();i++) {
+				STOItem* storeItem = store->GetItem(i, false);
+				if (!storeItem) continue;
+				const Item *itm2 = gamedata->GetItem(storeItem->ItemResRef, true);
+				if (!itm2) continue;
+				for (int h=0;h<CHARGE_COUNTERS;h++) {
+					const ITMExtHeader *header = itm2->GetExtHeader(h);
+					if (!header || !(header->RechargeFlags & IE_ITEM_RECHARGE)) {
+						continue;
+					}
+					unsigned short add = header->Charges;
+					if (hours && add > hours) add = hours;
+					storeItem->Usages[h] = std::min<ieWord>(add + storeItem->Usages[h], header->Charges);
+				}
+			}
+		}
 		gamedata->FreeItem( itm, item->ItemResRef, false );
 	}
 }
