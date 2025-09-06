@@ -8097,7 +8097,7 @@ bool Actor::IsDead() const
 
 bool Actor::ShouldDrawCircle() const
 {
-	if (Modified[IE_NOCIRCLE]) {
+	if (Modified[IE_NOCIRCLE] || Modified[IE_AVATARREMOVAL] || Modified[IE_SUMMONDISABLE]) {
 		return false;
 	}
 
@@ -8284,7 +8284,7 @@ void Actor::Draw(const Region& vp, Color baseTint, Color tint, BlitFlags flags) 
 	}
 
 	//iwd has this flag saved in the creature
-	if (Modified[IE_AVATARREMOVAL]) {
+	if (Modified[IE_AVATARREMOVAL] || Modified[IE_SUMMONDISABLE]) {
 		return;
 	}
 
@@ -9993,6 +9993,9 @@ bool Actor::HasFeat(unsigned int featindex) const
 
 ieDword Actor::ImmuneToProjectile(ieDword projectile) const
 {
+	if (projectile && Modified[IE_DONOTJUMP]==DNJ_BIRD) { // birds immune to projectiles?
+		return 1;
+	}
 	if (projectile >= projectileImmunity.size()) {
 		return 0;
 	}
@@ -11153,9 +11156,10 @@ void Actor::ClearHeadInfo() {
 void Actor::DisplayHeadInfo()
 {
 	// checks to see if we should display at all
-	if (!(InternalFlags&IF_INITIALIZED)) return;
-	if (!(InternalFlags & IF_VISIBLE) || Modified[IE_AVATARREMOVAL]) return;
-	if (!ShouldDrawCircle()) return;
+	if (!(InternalFlags&IF_INITIALIZED) || !(InternalFlags & IF_VISIBLE) || !ShouldDrawCircle()) {
+		ClearHeadInfo();
+		return;
+	}
 	std::vector<String> spells;
 	int flags = Setting::HeadInfo::Flags();
 	bool displayName = flags&HEAD_INFO_NAME || flags&HEAD_INFO_DEBUG;
