@@ -47,7 +47,7 @@ Level = 1
 FlashResRef = "FLASHBR" if GameCheck.IsBG2() else "FLASH"
 
 
-def UpdateMageLevel (newLevel, keepMemoLevel=False):
+def UpdateMageLevel (newLevel, keepMemoLevel):
 	global MageSpellLevel, MageMemoLevel
 	if not keepMemoLevel or MageMemoLevel < newLevel:
 		MageMemoLevel = newLevel
@@ -72,10 +72,12 @@ def InitMageWindow (window):
 	MageWindow = window
 
 	Button = MageWindow.GetControl (1)
-	Button.OnPress (MagePrevLevelPress)
+	Button.OnPress (lambda:MagePrevLevelPress(False))
+	Button.OnRightPress (lambda:MagePrevLevelPress(True))
 
 	Button = MageWindow.GetControl (2)
-	Button.OnPress (MageNextLevelPress)
+	Button.OnPress (lambda:MageNextLevelPress(False))
+	Button.OnRightPress (lambda:MageNextLevelPress(True))
 
 	#unknown usage
 	Button = MageWindow.GetControl (55)
@@ -86,7 +88,8 @@ def InitMageWindow (window):
 	if GameCheck.IsBG2():
 		for i in range (9):
 			Button = MageWindow.GetControl (56 + i)
-			Button.OnPress (JumpMageLevel)
+			Button.OnPress (lambda:JumpMageLevel(False))
+			Button.OnRightPress (lambda:JumpMageLevel(True))
 			Button.SetFlags (IE_GUI_BUTTON_RADIOBUTTON, OP_OR)
 			Button.SetVarAssoc ("MageSpellLevel", i)
 
@@ -228,20 +231,30 @@ OpenMageWindow = GUICommonWindows.CreateTopWinLoader(2, "GUIMG", GUICommonWindow
 ToggleSorcererWindow = GUICommonWindows.CreateTopWinLoader(8, "GUIMG", GUICommonWindows.ToggleWindow, InitMageWindow, MageSelectionChanged, GUICommonWindows.DefaultWinPos, True)
 OpenSorcererWindow = GUICommonWindows.CreateTopWinLoader(8, "GUIMG", GUICommonWindows.OpenWindowOnce, InitMageWindow, MageSelectionChanged, GUICommonWindows.DefaultWinPos, True)
 
-def MagePrevLevelPress ():
-	if MageSpellLevel > 0:
-		UpdateMageLevel (MageMemoLevel - 1)
-		UpdateMageWindow (MageWindow)
+def MagePrevLevelPress (keepMemoLevel):
+	if not keepMemoLevel:
+		if MageMemoLevel > 0:
+			UpdateMageLevel (MageMemoLevel - 1, False)
+			UpdateMageWindow (MageWindow)
+	else:
+		if MageSpellLevel > 0:
+			UpdateMageLevel (MageSpellLevel - 1, True)
+			UpdateMageWindow (MageWindow)
 	return
 
-def MageNextLevelPress ():
-	if MageSpellLevel < 8:
-		UpdateMageLevel (MageMemoLevel + 1)
-		UpdateMageWindow (MageWindow)
+def MageNextLevelPress (keepMemoLevel):
+	if not keepMemoLevel:
+		if MageMemoLevel < 8:
+			UpdateMageLevel (MageMemoLevel + 1, False)
+			UpdateMageWindow (MageWindow)
+	else:
+		if MageSpellLevel < 8:
+			UpdateMageLevel (MageSpellLevel + 1, True)
+			UpdateMageWindow (MageWindow)
 	return
 
-def JumpMageLevel ():
-	UpdateMageLevel (GemRB.GetVar ("MageSpellLevel"), keepMemoLevel = True)
+def JumpMageLevel (keepMemoLevel):
+	UpdateMageLevel (GemRB.GetVar ("MageSpellLevel"), keepMemoLevel)
 	UpdateMageWindow (MageWindow)
 	return
 
