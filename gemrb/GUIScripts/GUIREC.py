@@ -480,6 +480,7 @@ def GetProficiencies(pc, cdet):
 			stats.append ( ("Damage", GetDamageRange(cdet), "b") )
 	else:
 		stats.append ( (9457, str(tohit["Base"])+" ("+str(tohit["Total"])+")", '0') )
+		stats.append ( ("Damage", GetDamageRange(cdet), "b") )
 
 	tmp = cdet["APR"]
 	tmp2 = str(tmp // 2)
