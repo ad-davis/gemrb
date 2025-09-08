@@ -3061,30 +3061,21 @@ void Actor::RefreshPCStats() {
 	if (header) {
 		//wspattack appears to only effect warriors
 		int defaultattacks = 2 + 2*dualwielding;
-		if (stars) {
-			// In bg2 the proficiency and warrior level bonus is added after effects, so also ranged weapons are affected,
-			// since their rate of fire (apr) is set using an effect with a flat modifier.
-			// SetBase will compensate only for the difference between the current two stats, not considering the default
-			// example: actor with a bow gets 4 due to the equipping effect, while the wspatck bonus is 0-3
-			// the adjustment results in a base of 2-5 (2+[0-3]) and the modified stat degrades to 4+(4-[2-5]) = 8-[2-5] = 3-6
-			// instead of 4+[0-3] = 4-7
-			// For a master ranger at level 14, the difference ends up as 2 (1 apr).
-			ieDword warriorLevel = GetWarriorLevel();
-			if (warriorLevel) {
-				int mod = Modified[IE_NUMBEROFATTACKS] - BaseStats[IE_NUMBEROFATTACKS];
-				int bonus = gamedata->GetWeaponStyleAPRBonus(stars, warriorLevel - 1);
-				BaseStats[IE_NUMBEROFATTACKS] = defaultattacks + bonus;
-				if (fxqueue.HasEffectWithParam(fx_attacks_per_round_modifier_ref, 1)) { // launcher sets base APR
-					Modified[IE_NUMBEROFATTACKS] += bonus; // no default
-				} else {
-					Modified[IE_NUMBEROFATTACKS] = BaseStats[IE_NUMBEROFATTACKS] + mod;
-				}
-			} else {
-				SetBase(IE_NUMBEROFATTACKS, defaultattacks + gamedata->GetWeaponStyleAPRBonus(stars, 0));
-			}
+		// In bg2 the proficiency and warrior level bonus is added after effects, so also ranged weapons are affected,
+		// since their rate of fire (apr) is set using an effect with a flat modifier.
+		// SetBase will compensate only for the difference between the current two stats, not considering the default
+		// example: actor with a bow gets 4 due to the equipping effect, while the wspatck bonus is 0-3
+		// the adjustment results in a base of 2-5 (2+[0-3]) and the modified stat degrades to 4+(4-[2-5]) = 8-[2-5] = 3-6
+		// instead of 4+[0-3] = 4-7
+		// For a master ranger at level 14, the difference ends up as 2 (1 apr).
+		ieDword warriorLevel = GetWarriorLevel();
+		int mod = Modified[IE_NUMBEROFATTACKS] - BaseStats[IE_NUMBEROFATTACKS];
+		int bonus = gamedata->GetWeaponStyleAPRBonus(stars, warriorLevel ? warriorLevel - 1 : 0);
+		BaseStats[IE_NUMBEROFATTACKS] = defaultattacks + bonus;
+		if (fxqueue.HasEffectWithParam(fx_attacks_per_round_modifier_ref, 1)) { // launcher sets base APR
+			Modified[IE_NUMBEROFATTACKS] += bonus; // no default
 		} else {
-			// unproficient user - force defaultattacks
-			SetBase(IE_NUMBEROFATTACKS, defaultattacks);
+			Modified[IE_NUMBEROFATTACKS] = BaseStats[IE_NUMBEROFATTACKS] + mod;
 		}
 	}
 
