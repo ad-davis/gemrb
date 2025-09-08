@@ -111,6 +111,8 @@ private:
 	Container* overContainer = nullptr;
 	InfoPoint* overInfoPoint = nullptr;
 
+	bool highlightAll = false;
+
 	EventMgr::TapMonitorId eventMonitors[2];
 
 public:
@@ -256,7 +258,7 @@ protected:
 	bool OnTouchGesture(const GestureEvent& gesture) override;
 
 	/** Currently only deals with the GEM_TAB exception */
-	bool DispatchEvent(const Event& event) const;
+	bool DispatchEvent(const Event& event);
 	
 	/** Mouse Button Down */
 	bool OnMouseDown(const MouseEvent& /*me*/, unsigned short Mod) override;

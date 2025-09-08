@@ -528,6 +528,11 @@ void GameControl::DrawSelf(const Region& screen, const Region& /*clip*/)
 			continue;
 		}
 
+		if (highlightAll && area->IsVisible(c->Pos)) {
+			c->Highlight = true;
+			c->outlineColor = displaymsg->GetColor(GUIColors::HOVERCONTAINER);
+		}
+
 		if (overContainer == c) {
 			c->Highlight = true;
 			if (target_mode) {
@@ -633,7 +638,7 @@ void GameControl::DrawSelf(const Region& screen, const Region& /*clip*/)
 
 // this existly only so tab can be handled
 // it's used both for tooltips everywhere and hp display on game control
-bool GameControl::DispatchEvent(const Event& event) const
+bool GameControl::DispatchEvent(const Event& event)
 {
 	if (!window || window->IsDisabled() || (Flags()&IgnoreEvents)) {
 		return false;
@@ -649,6 +654,9 @@ bool GameControl::DispatchEvent(const Event& event) const
 			}
 		} else {
 			CurrentArea()->DisplayHeadInfo();
+		}
+		if (Setting::Gameplay::HighlightContainersOnTab()) {
+			highlightAll = true;
 		}
 		return true;
 	} else if (event.keyboard.keycode == GEM_ESCAPE) {
@@ -1098,6 +1106,9 @@ bool GameControl::OnKeyRelease(const KeyboardEvent& Key, unsigned short Mod)
 		case GEM_TAB: // remove overhead
 			if (!Setting::HeadInfo::TabToggle()) {
 				CurrentArea()->ClearHeadInfo();
+			}
+			if (Setting::Gameplay::HighlightContainersOnTab()) {
+				highlightAll = false;
 			}
 			break;
 		default:
