@@ -878,6 +878,7 @@ namespace Setting {
 	namespace Gameplay {
 		const Setting MoveSummons = {"Move summons between areas", 0};
 		const Setting HighlightContainersOnTab = {"Highlight containers on tab", 0};
+		const Setting NoAuraTaintOutsideOfCombat = {"No aura taint outside of combat", 0};
 	}
 };
 

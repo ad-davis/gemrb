@@ -19,6 +19,7 @@
 
 #include "Scriptable/Scriptable.h"
 
+#include "Interface.h"
 #include "strrefs.h"
 #include "voodooconst.h"
 
@@ -1555,6 +1556,9 @@ bool Scriptable::AuraPolluted()
 	if (actor->GetStat(IE_AURACLEANSING)) {
 		AuraCooldown = 0;
 		if (core->HasFeedback(FT_STATES)) displaymsg->DisplayConstantStringName(HCStrings::AuraCleansed, GUIColors::WHITE, this);
+		return false;
+	}
+	if (Setting::Gameplay::NoAuraTaintOutsideOfCombat() && !core->GetGame()->CombatCounter && actor->IsPartyMember()) {
 		return false;
 	}
 
