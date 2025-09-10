@@ -49,6 +49,7 @@
 #include "GameData.h"
 #include "Interface.h"
 #include "PluginMgr.h"
+#include "Streams/DataStream.h"
 #include "TableMgr.h"
 #include "RNG.h"
 
@@ -1837,6 +1838,15 @@ GameScript::~GameScript(void)
 	BcsCache.DecRef(Name, true);
 }
 
+// ReadLine reads a line in a script, but skip over empty lines (some weidu editing creates these)
+static void ReadLine(DataStream *stream, std::string& buf, strpos_t maxlen=0)
+{
+	strret_t ret;
+	do {
+		ret = stream->ReadLine(buf, maxlen);
+	} while (buf.empty() && ret != DataStream::Error);
+}
+
 Script* GameScript::CacheScript(const ResRef& resRef, bool AIScript)
 {
 	SClass_ID type = AIScript ? IE_BS_CLASS_ID : IE_BCS_CLASS_ID;
@@ -1852,7 +1862,7 @@ Script* GameScript::CacheScript(const ResRef& resRef, bool AIScript)
 	}
 
 	std::string line;
-	stream->ReadLine(line, 10);
+	ReadLine(stream, line, 10);
 	if (line.compare(0, 2, "SC") != 0) {
 		Log(WARNING, "GameScript", "Not a Compiled Script file");
 		delete stream;
@@ -1866,7 +1876,7 @@ Script* GameScript::CacheScript(const ResRef& resRef, bool AIScript)
 		if (!rB)
 			break;
 		newScript->responseBlocks.push_back( rB );
-		stream->ReadLine( line, 10 );
+		ReadLine( stream, line, 10 );
 	}
 	delete stream;
 	return newScript;
@@ -1959,11 +1969,11 @@ static Object* DecodeObject(const std::string& line)
 static Trigger* ReadTrigger(DataStream* stream)
 {
 	std::string line;
-	stream->ReadLine(line);
+	ReadLine(stream, line);
 	if (line.compare(0, 2, "TR") != 0) {
 		return nullptr;
 	}
-	stream->ReadLine(line);
+	ReadLine(stream, line);
 	Trigger* tR = new Trigger();
 	//this exists only in PST?
 	if (HasTriggerPoint) {
@@ -1980,9 +1990,9 @@ static Trigger* ReadTrigger(DataStream* stream)
 	StringToLower(tR->string0Parameter);
 	StringToLower(tR->string1Parameter);
 	tR->triggerID &= 0x3fff;
-	stream->ReadLine(line);
+	ReadLine(stream, line);
 	tR->objectParameter = DecodeObject( line );
-	stream->ReadLine(line);
+	ReadLine(stream, line);
 	//discard invalid triggers, so they won't cause a crash
 	if (tR->triggerID>=MAX_TRIGGERS) {
 		delete tR;
@@ -1994,7 +2004,7 @@ static Trigger* ReadTrigger(DataStream* stream)
 static Condition* ReadCondition(DataStream* stream)
 {
 	std::string line;
-	stream->ReadLine(line, 10);
+	ReadLine(stream, line, 10);
 	if (line.compare(0, 2, "CO") != 0) {
 		return nullptr;
 	}
@@ -2163,7 +2173,7 @@ void GameScript::EvaluateAllBlocks(bool testConditions)
 ResponseBlock* GameScript::ReadResponseBlock(DataStream* stream)
 {
 	std::string line;
-	stream->ReadLine(line, 10);
+	ReadLine(stream, line, 10);
 	if (line.compare(0, 2, "CR") != 0) {
 		return nullptr;
 	}
@@ -2176,7 +2186,7 @@ ResponseBlock* GameScript::ReadResponseBlock(DataStream* stream)
 ResponseSet* GameScript::ReadResponseSet(DataStream* stream)
 {
 	std::string line;
-	stream->ReadLine(line, 10);
+	ReadLine(stream, line, 10);
 	if (line.compare(0, 2, "RS") != 0) {
 		return nullptr;
 	}
@@ -2195,13 +2205,13 @@ ResponseSet* GameScript::ReadResponseSet(DataStream* stream)
 Response* GameScript::ReadResponse(DataStream* stream)
 {
 	std::string line;
-	stream->ReadLine(line);
+	ReadLine(stream, line);
 	if (line.compare(0, 2, "RE") != 0) {
 		return nullptr;
 	}
 	Response* rE = new Response();
 	rE->weight = 0;
-	stream->ReadLine( line, 1024 );
+	ReadLine(stream, line, 1024);
 	char *poi;
 	rE->weight = strtounsigned<uint8_t>(line.c_str(), &poi, 10);
 	if (strncmp(poi, "AC", 2) != 0) {
@@ -2214,13 +2224,13 @@ Response* GameScript::ReadResponse(DataStream* stream)
 		stream->ReadLine( line, 1024 );
 		aC->actionID = strtounsigned<uint16_t>(line.c_str(), nullptr, 10);
 		for (int i = 0; i < 3; i++) {
-			stream->ReadLine( line, 1024 );
+			ReadLine(stream, line, 1024);
 			Object* oB = DecodeObject( line );
 			aC->objects[i] = oB;
 			if (i != 2)
 				stream->ReadLine( line, 1024 );
 		}
-		stream->ReadLine(line);
+		ReadLine(stream, line);
 		sscanf(line.data(), "%d %d %d %d %d\"%[^\"]\" \"%[^\"]\" AC",
 			&aC->int0Parameter, &aC->pointParameter.x, &aC->pointParameter.y,
 			&aC->int1Parameter, &aC->int2Parameter, aC->string0Parameter.begin(),
@@ -2239,7 +2249,7 @@ Response* GameScript::ReadResponse(DataStream* stream)
 			}
 		}
 		rE->actions.push_back( aC );
-		stream->ReadLine(line);
+		ReadLine(stream, line);
 		if (line.compare(0, 2, "RE") == 0)
 			break;
 	}
