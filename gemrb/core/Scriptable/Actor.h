@@ -808,7 +808,7 @@ public:
 	/* finishes attack against target */
 	void FinishAttack();
 	/* returns the adjusted weapon range, since items have odd values stored */
-	unsigned int GetWeaponRange(bool leftOrRight) const;
+	unsigned int GetWeaponRange() const;
 	/* filter out any damage reduction that is cancelled by high weapon enchantment and return the resulting resistance */
 	int GetDamageReduction(int resist_stat, ieDword weaponEnchantment) const;
 	/* calculates strength (dexterity) based damage adjustment */

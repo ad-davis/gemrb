@@ -1558,7 +1558,7 @@ void AttackCore(Scriptable *Sender, Scriptable *target, int flags)
 		return;
 	}
 
-	unsigned int weaponRange = attacker->GetWeaponRange(leftOrRight);
+	unsigned int weaponRange = attacker->GetWeaponRange();
 	if (target->Type == ST_DOOR || target->Type == ST_CONTAINER) {
 		weaponRange += 10;
 	}

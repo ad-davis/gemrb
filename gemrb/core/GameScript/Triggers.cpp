@@ -3543,12 +3543,7 @@ int GameScript::InWeaponRange(Scriptable *Sender, const Trigger *parameters)
 	unsigned int range = 0;
 	const ITMExtHeader* header = actor->GetWeapon(false);
 	if (header) {
-		range = actor->GetWeaponRange(false);
-	}
-	// checking also the left hand, in case they're dualwielding
-	header = actor->GetWeapon(true);
-	if (header) {
-		range = std::max(actor->GetWeaponRange(true), range);
+		range = actor->GetWeaponRange();
 	}
 	if (WithinPersonalRange(actor, tar, range)) {
 		return 1;

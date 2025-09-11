@@ -7016,7 +7016,7 @@ void Actor::PerformAttack(ieDword gameTime)
 		}
 	}
 
-	if (!WithinPersonalRange(this, target, GetWeaponRange(usedLeftHand)) || GetCurrentArea() != target->GetCurrentArea()) {
+	if (!WithinPersonalRange(this, target, GetWeaponRange()) || GetCurrentArea() != target->GetCurrentArea()) {
 		// this is a temporary double-check, remove when bugfixed
 		Log(ERROR, "Actor", "Attack action didn't bring us close enough!");
 		return;
@@ -7287,9 +7287,13 @@ void Actor::FinishAttack() {
 	ResetState();
 }
 
-unsigned int Actor::GetWeaponRange(bool leftOrRight) const
+unsigned int Actor::GetWeaponRange() const
 {
-	return std::min(weaponInfo[leftOrRight].range, Modified[IE_VISUALRANGE]);
+	if (IsDualWielding()) {
+		return std::min(std::min(weaponInfo[0].range, weaponInfo[1].range), Modified[IE_VISUALRANGE]);
+	} else {
+		return std::min(weaponInfo[0].range, Modified[IE_VISUALRANGE]);
+	}
 }
 
 int Actor::WeaponDamageBonus(const WeaponInfo &wi) const
