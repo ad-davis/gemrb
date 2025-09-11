@@ -1942,14 +1942,6 @@ bool Inventory::IsSlotBlocked(int slot) const
 
 inline bool Inventory::RangedInSlot(int slot) const
 {
-	const CREItem *weapon = GetSlotItem(slot);
-	if (weapon) {
-		const Item *item = gamedata->GetItem(weapon->ItemResRef, true);
-		if (item) {
-			const ITMExtHeader *hittingHeader = item->GetExtHeader(EquippedHeader);
-			if (hittingHeader && hittingHeader->AttackType == ITEM_AT_PROJECTILE) return true; // throwing weapon
-		}
-	}
 	return (core->QuerySlotEffects(slot) & SLOT_EFFECT_MISSILE) == SLOT_EFFECT_MISSILE;
 }
 
