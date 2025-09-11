@@ -3059,7 +3059,6 @@ void Actor::RefreshPCStats() {
 	if (!stars && HasSpellState(SS_TENSER)) stars = 1;
 
 	if (header) {
-		//wspattack appears to only effect warriors
 		int defaultattacks = 2 + 2*dualwielding;
 		// In bg2 the proficiency and warrior level bonus is added after effects, so also ranged weapons are affected,
 		// since their rate of fire (apr) is set using an effect with a flat modifier.
@@ -3073,7 +3072,7 @@ void Actor::RefreshPCStats() {
 		int bonus = gamedata->GetWeaponStyleAPRBonus(stars, warriorLevel ? warriorLevel - 1 : 0);
 		BaseStats[IE_NUMBEROFATTACKS] = defaultattacks + bonus;
 		if (fxqueue.HasEffectWithParam(fx_attacks_per_round_modifier_ref, 1)) { // launcher sets base APR
-			Modified[IE_NUMBEROFATTACKS] += bonus; // no default
+			Modified[IE_NUMBEROFATTACKS] += bonus + 2*dualwielding; // no default
 		} else {
 			Modified[IE_NUMBEROFATTACKS] = BaseStats[IE_NUMBEROFATTACKS] + mod;
 		}

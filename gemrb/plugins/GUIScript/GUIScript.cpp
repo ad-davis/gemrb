@@ -9539,7 +9539,12 @@ static PyObject* GemRB_DropDraggedItem(PyObject * /*self*/, PyObject* args)
 	if (!item) {
 		return PyLong_FromLong(ASI_FAILED);
 	}
-	bool ranged = item->GetWeaponHeader(true) != NULL;
+
+	bool bowType = false;
+	const ITMExtHeader *rangedHeader = item->GetWeaponHeader(true);
+	if (rangedHeader) {
+		bowType = rangedHeader->AttackType == ITEM_AT_BOW;
+	}
 
 	// can't equip item because of similar already equipped
 	if (Effect) {
@@ -9586,7 +9591,7 @@ static PyObject* GemRB_DropDraggedItem(PyObject * /*self*/, PyObject* args)
 	if ( !Slottype) {
 		return PyLong_FromLong(ASI_FAILED);
 	}
-	int res = actor->inventory.AddSlotItem(slotitem, Slot, Slottype, ranged);
+	int res = actor->inventory.AddSlotItem(slotitem, Slot, Slottype, bowType);
 	if (res) {
 		//release it only when fully placed
 		if (res==ASI_SUCCESS) {
@@ -9598,7 +9603,7 @@ static PyObject* GemRB_DropDraggedItem(PyObject * /*self*/, PyObject* args)
 	//couldn't place item there, try swapping (only if slot is explicit)
 	} else if ( Slot >= 0 ) {
 		//swapping won't cure this
-		HCStrings msg = actor->inventory.WhyCantEquip(Slot, slotitem->Flags & IE_INV_ITEM_TWOHANDED, ranged);
+		HCStrings msg = actor->inventory.WhyCantEquip(Slot, slotitem->Flags & IE_INV_ITEM_TWOHANDED, bowType);
 		if (msg != HCStrings::count) {
 			displaymsg->DisplayConstantString(msg, GUIColors::WHITE);
 			return PyLong_FromLong(ASI_FAILED);

@@ -263,7 +263,7 @@ public:
 	** more slots. If slot == -3 then finds the first empty inventory slot
 	** Returns 2 if completely successful, 1 if partially, 0 else.
 	** slottype is an optional filter for searching eligible slots */
-	int AddSlotItem(CREItem* item, int slot, int slottype = -1, bool ranged = false);
+	int AddSlotItem(CREItem* item, int slot, int slottype = -1, bool bowtype = false);
 	/** tries to equip all inventory items in a given slot */
 	void TryEquipAll(int slot);
 	/** Adds STOItem to the inventory, it is never wielded, action might be STA_STEAL or STA_BUY */
@@ -348,7 +348,7 @@ public:
 	/** returns true if a two handed weapon is equipped */
 	bool TwoHandedEquipped() const;
 	/** returns the strref for the reason why the item cannot be equipped */
-	HCStrings WhyCantEquip(int slot, int twohanded, bool ranged = false) const;
+	HCStrings WhyCantEquip(int slot, int twohanded, bool bowtype = false) const;
 	/** returns a slot that has a stealable item */
 	int FindStealableItem();
 	/** checks if any equipped item provides critical hit aversion */

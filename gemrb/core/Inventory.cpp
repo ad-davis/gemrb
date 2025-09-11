@@ -602,7 +602,7 @@ void Inventory::SetSlotItem(CREItem* item, unsigned int slot)
 	}
 }
 
-int Inventory::AddSlotItem(CREItem* item, int slot, int slottype, bool ranged)
+int Inventory::AddSlotItem(CREItem* item, int slot, int slottype, bool bowtype)
 {
 	int twohanded = item->Flags&IE_INV_ITEM_TWOHANDED;
 	if (slot >= 0) {
@@ -611,7 +611,7 @@ int Inventory::AddSlotItem(CREItem* item, int slot, int slottype, bool ranged)
 		}
 
 		//check for equipping weapons
-		if (WhyCantEquip(slot, twohanded, ranged) != HCStrings::count) {
+		if (WhyCantEquip(slot, twohanded, bowtype) != HCStrings::count) {
 			return ASI_FAILED;
 		}
 
@@ -1400,7 +1400,7 @@ void Inventory::CacheWeaponInfo(bool leftOrRight) const
 
 		// deal with data we need to use from the launcher
 		int tmpSlot = wi.slot; // GetUsedWeapon will modify it!
-		const CREItem* launcher = GetUsedWeapon(false, tmpSlot);
+		const CREItem* launcher = GetUsedWeapon(leftOrRight, tmpSlot);
 		const Item* launcherItem = gamedata->GetItem(launcher->ItemResRef, true);
 		assert(launcherItem);
 		const ITMExtHeader* launcherHeader = launcherItem->GetExtHeader(0);
@@ -1970,7 +1970,7 @@ bool Inventory::TwoHandedEquipped() const
 	return TwoHandedInSlot(slot);
 }
 
-HCStrings Inventory::WhyCantEquip(int slot, int twohanded, bool ranged) const
+HCStrings Inventory::WhyCantEquip(int slot, int twohanded, bool bowtype) const
 {
 	// check only for hand slots
 	if ((slot<SLOT_MELEE || slot>LAST_MELEE) && (slot != SLOT_LEFT) ) {
@@ -1988,7 +1988,7 @@ HCStrings Inventory::WhyCantEquip(int slot, int twohanded, bool ranged) const
 		}
 		if (slot != otherslot) continue;
 
-		if (ranged) {
+		if (bowtype) {
 			return HCStrings::NoRangedOffhand;
 		}
 	}
