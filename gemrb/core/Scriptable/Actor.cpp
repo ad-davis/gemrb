@@ -517,12 +517,7 @@ void Actor::SetAnimationID(unsigned int AnimID)
 			Log(MESSAGE, "Actor", "No moverate.2da found, using animation ({:#x}) for speed fallback!", AnimID);
 		}
 		if (row == TableMgr::npos) {
-			const auto* anim = anims->GetAnimation(IE_ANI_WALK, S);
-			if (anim) {
-				SetBase(IE_MOVEMENTRATE, anim->at(0)->GetFrameCount());
-			} else {
-				Log(WARNING, "Actor", "Unable to determine movement rate for animation {:#x}!", AnimID);
-			}
+			SetBase(IE_MOVEMENTRATE, 10); // default speed
 		}
 	}
 
