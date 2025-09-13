@@ -250,7 +250,7 @@ void Scriptable::TickScripting()
 		needsUpdate = false;
 	}
 
-	if (!needsUpdate) {
+	if (!needsUpdate && !(InternalFlags&IF_JUSTDIED)) {
 		IdleTicks++;
 		return;
 	}
