@@ -1046,6 +1046,7 @@ void EscapeAreaCore(Scriptable* Sender, const Point &p, const ResRef& area, cons
 	Sender->ReleaseCurrentAction();
 	Action * action = GenerateAction(std::move(Tmp));
 	Sender->AddActionInFront( action );
+	Sender->CurrentActionInterruptable = false;
 }
 
 static void GetTalkPositionFromScriptable(Scriptable* scr, Point &position)
