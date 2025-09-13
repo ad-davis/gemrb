@@ -5773,12 +5773,8 @@ int fx_protection_secondary_type (Scriptable* /*Owner*/, Actor* target, Effect *
 //0xce Protection:Spell
 int fx_resist_spell (Scriptable* /*Owner*/, Actor* target, Effect *fx)
 {
-	if (fx->Resource != fx->SourceRef) {
-		STAT_BIT_OR( IE_IMMUNITY, IMM_RESOURCE);
-		return FX_APPLIED;
-	}
-	//this has effect only on first apply, it will stop applying the spell
-	return FX_ABORT;
+	STAT_BIT_OR( IE_IMMUNITY, IMM_RESOURCE);
+	return FX_APPLIED;
 }
 
 //0xce (same place as in bg2, but different targeting)
@@ -5787,12 +5783,7 @@ int fx_resist_spell2(Scriptable* Owner, Actor* target, Effect *fx)
 	if (!EffectQueue::CheckIWDTargeting(Owner, target, fx->Parameter1, fx->Parameter2, fx)) {
 		return FX_NOT_APPLIED;
 	}
-
-	if (fx->Resource != fx->SourceRef) {
-		return FX_APPLIED;
-	}
-	//this has effect only on first apply, it will stop applying the spell
-	return FX_ABORT;
+	return FX_APPLIED;
 }
 
 // ??? Protection:SpellDec
