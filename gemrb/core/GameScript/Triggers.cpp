@@ -1752,6 +1752,10 @@ int GameScript::Dead(Scriptable *Sender, const Trigger *parameters)
 		ieDword value;
 		ieVariable Variable;
 		bool valid;
+		// checking my own death (valygar does this)
+		if (Sender->GetScriptName() == parameters->string0Parameter && Die(Sender, parameters)) {
+			return 1;
+		}
 
 		if (core->HasFeature( GFFlags::HAS_KAPUTZ )) {
 			valid = Variable.Format("{}_DEAD", parameters->string0Parameter);
