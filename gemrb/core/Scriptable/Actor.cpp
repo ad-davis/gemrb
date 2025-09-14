@@ -6221,6 +6221,13 @@ void Actor::StopAttack()
 // checks for complete immobility — to the point of inaction
 int Actor::Immobile() const
 {
+	const Game *game = core->GetGame();
+	if (game && game->TimeStoppedFor(this)) {
+		return 1;
+	}
+	if (InternalFlags&IF_REALLYDIED) { // immobile blocks animation changes needed to run CheckOnDeath
+		return 0;
+	}
 	if (GetStat(IE_CASTERHOLD)) {
 		return 1;
 	}
@@ -6228,10 +6235,6 @@ int Actor::Immobile() const
 		return 1;
 	}
 	if (GetStat(IE_STATE_ID) & STATE_STILL) {
-		return 1;
-	}
-	const Game *game = core->GetGame();
-	if (game && game->TimeStoppedFor(this)) {
 		return 1;
 	}
 
