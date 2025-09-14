@@ -4334,7 +4334,7 @@ int fx_set_petrified_state (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/
 	}
 
 	const Game *game = core->GetGame();
-	int partySize = game->GetPartySize(true);
+	int partySize = game->GetPartySize(false);
 	BASE_STATE_SET( STATE_PETRIFIED );
 	if (partySize > 1 && target->InParty) {
 		GameScript::SetLeavePartyDialogFile(target, NULL);
@@ -4901,8 +4901,9 @@ int fx_replace_creature (Scriptable* Owner, Actor* target, Effect *fx)
 		target->LastDamageType |= DAMAGE_CHUNKING;
 		target->NewBase(IE_HITPOINTS, (ieDword) -100, MOD_ABSOLUTE);
 		target->Die(Owner);
+
 		// we also have to remove any party members or their corpses will stay around
-		if (target->InParty) {
+		if (core->GetGame()->GetPartySize() > 1 && target->InParty) {
 			int slot = core->GetGame()->LeaveParty(target);
 			core->GetGame()->DelNPC(slot);
 			target->SetPersistent(-1);
