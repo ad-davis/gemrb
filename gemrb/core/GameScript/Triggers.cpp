@@ -865,12 +865,12 @@ int GameScript::GlobalTimerStarted(Scriptable *Sender, const Trigger *parameters
 
 int GameScript::WasInDialog(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_wasindialog);
+	return Sender->GetMatchingTrigger(trigger_wasindialog) != NULL;
 }
 
 int GameScript::OnCreation(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_oncreation);
+	return Sender->GetMatchingTrigger(trigger_oncreation) != NULL;
 }
 
 int GameScript::SummoningLimit(Scriptable *Sender, const Trigger *parameters)
@@ -1630,86 +1630,116 @@ int GameScript::Or(Scriptable */*Sender*/, const Trigger *parameters)
 
 int GameScript::TriggerTrigger(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTrigger(trigger_trigger, parameters->int0Parameter);
+	return Sender->GetMatchingTrigger(trigger_trigger, NULL, parameters->int0Parameter) != NULL;
 }
 
 int GameScript::WalkedToTrigger(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_walkedtotrigger, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_walkedtotrigger, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Clicked(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_clicked, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_clicked, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Disarmed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_disarmed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_disarmed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 //stealing from a store failed, owner triggered
 int GameScript::StealFailed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_stealfailed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_stealfailed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::PickpocketFailed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_pickpocketfailed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_pickpocketfailed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::PickLockFailed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_picklockfailed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_picklockfailed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::OpenFailed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_failedtoopen, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_failedtoopen, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::DisarmFailed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_disarmfailed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_disarmfailed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 //opened for doors/containers
 int GameScript::Opened(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_opened, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_opened, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::HarmlessOpened(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_harmlessopened, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_harmlessopened, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 //closed for doors
 int GameScript::Closed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_closed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_closed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::HarmlessClosed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_harmlessclosed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_harmlessclosed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 //unlocked for doors/containers (using lastUnlocked)
 int GameScript::Unlocked(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_unlocked, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_unlocked, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Entered(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_entered, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_entered, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::HarmlessEntered(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_harmlessentered, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_harmlessentered, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::IsOverMe(Scriptable *Sender, const Trigger *parameters)
@@ -1807,32 +1837,38 @@ int GameScript::CreatureHidden(Scriptable *Sender, const Trigger *parameters)
 }
 int GameScript::BecameVisible(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_becamevisible);
+	return Sender->GetMatchingTrigger(trigger_becamevisible) != NULL;
 }
 
 int GameScript::Die(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_die);
+	return Sender->GetMatchingTrigger(trigger_die) != NULL;
 }
 
 int GameScript::Died(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_died, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_died, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::PartyMemberDied(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_partymemberdied, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_partymemberdied, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::NamelessBitTheDust(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_namelessbitthedust);
+	return Sender->GetMatchingTrigger(trigger_namelessbitthedust) != NULL;
 }
 
 int GameScript::Killed(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_killed, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_killed, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Race(Scriptable *Sender, const Trigger *parameters)
@@ -2888,7 +2924,7 @@ int GameScript::AreaRestDisabled(Scriptable *Sender, const Trigger */*parameters
 
 int GameScript::TargetUnreachable(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_targetunreachable);
+	return Sender->GetMatchingTrigger(trigger_targetunreachable) != NULL;
 }
 
 int GameScript::PartyCountEQ(Scriptable */*Sender*/, const Trigger *parameters)
@@ -3210,7 +3246,7 @@ int GameScript::TimeLT(Scriptable */*Sender*/, const Trigger *parameters)
 
 int GameScript::HotKey(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTrigger(trigger_hotkey, parameters->int0Parameter);
+	return Sender->GetMatchingTrigger(trigger_hotkey, NULL, parameters->int0Parameter) != NULL;
 }
 
 int GameScript::CombatCounter(Scriptable */*Sender*/, const Trigger *parameters)
@@ -3230,7 +3266,9 @@ int GameScript::CombatCounterLT(Scriptable */*Sender*/, const Trigger *parameter
 
 int GameScript::TrapTriggered(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_traptriggered, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_traptriggered, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::InteractingWith(Scriptable *Sender, const Trigger *parameters)
@@ -3318,32 +3356,39 @@ int GameScript::IsFacingObject(Scriptable *Sender, const Trigger *parameters)
 
 int GameScript::AttackedBy(Scriptable *Sender, const Trigger *parameters)
 {
-	bool match = Sender->MatchTriggerWithObject(trigger_attackedby, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_attackedby, parameters->objectParameter, parameters->int0Parameter);
 	const Scriptable* target = GetScriptableFromObject(Sender, parameters->objectParameter);
-	if (match && target && Sender->Type == ST_ACTOR) {
+	if (trig && target && Sender->Type == ST_ACTOR) {
 		Sender->LastMarked = target->GetGlobalID();
+		Sender->LastTrigger = target->GetGlobalID();
 	}
-	return match;
+	return trig != NULL;
 }
 
 int GameScript::TookDamage(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_tookdamage);
+	return Sender->GetMatchingTrigger(trigger_tookdamage) != NULL;
 }
 
 int GameScript::HitBy(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_hitby, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_hitby, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Heard(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_heard, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_heard, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Detected(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_detected, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_detected, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::LastMarkedObject_Trigger(Scriptable *Sender, const Trigger *parameters)
@@ -3407,28 +3452,35 @@ int GameScript::HelpEX(Scriptable *Sender, const Trigger *parameters)
 
 int GameScript::Help_Trigger(Scriptable *Sender, const Trigger *parameters)
 {
-	 bool match = Sender->MatchTriggerWithObject(trigger_help, parameters->objectParameter);
+	 const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_help, parameters->objectParameter);
 	 const Scriptable* target = GetScriptableFromObject(Sender, parameters->objectParameter);
-	 if (match && target && Sender->Type == ST_ACTOR) {
+	 if (trig && target && Sender->Type == ST_ACTOR) {
 		 Sender->LastMarked = target->GetGlobalID();
+		 Sender->LastTrigger = target->GetGlobalID();
 	 }
-	 return match;
+	 return trig != NULL;
 }
 
 // a few values are named in order.ids
 int GameScript::ReceivedOrder(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_receivedorder, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_receivedorder, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Joins(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_joins, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_joins, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::Leaves(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_leaves, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_leaves, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::FallenPaladin(Scriptable *Sender, const Trigger */*parameters*/)
@@ -3915,7 +3967,7 @@ int GameScript::RandomStatCheck(Scriptable *Sender, const Trigger *parameters)
 
 int GameScript::PartyRested(Scriptable *Sender, const Trigger */*parameters*/)
 {
-	return Sender->MatchTrigger(trigger_partyrested);
+	return Sender->GetMatchingTrigger(trigger_partyrested) != NULL;
 }
 
 int GameScript::IsWeaponRanged(Scriptable *Sender, const Trigger *parameters)
@@ -4112,22 +4164,30 @@ int GameScript::SystemVariable_Trigger(Scriptable *Sender, const Trigger *parame
 
 int GameScript::SpellCast(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_spellcast, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_spellcast, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::SpellCastPriest(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_spellcastpriest, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_spellcastpriest, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::SpellCastInnate(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_spellcastinnate, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_spellcastinnate, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::SpellCastOnMe(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_spellcastonme, parameters->objectParameter, parameters->int0Parameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_spellcastonme, parameters->objectParameter, parameters->int0Parameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 int GameScript::CalendarDay(Scriptable */*Sender*/, const Trigger *parameters)
@@ -4160,7 +4220,9 @@ int GameScript::CalendarDayLT(Scriptable */*Sender*/, const Trigger *parameters)
 //NT Returns true only if the active CRE was turned by the specified priest or paladin.
 int GameScript::TurnedBy(Scriptable *Sender, const Trigger *parameters)
 {
-	return Sender->MatchTriggerWithObject(trigger_turnedby, parameters->objectParameter);
+	const TriggerEntry* trig = Sender->GetMatchingTrigger(trigger_turnedby, parameters->objectParameter);
+	if (trig) Sender->SetLastTrigger(trig->triggerID, trig->param1);
+	return trig != NULL;
 }
 
 //This is used for pst portals
@@ -4735,7 +4797,7 @@ int GameScript::SecretDoorDetected(Scriptable* Sender, const Trigger* parameters
 	const Door* door = Scriptable::As<Door>(tar);
 	if (!door) return 0;
 
-	if (Sender->MatchTrigger(trigger_secreddoordetected, door->GetGlobalID())) {
+	if (Sender->GetMatchingTrigger(trigger_secreddoordetected, NULL, door->GetGlobalID())) {
 		return door->IsOpen() == parameters->int0Parameter;
 	}
 	return 0;

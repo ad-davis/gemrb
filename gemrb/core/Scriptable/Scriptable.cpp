@@ -618,36 +618,13 @@ void Scriptable::SetLastTrigger(ieDword triggerID, ieDword scriptableID)
 	}
 }
 
-bool Scriptable::MatchTrigger(unsigned short id, ieDword param) const
-{
-	for (const auto& trigger : triggers) {
-		if (trigger.triggerID != id)
-			continue;
-		if (param && trigger.param1 != param)
-			continue;
-		return true;
-	}
-
-	return false;
-}
-
-bool Scriptable::MatchTriggerWithObject(unsigned short id, const Object *obj, ieDword param) const
-{
-	for (auto& trigger : triggers) {
-		if (trigger.triggerID != id) continue;
-		if (param && trigger.param2 != param) continue;
-		if (!MatchActor(this, trigger.param1, obj)) continue;
-		return true;
-	}
-
-	return false;
-}
-
-const TriggerEntry *Scriptable::GetMatchingTrigger(unsigned short id, unsigned int notflags) const
+const TriggerEntry* Scriptable::GetMatchingTrigger(unsigned short id, const Object *obj, ieDword param, unsigned int notflags) const
 {
 	for (auto& trigger : triggers) {
 		if (trigger.triggerID != id) continue;
 		if (notflags & trigger.flags) continue;
+		if (param && trigger.param2 != param) continue;
+		if (obj && !MatchActor(this, trigger.param1, obj)) continue;
 		return &trigger;
 	}
 

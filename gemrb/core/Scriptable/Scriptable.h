@@ -376,9 +376,7 @@ public:
 	void ClearTriggers();
 	void AddTrigger(TriggerEntry trigger);
 	void SetLastTrigger(ieDword triggerID, ieDword scriptableID);
-	bool MatchTrigger(unsigned short id, ieDword param = 0) const;
-	bool MatchTriggerWithObject(short unsigned int id, const Object *obj, ieDword param = 0) const;
-	const TriggerEntry *GetMatchingTrigger(unsigned short id, unsigned int notflags = 0) const;
+	const TriggerEntry* GetMatchingTrigger(unsigned short id, const Object *obj = NULL, ieDword param = 0, unsigned int notflags = 0) const;
 	void SendTriggerToAll(TriggerEntry entry);
 	/* re/draws overhead text on the map screen */
 	void DrawOverheadText();

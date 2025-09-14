@@ -722,7 +722,7 @@ static inline int DamageLastHitter(Effect *fx, Actor *target, int param1, int pa
 	const Map *map = target->GetCurrentArea();
 	Actor *actor = map->GetActorByGlobalID(target->LastHitter);
 	if (actor && PersonalDistance(target, actor) < 30) {
-		const TriggerEntry *entry = target->GetMatchingTrigger(trigger_hitby, TEF_PROCESSED_EFFECTS);
+		const TriggerEntry *entry = target->GetMatchingTrigger(trigger_hitby, NULL, 0, TEF_PROCESSED_EFFECTS);
 		if (entry) {
 			Effect *newFX = EffectQueue::CreateEffect(fx_damage_opcode_ref, param1, param2 << 16, FX_DURATION_INSTANT_PERMANENT);
 			newFX->Target = FX_TARGET_PRESET;

@@ -4903,7 +4903,7 @@ int fx_replace_creature (Scriptable* Owner, Actor* target, Effect *fx)
 		target->Die(Owner);
 
 		// we also have to remove any party members or their corpses will stay around
-		if (core->GetGame()->GetPartySize() > 1 && target->InParty) {
+		if (core->GetGame()->GetPartySize(false) > 1 && target->InParty) {
 			int slot = core->GetGame()->LeaveParty(target);
 			core->GetGame()->DelNPC(slot);
 			target->SetPersistent(-1);
@@ -6395,7 +6395,7 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 	switch (fx->Parameter2) {
 	case COND_GOTHIT:
 		// HitBy([ANYONE])
-		entry = target->GetMatchingTrigger(trigger_hitby, TEF_PROCESSED_EFFECTS);
+		entry = target->GetMatchingTrigger(trigger_hitby, NULL, 0, TEF_PROCESSED_EFFECTS);
 		per_round = false;
 		break;
 	case COND_NEAR:
@@ -6424,7 +6424,7 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_ATTACKED:
 		// AttackedBy([ANYONE])
-		entry = target->GetMatchingTrigger(trigger_attackedby, TEF_PROCESSED_EFFECTS);
+		entry = target->GetMatchingTrigger(trigger_attackedby, NULL, 0, TEF_PROCESSED_EFFECTS);
 		per_round = false;
 		break;
 	case COND_NEAR4:
@@ -6442,12 +6442,12 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_TOOKDAMAGE:
 		// TookDamage()
-		entry = target->GetMatchingTrigger(trigger_tookdamage, TEF_PROCESSED_EFFECTS);
+		entry = target->GetMatchingTrigger(trigger_tookdamage, NULL, 0, TEF_PROCESSED_EFFECTS);
 		per_round = false;
 		break;
 	case COND_KILLER:
 		// killed someone (BGEE: Dorn's sword)
-		entry = target->GetMatchingTrigger(trigger_killed, TEF_PROCESSED_EFFECTS);
+		entry = target->GetMatchingTrigger(trigger_killed, NULL, 0, TEF_PROCESSED_EFFECTS);
 		per_round = false;
 		break;
 	case COND_TIMEOFDAY:
@@ -6469,7 +6469,7 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_DIED_ME:
 		// Die()
-		condition = target->GetMatchingTrigger(trigger_die, TEF_PROCESSED_EFFECTS);
+		condition = target->GetMatchingTrigger(trigger_die, NULL, 0, TEF_PROCESSED_EFFECTS);
 		per_round = false;
 		break;
 	case COND_DIED_ANY:
@@ -6479,7 +6479,7 @@ int fx_cast_spell_on_condition (Scriptable* Owner, Actor* target, Effect* fx)
 		break;
 	case COND_TURNEDBY:
 		// TurnedBy([ANYONE])
-		condition = target->GetMatchingTrigger(trigger_turnedby, TEF_PROCESSED_EFFECTS);
+		condition = target->GetMatchingTrigger(trigger_turnedby, NULL, 0, TEF_PROCESSED_EFFECTS);
 		per_round = false;
 		break;
 	case COND_HP_LT:

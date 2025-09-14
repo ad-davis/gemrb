@@ -2627,7 +2627,7 @@ int fx_effects_on_struck (Scriptable* Owner, Actor* target, Effect* fx)
 		return FX_APPLIED;
 	}
 
-	const TriggerEntry *entry = target->GetMatchingTrigger(trigger_hitby, TEF_PROCESSED_EFFECTS);
+	const TriggerEntry *entry = target->GetMatchingTrigger(trigger_hitby, NULL, 0, TEF_PROCESSED_EFFECTS);
 	if (entry) {
 		ieDword dist = GetSpellDistance(fx->Resource, target, actor->Pos);
 		if (!dist) return FX_APPLIED;
