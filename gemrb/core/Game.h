@@ -284,7 +284,6 @@ public:
 	EventHandler event_handler = nullptr;
 	bool hasInfra = false;
 	bool familiarBlock = false;
-	bool PartyAttack = false;
 	bool HOFMode = false;
 private:
 	/** reads the challenge rating table */
@@ -444,6 +443,8 @@ public:
 	void AddGold(int add);
 	/** Adds ticks to game time */
 	void AdvanceTime(ieDword add, bool fatigue=true);
+	/** Marks the game as in combat for next 150 ticks (10s) **/
+	void SetInCombat();
 	/** Runs the script engine on the global script and the area scripts
 	areas run scripts on door, infopoint, container, actors too */
 	void UpdateScripts();

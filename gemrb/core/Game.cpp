@@ -1481,29 +1481,28 @@ bool Game::EveryoneDead() const
 	return true;
 }
 
+void Game::SetInCombat()
+{
+	//ChangeSong will set the battlesong only if CombatCounter is nonzero
+	CombatCounter = 151;
+	ChangeSong(false, true);
+}
+
 //runs all area scripts
 
 void Game::UpdateScripts()
 {
 	Update();
 
-	PartyAttack = false;
-
 	for (size_t idx = 0; idx < Maps.size(); idx++) {
 		Maps[idx]->UpdateScripts();
 	}
 
-	if (PartyAttack) {
-		//ChangeSong will set the battlesong only if CombatCounter is nonzero
-		CombatCounter=150;
-		ChangeSong(false, true);
-	} else {
-		if (CombatCounter) {
-			CombatCounter--;
-			//Change song if combatcounter went down to 0
-			if (!CombatCounter) {
-				ChangeSong(false, false);
-			}
+	if (CombatCounter) {
+		CombatCounter--;
+		//Change song if combatcounter went down to 0
+		if (!CombatCounter) {
+			ChangeSong(false, false);
 		}
 	}
 

@@ -4169,6 +4169,10 @@ DamageResult Actor::Damage(int damage, int damagetype, Scriptable* hitter, int m
 
 	Actor* act = Scriptable::As<Actor>(hitter);
 
+	if (act && (act->GetStat(IE_EA) <= EA_GOODCUTOFF || (act->GetStat(IE_EA) >= EA_EVILCUTOFF && GetStat(IE_EA) <= EA_GOODCUTOFF))) {
+		core->GetGame()->SetInCombat();
+	}
+
 	switch (modtype) {
 	case MOD_ADDITIVE:
 		//bonus against creature should only affect additive damages or spells like harm would be deadly
@@ -6195,6 +6199,9 @@ void Actor::AttackedBy(const Actor *attacker)
 	if (attacker->GetStat(IE_EA) != EA_PC && Modified[IE_EA] != EA_PC) {
 		LastAttacker = attacker->GetGlobalID();
 	}
+	if (attacker->GetStat(IE_EA) <= EA_GOODCUTOFF || (attacker->GetStat(IE_EA) >= EA_EVILCUTOFF && GetStat(IE_EA) <= EA_GOODCUTOFF)) {
+		core->GetGame()->SetInCombat();
+	}
 	if (InParty) {
 		core->Autopause(AUTOPAUSE::ATTACKED, this);
 	}
@@ -6912,8 +6919,7 @@ void Actor::PerformAttack(ieDword gameTime)
 
 	if (InParty) {
 		// TODO: this is temporary hack
-		Game *game = core->GetGame();
-		game->PartyAttack = true;
+		core->GetGame()->SetInCombat();
 	}
 
 	if (!roundTime || (gameTime-roundTime > core->Time.attack_round_size)) { // the original didn't use a normal round
@@ -7073,7 +7079,7 @@ void Actor::FinishAttack() {
 
 	// also start CombatCounter if a pc is attacked
 	if (!InParty && target->IsPartyMember()) {
-		core->GetGame()->PartyAttack = true;
+		core->GetGame()->SetInCombat();
 	}
 
 	if ((target->IsInvisibleTo((Scriptable *) this) || (target->GetSafeStat(IE_STATE_ID) & STATE_DEAD))) return;
