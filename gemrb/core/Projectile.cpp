@@ -45,6 +45,8 @@ static const ieByte SixteenToFive[MAX_ORIENT]={0,1,2,3,4,3,2,1,0,1,2,3,4,3,2,1};
 
 static ProjectileServer *server = NULL;
 
+static EffectRef fx_knock_ref = { "Unlock", -1 };
+
 Projectile::Projectile() noexcept
 {
 	if (!server) {
@@ -500,7 +502,7 @@ void Projectile::Payload()
 		return;
 	}
 
-	Actor *target;
+	Actor *target = NULL;
 	Scriptable *Owner;
 
 	if (Target) {
@@ -513,7 +515,7 @@ void Projectile::Payload()
 			if (!target) {
 				target = core->GetGame()->GetActorByGlobalID(FakeTarget);
 			}
-		} else {
+		} else if (effects.HasEffect(fx_knock_ref)) { // hack to get knock to work
 			target = area->GetActorByGlobalID(Caster);
 		}
 	}
