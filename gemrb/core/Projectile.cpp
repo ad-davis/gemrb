@@ -46,6 +46,8 @@ static const ieByte SixteenToFive[MAX_ORIENT]={0,1,2,3,4,3,2,1,0,1,2,3,4,3,2,1};
 static ProjectileServer *server = NULL;
 
 static EffectRef fx_knock_ref = { "Unlock", -1 };
+static EffectRef fx_sequencer_activate_ref = { "Sequencer:Activate", -1 };
+static EffectRef fx_sequencer_store_ref = { "Sequencer:Store", -1 };
 
 Projectile::Projectile() noexcept
 {
@@ -515,8 +517,26 @@ void Projectile::Payload()
 			if (!target) {
 				target = core->GetGame()->GetActorByGlobalID(FakeTarget);
 			}
-		} else if (effects.HasEffect(fx_knock_ref)) { // hack to get knock to work
-			target = area->GetActorByGlobalID(Caster);
+		} else {
+			// no target, hacks for effects that still need to do things
+			Actor* caster = area->GetActorByGlobalID(Caster);
+			if (caster) {
+				if (effects.HasEffect(fx_knock_ref)) {
+					target = caster; // knock just uses projectile position, need a target to run the effect
+				} else {
+					const Effect* seq = effects.HasEffect(fx_sequencer_activate_ref);
+					if (seq) {
+						// remove failed sequencer
+						caster->spellbook->UnmemorizeSpell(seq->SourceRef, false, 0);
+						caster->spellbook->RemoveSpell(seq->SourceRef, false);
+						Effect* store = caster->fxqueue.HasEffectWithSource(fx_sequencer_store_ref, seq->Resource);
+						if (store) {
+							store->TimingMode = FX_DURATION_JUST_EXPIRED;
+						}
+
+					}
+				}
+			}
 		}
 	}
 
