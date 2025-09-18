@@ -5901,7 +5901,7 @@ int fx_imprisonment (Scriptable* /*Owner*/, Actor* target, Effect* /*fx*/)
 	target->SendDiedTrigger();
 	target->Stop();
 	// we need to set the LeavePartyDialogFile here or otherwise can never rejoin
-	if (target->InParty) {
+	if (core->GetGame()->GetPartySize(false) > 1 && target->InParty) {
 		GameScript::SetLeavePartyDialogFile(target, NULL);
 		core->GetGame()->LeaveParty(target);
 	}

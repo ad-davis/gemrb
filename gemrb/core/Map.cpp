@@ -2565,7 +2565,9 @@ void Map::GenerateQueues()
 		Actor* actor = actors[i];
 
 		if (actor->CheckOnDeath()) {
-			DeleteActor( i );
+			if (!(actor->InParty && core->GetGame()->GetPartySize(false) == 1)) {
+				DeleteActor( i );
+			}
 			continue;
 		}
 
