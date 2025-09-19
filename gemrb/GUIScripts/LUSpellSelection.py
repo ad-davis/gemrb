@@ -226,9 +226,10 @@ def OpenSpellsWindow (actor, table, level, diff, kit=0, gen=0, recommend=True, b
 			ScrollBar = SpellsWindow.GetControl (NewScrollBarID)
 			UpdateScrollBar (ScrollBar, len (Spells[i]))
 
-			# dump all the spells we already know
+			# select all the spells we already know
 			for j in range (len (Spells[i])):
 				if Spellbook.HasSpell (pc, SpellBookType, i, Spells[i][j][0]) >= 0:
+					GemRB.RemoveSpell (pc, Spells[i][j][0]) # we relearn selected spells when done
 					SpellBook[j] = 1
 
 			# show our spells
@@ -288,7 +289,6 @@ def SpellsDonePress ():
 
 	# save all the spells
 	if not Memorization:
-		Spellbook.RemoveKnownSpells(pc, SpellBookType, SpellLevel+1, SpellLevel+1)
 		for i in range (len (Spells[SpellLevel])):
 			if SpellBook[i]: # we need to learn this spell
 				if IWD2:
@@ -313,6 +313,7 @@ def SpellsDonePress ():
 				ShowSpells ()
 				for j in range (len (Spells[i])):
 					if Spellbook.HasSpell (pc, SpellBookType, i, Spells[i][j][0]) >= 0:
+						GemRB.RemoveSpell (pc, Spells[i][j][0]) # we relearn selected spells when done
 						SpellBook[j] = 1
 				ShowSelectedSpells ()
 				if SpellsSelectPointsLeft[i] > 0:
