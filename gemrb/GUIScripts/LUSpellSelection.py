@@ -199,9 +199,9 @@ def OpenSpellsWindow (actor, table, level, diff, kit=0, gen=0, recommend=True, b
 	for i in range (9):
 
 		# make sure we always have a value to minus (bards)
-		SecondPoints = SpellsToMemoTable.GetValue (str(level-diff), str(i+1), GTV_INT)
+		SecondPoints = SpellLearnTable.GetValue (str(level-diff), str(i+1), GTV_INT)
 
-		SpellsSelectPoints[i] = SpellsToMemoTable.GetValue (str(level), str(i+1), GTV_INT)
+		SpellsSelectPoints[i] = SpellLearnTable.GetValue (str(level), str(i+1), GTV_INT)
 		SpellsSelectPointsLeft[i] = SpellsSelectPoints[i] - SecondPoints
 
 		# luckily the bonus applies both to learning and memorization
