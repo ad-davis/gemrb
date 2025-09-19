@@ -673,7 +673,17 @@ def GetNewSpells(actor, Classes, Level, LevelDiff, Kit=0):
 					NewWSpells[j] += Specialist
 				if OldWSpells[j] > 0:
 					OldWSpells[j] += Specialist
-			DeltaWSpells = sum(NewWSpells)-sum(OldWSpells)
+
+			if Spellbook.HasSorcererBook (actor, Classes[i]):
+				SorcTable = GemRB.LoadTable ("SPLSRCKN")
+				OldSSpellsSum = 0
+				NewSSpellsSum = 0
+				for j in range (MageTable.GetColumnCount ()):
+					NewSSpellsSum += SorcTable.GetValue (str(Level[i]), str(j+1), GTV_INT)
+					OldSSpellsSum += SorcTable.GetValue (str(StartLevel), str(j+1), GTV_INT)
+				DeltaWSpells = NewSSpellsSum-OldSSpellsSum
+			else:
+				DeltaWSpells = sum(NewWSpells)-sum(OldWSpells)
 		elif ClericTable != "*":
 			# check for cleric spells
 			if not GemRB.HasResource(ClericTable, RES_2DA, 1):
