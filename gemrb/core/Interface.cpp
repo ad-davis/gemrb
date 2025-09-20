@@ -1898,7 +1898,7 @@ ScriptEngine* Interface::GetGUIScriptEngine() const
 }
 
 //NOTE: if there were more summoned creatures, it will return only the last
-Actor *Interface::SummonCreature(const ResRef& resource, const ResRef& animRes, Scriptable *Owner, const Actor *target, const Point &position, int eamod, int level, Effect *fx, bool sexmod)
+Actor *Interface::SummonCreature(const ResRef& resource, const ResRef& animRes, Scriptable *Owner, const Actor *target, const Point &position, int eamod, int level, Effect *fx, bool sexlimit)
 {
 	static EffectRef fx_summon_disable_ref = { "AvatarRemovalModifier", -1 };
 	//maximum number of monsters summoned
@@ -1943,17 +1943,12 @@ Actor *Interface::SummonCreature(const ResRef& resource, const ResRef& animRes, 
 			}
 		}
 
-		// mark the summon, but only if they don't have a special sex already
-		if (sexmod && tmp->BaseStats[IE_SEX] < SEX_EXTRA && tmp->BaseStats[IE_SEX] != SEX_ILLUSION) {
-			tmp->SetBase(IE_SEX, SEX_SUMMON);
-		}
-
 		// only allow up to the summoning limit of new summoned creatures
 		// the summoned creatures have a special IE_SEX
 		// but also only limit the party, so spore colonies can reproduce more
 		ieDword sex = tmp->GetStat(IE_SEX);
 		int limit = gamedata->GetSummoningLimit(sex);
-		if (limit && sexmod && map->CountSummons(flag, sex) >= limit && summoner && summoner->InParty) {
+		if (limit && sexlimit && map->CountSummons(flag, sex) >= limit && summoner && summoner->InParty) {
 			//summoning limit reached
 			displaymsg->DisplayConstantString(HCStrings::SummoningLimit, GUIColors::WHITE);
 			delete tmp;
